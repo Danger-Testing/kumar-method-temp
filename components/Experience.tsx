@@ -79,6 +79,29 @@ export default function Experience() {
       {phase === "book" && (
         <>
           <Book />
+          {/* closing the book returns to the tomb landing; the host remounts
+              fresh, so the awakening can play again untouched by the old
+              per-layer grading. Waits out the handoff flash. */}
+          {!flash && (
+          <button
+            className="closeBook"
+            aria-label="Close the book"
+            onClick={() => {
+              setFlash(false);
+              setPhase("tomb");
+            }}
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                d="M2.5 2.5 L13.5 13.5 M13.5 2.5 L2.5 13.5"
+                stroke="currentColor"
+                strokeWidth="1.1"
+                strokeLinecap="round"
+                fill="none"
+              />
+            </svg>
+          </button>
+          )}
           {/* the page emerges out of the golden flash the dolly ended on */}
           {flash && (
             <div className="handoffFlash" onAnimationEnd={() => setFlash(false)}>

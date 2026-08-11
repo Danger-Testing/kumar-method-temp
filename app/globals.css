@@ -855,6 +855,38 @@ body {
 }
 
 /* ----------------------------------------------------------------
+   Close the book — a quiet hairline ✕, top-left; returns to the tomb
+   ---------------------------------------------------------------- */
+
+.closeBook {
+  position: fixed;
+  top: 2.2vh;
+  left: 2.5vw;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: none;
+  border: none;
+  z-index: 45;
+  cursor: pointer;
+  color: rgba(233, 214, 178, 0.45);
+  transition: color 0.3s;
+}
+
+.closeBook:hover,
+.closeBook:focus-visible {
+  color: rgba(233, 214, 178, 0.95);
+}
+
+.closeBook svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
+/* ----------------------------------------------------------------
    Accessibility
    ---------------------------------------------------------------- */
 
