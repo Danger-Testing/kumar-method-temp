@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useTexture, useGLTF, Sparkles } from "@react-three/drei";
+import { useTexture, useGLTF } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 
 /* Book proportions measured from the cover scans:
@@ -46,12 +46,14 @@ function buildGoldMask(
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
   ctx.drawImage(img, 0, 0, w, h);
-  const data = ctx.getImageData(0, 0, w, h);
+  const source = ctx.getImageData(0, 0, w, h);
+  const src = source.data;
+  const data = ctx.createImageData(w, h);
   const px = data.data;
   for (let i = 0; i < px.length; i += 4) {
-    const r = px[i];
-    const g = px[i + 1];
-    const b = px[i + 2];
+    const r = src[i];
+    const g = src[i + 1];
+    const b = src[i + 2];
     const gold = r > 105 && g > 70 && g > r * 0.58 && b < g * 0.8 && r + g > 195;
     const v = gold ? 255 : 0;
     px[i] = v;
@@ -61,7 +63,7 @@ function buildGoldMask(
   }
   ctx.putImageData(data, 0, 0);
 
-  // density pass: blur a copy, keep only clustered gold
+  // density pass: blur a copy, keep only clustered gold for the gilding
   const dcan = document.createElement("canvas");
   dcan.width = w;
   dcan.height = h;
@@ -79,6 +81,44 @@ function buildGoldMask(
     }
   }
   ctx.putImageData(m, 0, 0);
+
+  // the stars piercing through the book: the brightest natural glint in
+  // each patch of leather becomes a small soft point of light embedded
+  // in the cover — spread across the whole face, not ranked toward the
+  // bright borders (mask preview verified against the real atlas)
+  const CELL = Math.max(28, Math.round(w / 26));
+  const cols = Math.ceil(w / CELL);
+  const best = new Map<number, { x: number; y: number; heat: number }>();
+  for (let y = 0; y < h; y += 2) {
+    for (let x = 0; x < w; x += 2) {
+      const i = (y * w + x) * 4;
+      if (dens[i] > 60) continue; // real gilding — already glows
+      const r = src[i];
+      const g = src[i + 1];
+      const heat = r + g;
+      if (heat < 170 || r < 112) continue; // atlas background / dull leather
+      const key = Math.floor(y / CELL) * cols + Math.floor(x / CELL);
+      const prev = best.get(key);
+      if (!prev || heat > prev.heat) best.set(key, { x, y, heat });
+    }
+  }
+  const stars = [...best.values()]
+    .sort(
+      (a, b) =>
+        ((a.x * 2654435761 + a.y * 40503) % 65536) - ((b.x * 2654435761 + b.y * 40503) % 65536)
+    )
+    .slice(0, 150);
+  stars.forEach((s, i) => {
+    const rad = (1.1 + ((s.x * 7 + s.y * 13 + i) % 10) * 0.2) * 2.2;
+    const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, rad);
+    grad.addColorStop(0, "rgba(255,255,255,1)");
+    grad.addColorStop(0.35, "rgba(255,255,255,0.65)");
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, rad, 0, Math.PI * 2);
+    ctx.fill();
+  });
 
   // soften so the glow feathers
   ctx.filter = "blur(1.2px)";
@@ -370,8 +410,6 @@ function IntroScene({
   onDone: (finished: boolean) => void;
 }) {
   const group = useRef<THREE.Group>(null);
-  const embersEarly = useRef<THREE.Group>(null);
-  const embersMain = useRef<THREE.Group>(null);
   const igniteRef = useRef(0);
   const bloomRef = useRef<{ intensity: number } | null>(null);
   const doneRef = useRef(false);
@@ -408,10 +446,6 @@ function IntroScene({
     igniteRef.current = ig;
     if (bloomRef.current) bloomRef.current.intensity = 0.1 + ig * 0.85 + d * 1.1;
 
-    // embers seed the awakening before the glow arrives, then thicken
-    if (embersEarly.current) embersEarly.current.visible = t > 1.2;
-    if (embersMain.current) embersMain.current.visible = t > 2.8;
-
     // stop the magnification before the scan runs out of pixels — the
     // rack-focus blur and grain carry the final stretch instead
     camera.position.z = 4.15 - d * 3.72;
@@ -446,15 +480,6 @@ function IntroScene({
       <pointLight position={[-1.6, -1.4, 2.6]} intensity={6} color="#ffc890" />
       <group ref={group}>
         {useGlb ? <GlbBook igniteRef={igniteRef} /> : <BuiltBook igniteRef={igniteRef} />}
-      </group>
-
-      {/* a few faint embers stir before the gold does — first signs of life */}
-      <group ref={embersEarly} visible={false}>
-        <Sparkles count={38} scale={[4.5, 3, 3.5]} size={2.4} speed={0.32} opacity={0.42} color="#ffcf8f" noise={1} />
-      </group>
-      {/* the awakening thickens as the ignition builds */}
-      <group ref={embersMain} visible={false}>
-        <Sparkles count={70} scale={[5.5, 3.6, 4.5]} size={3.8} speed={0.65} opacity={0.55} color="#ffc069" noise={1.5} />
       </group>
 
       <EffectComposer multisampling={isCoarse() ? 0 : 4}>
