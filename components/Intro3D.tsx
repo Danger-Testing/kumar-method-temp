@@ -395,17 +395,6 @@ export function GlbBook({
     const cut = new THREE.TextureLoader().load("/masks/ramp-cutout-alpha.png");
     cut.flipY = false; // glTF UV convention — must match the atlas
     cut.anisotropy = 16; // alpha data stays linear — no SRGB here
-    // THE IGNITION, revived (owner request, with the old scan-book
-    // reference in hand): the WHOLE gilding blazes — borders, frames,
-    // title, flourishes, plus the star-glints on the leather. Authored
-    // offline from the atlas (ported buildGoldMask rules + star pass,
-    // eye-verified overlay) — the lesson from the rejected attempts is
-    // that glow reads majestic when everything burns together and smudgy
-    // when one element glows alone.
-    const ignite = new THREE.TextureLoader().load("/masks/gilding-ignite.png");
-    ignite.flipY = false;
-    ignite.colorSpace = THREE.SRGBColorSpace; // emissive stencil is color data
-    ignite.anisotropy = 16;
     mats.forEach((m) => {
       // sharper sampling at glancing angles on the asset's own maps —
       // these are already on the GPU, so the sampler must be re-uploaded
@@ -415,16 +404,9 @@ export function GlbBook({
           tex.needsUpdate = true;
         }
       });
-      if (m.name !== "Book_Outer") return; // only the covers are cut + ignited
+      if (m.name !== "Book_Outer") return; // only the covers are cut
       m.alphaMap = cut;
       m.alphaTest = 0.5; // binary cut at the stencil's anti-aliased midline
-      if (m.map) {
-        ignite.wrapS = m.map.wrapS;
-        ignite.wrapT = m.map.wrapT;
-      }
-      m.emissive = new THREE.Color("#ffb763");
-      m.emissiveMap = ignite; // the useFrame ignite drive picks this up (×2.8)
-      m.emissiveIntensity = 0;
       m.needsUpdate = true;
     });
   }, [mats]);

@@ -253,17 +253,11 @@ The book is NOT an AI-generated mesh and NOT a video. It is a real
   the emissive gold mask from the leather's natural glints), NOT
   floating room particles — the owner explicitly rejected drei
   Sparkles fields twice. Don't re-add them.
-  UPDATE 2026-08-11 (morning): the full ignition is BACK on the GLB by
-  owner request (they sent the beloved old scan-book reference): the
-  emissive is the authored stencil public/masks/gilding-ignite.png —
-  ALL gilding + the star-glints, built offline per the recalibration
-  protocol (ported buildGoldMask rules + star pass, eye-verified).
-  Lesson recorded: glow on ONE element reads as blur; the whole
-  gilding burning together reads majestic. The back-cover ramp mark
-  is CUT OUT (alphaTest + public/masks/ramp-cutout-alpha.png) with
-  unlit lantern planes inside the covers — light from within, edges
-  are occlusion so they cannot blur. Runtime buildGoldMask is still
-  dead code on the GLB path; the authored PNGs are canonical.
+  UPDATE 2026-08-11: on the GLB path, stars AND the all-over gilding
+  glow are removed entirely (owner step-by-step call) — the emissive
+  is now the authored stencil public/masks/ramp-glow.png (back-cover
+  ramp mark ONLY, built offline per the recalibration protocol).
+  Don't "helpfully" restore the runtime gold mask on the GLB; ask.
 
 GOLD MASK RECALIBRATION PROTOCOL (mandatory on every book swap):
 The ignition glow is driven by buildGoldMask() in Intro3D.tsx, whose
