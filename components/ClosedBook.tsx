@@ -105,7 +105,14 @@ export default function ClosedBook({
       >
         <SpinnableBook spinRef={spinRef} plain={plain} />
       </Canvas>
-      <div className="closedHint">drag to turn it over · tap to open</div>
+      {/* the held-book hero copy (owner mock, 2026-08-11): instruction
+          above, the Kumar×Ramp line below — the book's own face, quiet */}
+      <div className="closedTitle">Drag to turn it over. Tap to open.</div>
+      <div className="closedTagline">
+        Use The Kumar Method to run your life.
+        <br />
+        Use Ramp to run your business.
+      </div>
     </div>
   );
 }

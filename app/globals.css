@@ -1142,17 +1142,40 @@ body {
   inset: 0;
 }
 
-.closedHint {
+/* the held-book hero copy: instruction above, Kumar×Ramp line below.
+   The book's own Garamond — large but quiet, parchment on dark. */
+.closedTitle,
+.closedTagline {
   position: fixed;
-  bottom: 2.6vh;
   left: 50%;
   transform: translateX(-50%);
+  width: min(92vw, 720px);
+  text-align: center;
   font-family: var(--font-garamond), Georgia, serif;
-  font-style: italic;
-  font-size: 15px;
-  letter-spacing: 0.06em;
-  color: rgba(233, 214, 178, 0.42);
+  letter-spacing: 0.03em;
   pointer-events: none;
+  z-index: 95;
+  opacity: 0;
+  animation: heroCopyIn 1.3s ease 0.35s forwards;
+}
+
+.closedTitle {
+  top: 6vh;
+  font-size: clamp(21px, 3.4vw, 30px);
+  color: rgba(233, 214, 178, 0.9);
+}
+
+.closedTagline {
+  bottom: 6vh;
+  font-size: clamp(17px, 2.6vw, 23px);
+  line-height: 1.5;
+  color: rgba(233, 214, 178, 0.72);
+}
+
+@keyframes heroCopyIn {
+  to {
+    opacity: 1;
+  }
 }
 
 /* (the lights toggle and glow slider lived here — retired 2026-08-11
