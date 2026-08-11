@@ -54,7 +54,11 @@ function buildGoldMask(
     const r = src[i];
     const g = src[i + 1];
     const b = src[i + 2];
-    const gold = r > 105 && g > 70 && g > r * 0.58 && b < g * 0.8 && r + g > 195;
+    // tuned for the copper gilding on the plum book (bookNew2): warmth
+    // (r well above b) is the law — the leather's grey sheen fails it.
+    // Verified against the actual atlas: title, flourishes, borders and
+    // ramp logos catch; leather field stays clean.
+    const gold = r > 100 && r - b > 24 && g > r * 0.42 && b < g * 1.1 && r + g > 150;
     const v = gold ? 255 : 0;
     px[i] = v;
     px[i + 1] = v;
@@ -74,7 +78,7 @@ function buildGoldMask(
   const dens = dctx.getImageData(0, 0, w, h).data;
   const m = ctx.getImageData(0, 0, w, h);
   for (let i = 0; i < m.data.length; i += 4) {
-    if (m.data[i] > 0 && dens[i] <= 75) {
+    if (m.data[i] > 0 && dens[i] <= 70) {
       m.data[i] = 0;
       m.data[i + 1] = 0;
       m.data[i + 2] = 0;
@@ -95,8 +99,10 @@ function buildGoldMask(
       if (dens[i] > 60) continue; // real gilding — already glows
       const r = src[i];
       const g = src[i + 1];
+      const b = src[i + 2];
       const heat = r + g;
-      if (heat < 170 || r < 112) continue; // atlas background / dull leather
+      // warm glints only — the plum leather's grey sheen fails r-b
+      if (heat < 150 || r < 100 || r - b < 22) continue;
       const key = Math.floor(y / CELL) * cols + Math.floor(x / CELL);
       const prev = best.get(key);
       if (!prev || heat > prev.heat) best.set(key, { x, y, heat });
