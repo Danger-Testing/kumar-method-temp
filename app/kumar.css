@@ -324,14 +324,18 @@
 }
 
 .km-tomb-frame {
-  /* cover, anchored to the floor: the frame always fills the viewport
-     (cropping excess artwork at the top/sides) so the tomb never
-     shrinks or floats off the ground in tall windows */
+  /* dynamic cover, anchored near the floor: fills the viewport in tall
+     windows (cropping excess at the top), but on wide/fullscreen
+     screens the frame's growth is capped at 115svh and a quarter of
+     the overflow is pushed below the fold — so the tomb reads smaller
+     and sits lower instead of blowing up and crowding the top edge.
+     The room background is a separate full-viewport layer, so a frame
+     narrower than the viewport never shows a gap. */
   position: absolute;
   left: 50%;
-  bottom: 0;
+  bottom: min(0px, calc((100svh - min(100vw * (1117 / 1728), 115svh)) * 0.25));
   transform: translateX(-50%);
   aspect-ratio: 1728 / 1117;
-  height: max(100svh, calc(100vw * (1117 / 1728)));
+  height: clamp(100svh, 100vw * (1117 / 1728), 115svh);
   z-index: 2;
 }
