@@ -53,6 +53,29 @@ export default function TombScene({
     []
   );
 
+  // iOS (esp. Low Power Mode) blocks video autoplay and stamps a play
+  // glyph over the paused element. Retry on the first touch (a user
+  // gesture unlocks playback); if it still refuses, hide the smoke —
+  // it's an enhancement, never worth a play button.
+  useEffect(() => {
+    const root = landingRef.current;
+    if (!root) return;
+    const vids = Array.from(root.querySelectorAll("video"));
+    const tryPlay = () => {
+      vids.forEach((v) => {
+        const p = v.play();
+        if (p)
+          p.then(() => v.classList.remove("smokeHidden")).catch(() =>
+            v.classList.add("smokeHidden")
+          );
+      });
+    };
+    tryPlay();
+    const unlock = () => tryPlay();
+    window.addEventListener("touchstart", unlock, { once: true, passive: true });
+    return () => window.removeEventListener("touchstart", unlock);
+  }, []);
+
   return (
     <section
       className={`km-landing km-view-active ${interactive ? "km-wakeable" : ""}`}

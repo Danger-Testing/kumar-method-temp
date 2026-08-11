@@ -834,7 +834,7 @@ export default function Intro3D({
       <div className="introFade" ref={fadeRef} aria-hidden="true">
         <div className="rampLogo" aria-label="ramp" />
       </div>
-      <div className="skipHint">{holding ? "" : "tap to skip"}</div>
+      {/* "tap to skip" retired — the intro is fast enough now (owner) */}
       {/* the held-book hero copy (owner mock): fades in at the hold,
           fades away as the click sends the book into the pages. The
           tagline speaks ramp's voice and opens the access modal. */}
