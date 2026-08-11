@@ -591,7 +591,17 @@ body {
   opacity: 0;
 }
 
-/* quiet corner CTA: Kumar Method for business, signed with the ramp mark */
+/* quiet corner CTA: Kumar Method for business, signed with the ramp mark.
+   Ramp's brand face is TWK Lausanne (licensed); Switzer is its standard
+   free double, self-hosted — swap the woff2 for Lausanne if licensed. */
+@font-face {
+  font-family: "Switzer";
+  src: url("/fonts/switzer-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
 .bizLink {
   position: fixed;
   bottom: 2.2vh;
@@ -600,11 +610,11 @@ body {
   display: flex;
   align-items: center;
   gap: 9px;
-  font-family: var(--font-fell), serif;
-  font-style: italic;
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  color: rgba(233, 214, 178, 0.45);
+  font-family: "Switzer", -apple-system, "Helvetica Neue", sans-serif;
+  font-weight: 500;
+  font-size: 12.5px;
+  letter-spacing: 0.005em;
+  color: rgba(233, 214, 178, 0.5);
   text-decoration: none;
   transition: color 0.25s;
 }
