@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture, useGLTF } from "@react-three/drei";
+import TombScene from "@/components/TombScene";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 
 /* Book proportions measured from the cover scans:
@@ -538,7 +539,6 @@ export default function Intro3D({
   const grainRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
   const tombRef = useRef<HTMLDivElement>(null);
-  const emergeSmokeRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     fetch("/book.glb", { method: "HEAD" })
@@ -562,18 +562,7 @@ export default function Intro3D({
     <div className="introRoot" onClick={() => onDone(false)}>
       {emerge && (
         <div className="introTomb" ref={tombRef} aria-hidden="true">
-          <img className="tombBg" src="/tomb/bg.webp" alt="" />
-          <img className="tombWall" src="/tomb/wall.png" alt="" />
-          <img className="tombStructure" src="/tomb/kumar-tomb-final.png" alt="" />
-          <video
-            className="tombSmoke emergeSmoke"
-            ref={emergeSmokeRef}
-            src="/tomb/intomb-smoke.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-          />
+          <TombScene interactive={false} />
         </div>
       )}
       <div className="introGlow" ref={glowRef} aria-hidden="true" />
@@ -589,14 +578,9 @@ export default function Intro3D({
             emerge={emerge}
             onEmerge={(rise, t) => {
               // the tomb holds through the rise, then dissolves into the
-              // dark room; its smoke swells as the book climbs out
+              // dark room as the spin takes over
               if (tombRef.current) {
                 tombRef.current.style.opacity = String(1 - smooth(1.1, 3, t));
-              }
-              if (emergeSmokeRef.current) {
-                emergeSmokeRef.current.style.opacity = String(
-                  0.85 * smooth(0, 0.6, t) * (1 - smooth(1.8, 3.2, t))
-                );
               }
             }}
             onFade={(v) => {

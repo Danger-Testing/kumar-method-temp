@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EB_Garamond, IM_Fell_English, IM_Fell_English_SC } from "next/font/google";
 import "./globals.css";
+import "./kumar.css";
 
 const garamond = EB_Garamond({
   subsets: ["latin"],

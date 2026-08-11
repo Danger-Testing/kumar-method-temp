@@ -683,101 +683,14 @@ body {
 }
 
 /* ----------------------------------------------------------------
-   The tomb — homepage landing (assets: marcgmbh/kumarmethod-website)
+   The tomb — Marc's landing is styled by app/kumar.css (ported
+   verbatim). Only the emergence backdrop wrapper lives here.
    ---------------------------------------------------------------- */
 
-.tombScene {
-  --tx: 0;
-  --ty: 0;
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  overflow: hidden;
-  background: #05070a;
-  cursor: pointer;
-}
-
-.tombBg,
-.tombWall {
-  position: absolute;
-  inset: -2.5%;
-  width: 105%;
-  height: 105%;
-  object-fit: cover;
-  filter: saturate(0.78) contrast(1.05) brightness(0.85);
-  transform: translate(calc(var(--tx) * -8px), calc(var(--ty) * -3px));
-  will-change: transform;
-}
-
-.tombWall {
-  opacity: 0.55;
-  mix-blend-mode: luminosity;
-}
-
-.tombStructure {
-  position: absolute;
-  left: 50%;
-  bottom: 6svh;
-  height: 76svh;
-  max-width: 92vw;
-  object-fit: contain;
-  transform: translateX(-50%) translate(calc(var(--tx) * -3px), calc(var(--ty) * -1.5px));
-  filter: brightness(0.92);
-  will-change: transform;
-}
-
-.tombSmoke {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  mix-blend-mode: screen;
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.tombVignette {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(ellipse 72% 64% at 50% 55%, transparent 38%, rgba(0, 0, 0, 0.55) 76%, rgba(0, 0, 0, 0.88) 100%);
-}
-
-.tombHint {
-  position: absolute;
-  bottom: 3vh;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: var(--font-fell), serif;
-  font-style: italic;
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  color: rgba(233, 214, 178, 0.5);
-  pointer-events: none;
-  animation: hintBreathe 3.4s ease-in-out infinite;
-}
-
-@keyframes hintBreathe {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-/* the tomb held behind the rising book during the intro's emergence */
 .introTomb {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  will-change: opacity;
-}
-
-.introTomb .emergeSmoke {
-  opacity: 0;
   will-change: opacity;
 }
 
