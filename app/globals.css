@@ -82,9 +82,48 @@ body {
   position: relative;
   height: min(94svh, 140vw);
   aspect-ratio: 0.66;
-  container-type: size;
   cursor: pointer;
   z-index: 2;
+}
+
+/* an open book on wide screens: two facing leaves and a center spine */
+.bookArea.spreadOpen {
+  aspect-ratio: 1.32;
+  max-width: 96vw;
+}
+
+.leafBox {
+  position: absolute;
+  inset: 0;
+  container-type: size;
+}
+
+.spreadOpen .leafBox.boxLeft {
+  right: 50%;
+}
+
+.spreadOpen .leafBox.boxRight {
+  left: 50%;
+}
+
+.spreadOpen::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0.5%;
+  bottom: 0.5%;
+  width: 7%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 5;
+  background: linear-gradient(
+    to right,
+    rgba(30, 20, 10, 0) 0%,
+    rgba(30, 20, 10, 0.22) 38%,
+    rgba(24, 15, 7, 0.42) 50%,
+    rgba(30, 20, 10, 0.22) 62%,
+    rgba(30, 20, 10, 0) 100%
+  );
 }
 
 .leaf {
@@ -177,6 +216,29 @@ body {
     linear-gradient(to left, rgba(82, 60, 32, 0.3), rgba(82, 60, 32, 0) 6%),
     linear-gradient(to bottom, rgba(82, 60, 32, 0.24), rgba(82, 60, 32, 0) 5%),
     linear-gradient(to top, rgba(82, 60, 32, 0.32), rgba(82, 60, 32, 0) 7%);
+}
+
+/* left (verso) page of a spread: the binding sits on its RIGHT side */
+.paper.side-left .edgeShade {
+  background:
+    radial-gradient(16cqw 16cqw at 0% 100%, rgba(82, 60, 32, 0.22), rgba(82, 60, 32, 0) 62%),
+    radial-gradient(14cqw 14cqw at 100% 100%, rgba(82, 60, 32, 0.18), rgba(82, 60, 32, 0) 62%),
+    radial-gradient(12cqw 12cqw at 0% 0%, rgba(82, 60, 32, 0.14), rgba(82, 60, 32, 0) 62%),
+    linear-gradient(to left, rgba(82, 60, 32, 0.42), rgba(82, 60, 32, 0.12) 3.5%, rgba(82, 60, 32, 0) 10%),
+    linear-gradient(to right, rgba(82, 60, 32, 0.3), rgba(82, 60, 32, 0) 6%),
+    linear-gradient(to bottom, rgba(82, 60, 32, 0.24), rgba(82, 60, 32, 0) 5%),
+    linear-gradient(to top, rgba(82, 60, 32, 0.32), rgba(82, 60, 32, 0) 7%);
+}
+
+.paper.side-left .smudge {
+  left: auto;
+  right: 0;
+}
+
+/* recto folio sits on the outer (right) corner */
+.paper.side-right .folio {
+  left: auto;
+  right: 9cqw;
 }
 
 /* foxing stains + smudge */

@@ -118,10 +118,12 @@ function PageLeaf({
   index,
   animClass,
   squareCorners,
+  side = "single",
 }: {
   index: number;
   animClass: string;
   squareCorners: boolean;
+  side?: "single" | "left" | "right";
 }) {
   const page = pages[index];
   const rand = seeded(index + 3);
@@ -140,7 +142,7 @@ function PageLeaf({
 
   return (
     <div className={`leaf ${animClass}`}>
-      <div className={`paper ${squareCorners ? "cornersSquare" : ""}`}>
+      <div className={`paper ${squareCorners ? "cornersSquare" : ""} side-${side}`}>
         {/* a real scanned sheet of old paper, toned to match */}
         <div className="photoPaper" aria-hidden="true" />
 
@@ -221,11 +223,25 @@ export default function Book() {
   const [current, setCurrent] = useState(0);
   const [hasTurned, setHasTurned] = useState(false);
   const [squareCorners, setSquareCorners] = useState(true);
+  const [spread, setSpread] = useState(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
+
+  // wide landscape screens read as an open book, two pages at once
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 900px) and (orientation: landscape)");
+    const update = () => setSpread(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const base = spread ? current - (current % 2) : current;
+  const step = spread ? 2 : 1;
 
   const go = useCallback(
     (to: number) => {
-      if (to < 0 || to >= pages.length || to === current) return;
+      if (to < 0) to = 0;
+      if (to >= pages.length || to === current) return;
       setCurrent(to);
       setHasTurned(true);
     },
@@ -236,21 +252,22 @@ export default function Book() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
         e.preventDefault();
-        go(current + 1);
+        go(base + step);
       }
       if (e.key === "ArrowLeft" || e.key === "PageUp") {
         e.preventDefault();
-        go(current - 1);
+        go(base - step);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [go, current]);
+  }, [go, base, step]);
 
   const onPageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
-    go(x < 0.32 ? current - 1 : current + 1);
+    const backZone = spread ? 0.5 : 0.32;
+    go(x < backZone ? base - step : base + step);
   };
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -262,7 +279,7 @@ export default function Book() {
     const dy = e.changedTouches[0].clientY - touchStart.current.y;
     touchStart.current = null;
     if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-      go(dx < 0 ? current + 1 : current - 1);
+      go(dx < 0 ? base + step : base - step);
     }
   };
 
@@ -272,17 +289,29 @@ export default function Book() {
       <Dust />
 
       <div
-        className="bookArea"
+        className={`bookArea ${spread ? "spreadOpen" : ""}`}
         onClick={onPageClick}
         role="region"
-        aria-label={`Book page ${current + 1} of ${pages.length}`}
+        aria-label={`Book page ${base + 1}${spread ? ` and ${Math.min(base + 2, pages.length)}` : ""} of ${pages.length}`}
       >
-        <PageLeaf
-          key={current}
-          index={current}
-          animClass={hasTurned ? "" : "enterFirst"}
-          squareCorners={squareCorners}
-        />
+        <div className="leafBox boxLeft" key={`L${base}`}>
+          <PageLeaf
+            index={base}
+            animClass={hasTurned ? "" : "enterFirst"}
+            squareCorners={squareCorners}
+            side={spread ? "left" : "single"}
+          />
+        </div>
+        {spread && base + 1 < pages.length && (
+          <div className="leafBox boxRight" key={`R${base + 1}`}>
+            <PageLeaf
+              index={base + 1}
+              animClass={hasTurned ? "" : "enterFirst"}
+              squareCorners={squareCorners}
+              side="right"
+            />
+          </div>
+        )}
       </div>
 
       <div className="vignette" aria-hidden="true" />
