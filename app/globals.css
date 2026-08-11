@@ -1165,14 +1165,17 @@ body {
 .closedTitle {
   top: 6vh;
   font-size: clamp(18px, 2.8vw, 25px);
-  color: rgba(233, 214, 178, 0.9);
+  color: rgba(240, 224, 192, 0.98);
+  /* a whisper of back-shadow so the copy holds against bright stone */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65), 0 2px 16px rgba(0, 0, 0, 0.7);
 }
 
 .closedTagline {
   bottom: 6vh;
   font-size: clamp(17px, 2.6vw, 23px);
   line-height: 1.55;
-  color: rgba(233, 214, 178, 0.72);
+  color: rgba(240, 224, 192, 0.95);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65), 0 2px 16px rgba(0, 0, 0, 0.7);
 }
 
 /* only the business line is clickable: underlined so it reads as a
