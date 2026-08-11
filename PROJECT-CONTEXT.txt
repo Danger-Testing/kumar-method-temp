@@ -58,9 +58,8 @@ get the work rejected:
   build-and-detonate glow is separate and was requested.)
 - Page edges: nearly straight, long gentle waves, low-frequency.
   High-frequency edge fuzz reads as "stubble" on mobile — rejected.
-- Corner style is A/B testable: a temporary toggle sits bottom-
-  right of the reader ("corners: square" vs "worn"). Default is
-  square. Remove the toggle once the owner picks a winner.
+- Page corners are SQUARE — decided 2026-08-10, the A/B toggle was
+  removed. Do not reintroduce rounded/worn corners.
 - EVERY risky/aesthetic change goes in ITS OWN COMMIT with a clear
   message, so the owner can say "revert that" and it's one
   git revert + redeploy. This is a standing contract. Honor it.
@@ -200,7 +199,7 @@ The book is NOT an AI-generated mesh and NOT a video. It is a real
 - OPEN ITEMS: author credit line; whether a title page/front
   matter should exist (would also bring the count toward the 122
   pages the owner once estimated); repo is named -temp and may be
-  renamed; corner-style toggle needs a final verdict.
+  renamed.
 
 ----------------------------------------------------------------
 7. OPERATIONS
