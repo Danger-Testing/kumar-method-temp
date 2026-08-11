@@ -95,6 +95,10 @@ export default function TombScene({
               muted
               playsInline
             />
+            {/* the doorway blazes bright yellow as the book wakes — clipped
+                to the doorway polygon by the parent; driven per frame by
+                Experience during the intro, inert on the landing */}
+            <div className="tombDoorGlow" aria-hidden="true" />
           </div>
           <Image
             className="km-landing-image km-landing-tomb"

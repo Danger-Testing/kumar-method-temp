@@ -85,7 +85,7 @@ export default function Experience() {
           emerge
           plain={plain}
           holeRect={holeRef}
-          onTombFade={(fade, glow) => {
+          onTombFade={(fade, glow, doorGlow = 0) => {
             // the scene stays alive behind the book instead of dying to
             // black: the room settles at 70% dark, the tomb at 40% — and
             // when the gilding ignites, its glow lights the whole chamber
@@ -111,6 +111,8 @@ export default function Experience() {
             if (smoke) smoke.style.opacity = (0.52 * (1 - 0.7 * fade)).toFixed(3);
             if (stone) stone.style.opacity = Math.min(1, glow).toFixed(3);
             if (floor) floor.style.opacity = Math.min(1, 0.95 * glow).toFixed(3);
+            const door = el.querySelector<HTMLElement>(".tombDoorGlow");
+            if (door) door.style.opacity = Math.min(1, doorGlow).toFixed(3);
           }}
           onDone={(finished) => {
             setFlash(finished);

@@ -499,7 +499,7 @@ function IntroScene({
   onFade: (v: number) => void;
   onDive: (v: number) => void;
   onAtmos: (ignite: number, dive: number, t: number) => void;
-  onEmerge: (rise: number, t: number, ignite: number) => void;
+  onEmerge: (rise: number, t: number, ignite: number, doorGlow: number) => void;
   onDone: (finished: boolean) => void;
 }) {
   const group = useRef<THREE.Group>(null);
@@ -621,7 +621,12 @@ function IntroScene({
     igniteRef.current = ig;
     // the tomb layers hear about both the rise and the ignition, so the
     // awakening glow can light the whole chamber
-    if (E > 0) onEmerge(rise, t, ig);
+    if (E > 0) {
+      // the doorway blazes bright yellow at the click: fast flare-in,
+      // held through the exit, dying away once the book is out
+      const doorGlow = smooth(0.05, 0.3, t) * (1 - smooth(E + 0.35, E + 1.4, t));
+      onEmerge(rise, t, ig, doorGlow);
+    }
     if (bloomRef.current) bloomRef.current.intensity = plain ? 0 : 0.1 + ig * 0.85 + d * 1.1;
 
     // stop the magnification before the scan runs out of pixels — the
@@ -710,7 +715,7 @@ export default function Intro3D({
   /** drives the persistent tomb layer (owned by Experience) behind us:
       fade = settle into the dark grade, glow = the ignition lighting
       the chamber back up (flickers with the gilding) */
-  onTombFade?: (fade: number, glow: number) => void;
+  onTombFade?: (fade: number, glow: number, doorGlow?: number) => void;
   /** the tomb doorway, measured by Experience — anchors the emergence */
   holeRect?: MutableRefObject<HoleRect | null>;
 }) {
@@ -756,12 +761,12 @@ export default function Intro3D({
             emerge={emerge}
             plain={plain}
             holeRef={holeRect}
-            onEmerge={(rise, t, ignite) => {
+            onEmerge={(rise, t, ignite, doorGlow) => {
               // the tomb (persistent layer behind us) settles into its
               // 70/40 grade through the rise, then the ignition's own
               // flicker lights the chamber back up
               // the room starts dimming as the book shoots out
-              onTombFade?.(smooth(0.6, 2.4, t), Math.min(1.2, ignite));
+              onTombFade?.(smooth(0.6, 2.4, t), Math.min(1.2, ignite), doorGlow);
               void rise;
             }}
             onFade={(v) => {
