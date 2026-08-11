@@ -113,7 +113,7 @@ export default function ClosedBook({
           tagline is a button that opens the access modal */}
       <div className="closedTitle">Drag to turn it over. Tap to open.</div>
       <div className="closedTagline">
-        Use The <strong>Kumar Method</strong> to run your life.
+        <span className="tagLife">Use The <strong>Kumar Method</strong> to run your life.</span>
         <br />
         <button
           type="button"

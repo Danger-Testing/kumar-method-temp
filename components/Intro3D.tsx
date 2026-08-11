@@ -844,7 +844,7 @@ export default function Intro3D({
             Tap to open the book.
           </div>
           <div className={`closedTagline heroWait ${holding ? "heroShow" : ""}`}>
-            Use The <strong>Kumar Method</strong> to run your life.
+            <span className="tagLife">Use The <strong>Kumar Method</strong> to run your life.</span>
             <br />
             <button
               type="button"
