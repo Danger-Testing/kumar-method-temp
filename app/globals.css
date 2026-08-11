@@ -1198,6 +1198,17 @@ body {
   top: calc(50% + 33.5svh);
 }
 
+/* desktop: the title breathes higher (equal-air reads cramped on wide
+   screens); mobile keeps the tight symmetry */
+@media (min-width: 900px) and (orientation: landscape) {
+  .closedTitle {
+    bottom: calc(50% + 33svh);
+  }
+  .closedTitle.heroWait {
+    bottom: calc(50% + 38.5svh);
+  }
+}
+
 /* the life line steps back so the business line leads */
 .tagLife {
   font-size: 0.82em;
