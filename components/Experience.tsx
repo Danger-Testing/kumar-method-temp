@@ -6,11 +6,12 @@ import Book from "@/components/Book";
 import TombScene from "@/components/TombScene";
 
 const Intro3D = dynamic(() => import("@/components/Intro3D"), { ssr: false });
+const ClosedBook = dynamic(() => import("@/components/ClosedBook"), { ssr: false });
 
 import type { HoleRect } from "@/components/Intro3D";
 
 export default function Experience() {
-  const [phase, setPhase] = useState<"tomb" | "intro" | "book">("tomb");
+  const [phase, setPhase] = useState<"tomb" | "intro" | "book" | "closed">("tomb");
   const [flash, setFlash] = useState(false);
   const tombHostRef = useRef<HTMLDivElement>(null);
   // the doorway hole, as viewport fractions: derived from .km-tomb-frame's
@@ -62,7 +63,7 @@ export default function Experience() {
     <>
       {/* The tomb never unmounts between landing and intro — same DOM,
           same playing videos — so waking the book cannot flash. */}
-      {(phase === "tomb" || phase === "intro") && (
+      {(phase === "tomb" || phase === "intro" || phase === "closed") && (
         <div className="tombHost" ref={tombHostRef}>
           <main className="km-site">
             <div className="km-transition-stage km-transition-landing">
@@ -113,19 +114,21 @@ export default function Experience() {
         />
       )}
 
+      {phase === "closed" && <ClosedBook onOpen={() => setPhase("book")} />}
+
       {phase === "book" && (
         <>
           <Book />
-          {/* closing the book returns to the tomb landing; the host remounts
-              fresh, so the awakening can play again untouched by the old
-              per-layer grading. Waits out the handoff flash. */}
+          {/* closing the book: back to the tomb, with the closed tome
+              hanging in the room — not all the way back to square one.
+              Waits out the handoff flash. */}
           {!flash && (
           <button
             className="closeBook"
             aria-label="Close the book"
             onClick={() => {
               setFlash(false);
-              setPhase("tomb");
+              setPhase("closed");
             }}
           >
             <svg viewBox="0 0 16 16" aria-hidden="true">

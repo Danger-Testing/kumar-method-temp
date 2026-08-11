@@ -949,6 +949,41 @@ body {
 }
 
 /* ----------------------------------------------------------------
+   The closed book — dismissed reader: the tome hangs before the tomb.
+   Drag turns it in your hands; a tap opens the reader again.
+   ---------------------------------------------------------------- */
+
+.closedBook {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  cursor: grab;
+  touch-action: none;
+}
+
+.closedBook:active {
+  cursor: grabbing;
+}
+
+.closedBook canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.closedHint {
+  position: fixed;
+  bottom: 2.6vh;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-garamond), Georgia, serif;
+  font-style: italic;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  color: rgba(233, 214, 178, 0.42);
+  pointer-events: none;
+}
+
+/* ----------------------------------------------------------------
    Accessibility
    ---------------------------------------------------------------- */
 

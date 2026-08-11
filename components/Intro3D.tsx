@@ -214,7 +214,7 @@ function makePageEdgeTexture(): THREE.CanvasTexture {
 /*  The tome, built from the real cover scans                          */
 /* ------------------------------------------------------------------ */
 
-function BuiltBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) {
+export function BuiltBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) {
   const [front, back, spine] = useTexture([
     "/covers/front.jpeg",
     "/covers/back.jpeg",
@@ -332,7 +332,7 @@ function BuiltBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> })
 
 /* optional: drop a mesh at public/book.glb and it replaces the built one
    automatically */
-function GlbBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) {
+export function GlbBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) {
   const { scene } = useGLTF("/book.glb");
 
   // give the GLB the same gilding ignition as the built book: derive a
