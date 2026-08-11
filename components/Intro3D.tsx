@@ -146,6 +146,10 @@ function useGoldMask(src: string): THREE.CanvasTexture | null {
       if (!canvas) return;
       const t = new THREE.CanvasTexture(canvas);
       t.colorSpace = THREE.SRGBColorSpace;
+      // mipmapped + anisotropic, or the mask aliases into moiré when small
+      t.generateMipmaps = true;
+      t.minFilter = THREE.LinearMipmapLinearFilter;
+      t.anisotropy = 16;
       setTex(t);
     };
   }, [src]);
@@ -184,7 +188,7 @@ function useWineTint(src: string): THREE.CanvasTexture | null {
       ctx.putImageData(data, 0, 0);
       const t = new THREE.CanvasTexture(canvas);
       t.colorSpace = THREE.SRGBColorSpace;
-      t.anisotropy = 8;
+      t.anisotropy = 16;
       setTex(t);
     };
   }, [src]);
@@ -239,7 +243,7 @@ export function BuiltBook({
 
   [front, back, spine].forEach((t) => {
     t.colorSpace = THREE.SRGBColorSpace;
-    t.anisotropy = 8;
+    t.anisotropy = 16;
   });
 
   const frontMat = useMemo(() => {
@@ -393,10 +397,19 @@ export function GlbBook({
       t.wrapS = src.wrapS;
       t.wrapT = src.wrapT;
       t.colorSpace = THREE.SRGBColorSpace;
+      // mipmapped + anisotropic, or the glowing emblems alias into moiré
+      // whenever the book is small on screen
+      t.generateMipmaps = true;
+      t.minFilter = THREE.LinearMipmapLinearFilter;
+      t.anisotropy = 16;
       m.emissive = new THREE.Color("#ffb763");
       m.emissiveMap = t;
       m.emissiveIntensity = 0;
       m.needsUpdate = true;
+      // sharper sampling at glancing angles on the asset's own maps
+      [m.map, m.normalMap, m.roughnessMap, m.metalnessMap].forEach((tex) => {
+        if (tex) tex.anisotropy = 16;
+      });
     });
   }, [mats]);
 
@@ -410,7 +423,12 @@ export function GlbBook({
       m.color.copy(m.userData.baseColor as THREE.Color).multiplyScalar(shade);
       // inspection mode strips surface relief (moiré source)
       if (m.userData.baseBump === undefined) m.userData.baseBump = m.bumpScale;
-      if (!m.userData.baseNormal && m.normalScale) m.userData.baseNormal = m.normalScale.clone();
+      // moiré taming: the GLB's normal map is far denser than the screen
+      // can resolve, so its authoritative base strength is 60% of the
+      // asset's — stashed once, so cache-shared materials never compound
+      if (!m.userData.baseNormal && m.normalScale) {
+        m.userData.baseNormal = m.normalScale.clone().multiplyScalar(0.6);
+      }
       m.bumpScale = plain ? 0 : (m.userData.baseBump as number);
       if (m.userData.baseNormal) {
         m.normalScale.copy(m.userData.baseNormal as THREE.Vector2);
