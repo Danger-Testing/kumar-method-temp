@@ -86,8 +86,9 @@ function SpinnableBook({
         </>
       ) : (
         <>
-          <ambientLight intensity={0.22} color="#ffdcb0" />
-          <spotLight position={[2.4, 2.6, 3.4]} intensity={38} angle={0.7} penumbra={0.6} color="#ffd9a2" />
+          {/* no key spotlight: its raking angle dragged the normal map
+              into diagonal moiré bands across the cover */}
+          <ambientLight intensity={0.42} color="#ffdcb0" />
           <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
           <pointLight position={[-1.6, -1.4, 2.6]} intensity={10} color="#ffc890" />
         </>
