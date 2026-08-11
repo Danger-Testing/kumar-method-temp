@@ -545,7 +545,9 @@ function IntroScene({
         if (tau < 0.28) {
           boom = peak * (1 - Math.pow(1 - tau / 0.28, 3));
         } else {
-          boom = peak * Math.exp(-(tau - 0.28) * 5) * Math.cos((tau - 0.28) * 9);
+          // single clean return — no oscillation, no squash (the ringing
+          // spring read as too dramatic)
+          boom = peak * Math.exp(-(tau - 0.28) * 4);
         }
       }
     }
