@@ -63,9 +63,13 @@ function SpinnableBook({
 export default function ClosedBook({
   onOpen,
   onBusiness,
+  active = true,
   plain = false,
 }: {
   onOpen: () => void;
+  /** false = standby: pre-mounted invisibly under the reader, rendering
+      once so the dismissal reveal is instant */
+  active?: boolean;
   /** opens the access modal (the tagline is a button) */
   onBusiness?: () => void;
   /** inspection mode, owned by Experience: no warm rig, no relief, no glow */
@@ -76,7 +80,7 @@ export default function ClosedBook({
 
   return (
     <div
-      className="closedBook"
+      className={`closedBook ${active ? "" : "closedStandby"}`}
       onPointerDown={(e) => {
         e.currentTarget.setPointerCapture(e.pointerId);
         drag.current = { x: e.clientX, y: e.clientY, moved: 0 };
@@ -105,6 +109,7 @@ export default function ClosedBook({
         camera={{ position: [0, 0, 4.15], fov: 40 }}
         gl={{ antialias: true }}
         dpr={isCoarse() ? [1, 1.5] : [1, 1.75]}
+        frameloop={active ? "always" : "demand"}
       >
         <SpinnableBook spinRef={spinRef} plain={plain} />
       </Canvas>

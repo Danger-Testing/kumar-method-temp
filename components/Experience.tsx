@@ -56,6 +56,7 @@ export default function Experience() {
     // tomb: the three.js chunk pulls in TheBook, whose module preloads
     // all the book textures (~700KB total — no more 4.8MB GLB fetch)
     import("@/components/Intro3D");
+    import("@/components/ClosedBook"); // pre-warm: dismissing must be seamless
   }, []);
 
   useEffect(() => {
@@ -127,8 +128,11 @@ export default function Experience() {
         />
       )}
 
-      {phase === "closed" && (
+      {/* pre-mounted (hidden) while reading, so dismissing reveals a
+          fully-rendered book instead of a jarring late pop-in */}
+      {(phase === "book" || phase === "closed") && (
         <ClosedBook
+          active={phase === "closed"}
           onOpen={() => setPhase("book")}
           onBusiness={() => setEnterpriseOpen(true)}
           plain={plain}

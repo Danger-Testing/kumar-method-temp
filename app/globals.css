@@ -849,6 +849,18 @@ body {
   will-change: opacity;
 }
 
+/* iOS: never show native controls/glyphs on the ambience videos; if
+   playback is refused even after a touch, the smoke hides gracefully */
+.km-landing-artboard video::-webkit-media-controls,
+.km-landing-artboard video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
+
+video.smokeHidden {
+  opacity: 0 !important;
+}
+
 /* light inside the tomb as the book wakes — not a solid fill: it rakes
    the doorway's inner walls at angles and bounces, left and right
    trading intensity on different rhythms like something luminous is
@@ -1131,6 +1143,13 @@ body {
   z-index: 90;
   cursor: grab;
   touch-action: none;
+  transition: opacity 0.25s ease;
+}
+
+/* standby: pre-rendered under the reader, invisible and inert */
+.closedBook.closedStandby {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .closedBook:active {
