@@ -1163,7 +1163,7 @@ body {
   /* a soft dark scrim pooling behind the letters — edge-faded, so it
      reads as shadow, not a box (user: hard to read over bright stone) */
   padding: 12px 26px;
-  background: radial-gradient(ellipse closest-side, rgba(5, 3, 2, 0.6), rgba(5, 3, 2, 0.38) 55%, transparent 100%);
+  background: radial-gradient(ellipse closest-side, rgba(5, 3, 2, 0.42), rgba(5, 3, 2, 0.2) 68%, transparent 100%);
 }
 
 .closedTitle {
