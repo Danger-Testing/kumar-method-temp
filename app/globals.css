@@ -1176,8 +1176,8 @@ video.smokeHidden {
 /* the reader's corner tagline: hero copy at quiet-chrome scale */
 .readerTagline {
   position: fixed;
-  right: max(2.5vw, 18px);
-  bottom: 2.2vh;
+  right: 20px;
+  bottom: 16px;
   z-index: 45;
   text-align: right;
   font-family: "Switzer", -apple-system, "Helvetica Neue", sans-serif;
@@ -1221,17 +1221,19 @@ video.smokeHidden {
 /* only the business line is clickable: underlined so it reads as a
    link, "Ramp" bolded, opens the access modal */
 .tagBiz {
+  /* brighter than the life line — the contrast reads as interactive */
+  color: rgba(240, 224, 192, 0.95);
   background: none;
   border: 0;
   padding: 0 2px 2px;
   font: inherit;
   letter-spacing: inherit;
-  color: inherit;
   cursor: pointer;
   pointer-events: auto;
   /* a real border, not text-decoration: the native underline draws in
      fragments around the bold span and the seams read as breaks */
-  border-bottom: 1px solid rgba(233, 214, 178, 0.38);
+  /* scales with the text: hairline in the corner, visible at hero size */
+  border-bottom: 0.055em solid rgba(233, 214, 178, 0.55);
   /* hug the letters: without this the inherited 1.55 line-height pushes
      the border into looking like a separate divider */
   display: inline-block;
