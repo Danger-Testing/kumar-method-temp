@@ -45,6 +45,11 @@ function PlumBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) 
     t.colorSpace = THREE.SRGBColorSpace;
     t.anisotropy = 16;
   });
+  // the GLB tiles its page stripes denser than a single wrap — match it
+  pagesRot.wrapS = pagesRot.wrapT = THREE.RepeatWrapping;
+  pagesRot.repeat.set(2, 1); // fore-edge: lines vary along u (depth)
+  pages.wrapS = pages.wrapT = THREE.RepeatWrapping;
+  pages.repeat.set(1, 2); // top/bottom: lines vary along v (depth)
 
   const frontMat = useMemo(() => {
     const m = new THREE.MeshStandardMaterial({
@@ -190,9 +195,12 @@ function GlbBookAsDelivered() {
 function Trio({
   spinRef,
   glowRef,
+  fixed,
 }: {
   spinRef: React.MutableRefObject<Spin>;
   glowRef: React.MutableRefObject<boolean>;
+  /** deterministic pose for screenshot verification (?spin=&tilt= in deg) */
+  fixed: { ry: number; rx: number } | null;
 }) {
   // BuiltBook/PlumBook multiply internally by ~0.3 (the "10%" era) —
   // compensate so ignition burns at the full power of the screenshots
@@ -204,13 +212,21 @@ function Trio({
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     const s = spinRef.current;
-    s.ry += s.vy;
-    s.rx += s.vx;
-    s.vx *= 0.94;
-    s.vy *= 0.94;
-    s.ry += 0.0012;
-    s.rx = Math.max(-0.9, Math.min(0.9, s.rx));
-    const ig = (0.55 + 0.45 * Math.sin(t * 0.9)) * (0.9 + 0.1 * Math.sin(t * 5.1));
+    if (fixed) {
+      s.ry = fixed.ry;
+      s.rx = fixed.rx;
+      s.vx = s.vy = 0;
+    } else {
+      s.ry += s.vy;
+      s.rx += s.vx;
+      s.vx *= 0.94;
+      s.vy *= 0.94;
+      s.ry += 0.0012;
+      s.rx = Math.max(-0.9, Math.min(0.9, s.rx));
+    }
+    const ig = fixed
+      ? 0.85 // steady mid-burn for reproducible screenshots
+      : (0.55 + 0.45 * Math.sin(t * 0.9)) * (0.9 + 0.1 * Math.sin(t * 5.1));
     igHot.current = glowRef.current ? ig * 3.3 : 0;
     [gL, gM, gR].forEach((g) => {
       if (g.current) {
@@ -266,6 +282,18 @@ export default function GlowTest() {
   useEffect(() => {
     glowRef.current = glowOn;
   }, [glowOn]);
+  // deterministic pose + glow via URL for screenshot verification
+  const [fixed, setFixed] = useState<{ ry: number; rx: number } | null>(null);
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.has("spin") || p.has("tilt")) {
+      setFixed({
+        ry: ((parseFloat(p.get("spin") ?? "0") || 0) * Math.PI) / 180,
+        rx: ((parseFloat(p.get("tilt") ?? "0") || 0) * Math.PI) / 180,
+      });
+    }
+    if (p.get("glow") === "1") setGlowOn(true);
+  }, []);
 
   return (
     <main
@@ -290,7 +318,7 @@ export default function GlowTest() {
         <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
         <pointLight position={[-1.6, -1.4, 2.6]} intensity={16} color="#ffc890" />
         <Suspense fallback={null}>
-          <Trio spinRef={spinRef} glowRef={glowRef} />
+          <Trio spinRef={spinRef} glowRef={glowRef} fixed={fixed} />
         </Suspense>
         <EffectComposer multisampling={2}>
           <Bloom
