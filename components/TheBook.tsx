@@ -47,8 +47,10 @@ export function BookLights({ plain }: { plain: boolean }) {
     <ambientLight intensity={1.35} color="#ffffff" />
   ) : (
     <>
-      <ambientLight intensity={0.55} color="#fffaf2" />
-      <directionalLight position={[0, 0.5, 5]} intensity={2.4} color="#fff6e8" />
+      {/* dimmer, gold — candlelight that compliments the plum leather
+          and copper gilding; the on-axis angle stays sacred */}
+      <ambientLight intensity={0.45} color="#f6e3bd" />
+      <directionalLight position={[0, 0.5, 5]} intensity={1.7} color="#ffd98f" />
     </>
   );
 }
