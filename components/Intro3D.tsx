@@ -813,7 +813,19 @@ export default function Intro3D({
       <div className="introFade" ref={fadeRef} aria-hidden="true">
         <div className="rampLogo" aria-label="ramp" />
       </div>
-      <div className="skipHint">{holding ? "tap to open the book" : "tap to skip"}</div>
+      <div className="skipHint">{holding ? "" : "tap to skip"}</div>
+      {/* the held-book hero copy (owner mock) — same treatment as the
+          closed view, adapted to this state's affordance */}
+      {holding && (
+        <>
+          <div className="closedTitle">Tap to open the book.</div>
+          <div className="closedTagline">
+            Use The Kumar Method to run your life.
+            <br />
+            Use Ramp to run your business.
+          </div>
+        </>
+      )}
     </div>
   );
 }
