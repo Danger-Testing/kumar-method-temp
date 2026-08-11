@@ -385,13 +385,16 @@ export function GlbBook({
   }, [scene]);
 
   useEffect(() => {
-    // The GLB renders its UNTOUCHED original materials: no emissive, no
-    // recolor, no shine (owner call, night of 2026-08-11 — the glow read
-    // blurry, the recolor was loved but pulled with it, the foil shine
-    // brought the muffled look back). The authored stencils survive in
-    // public/masks/ (ramp-glow.png, book-outer-rampblue.jpg,
-    // book-outer-mr-shine.png) for the morning's iteration. Only texture
-    // sampling hygiene is applied here.
+    // THE LANTERN CUT (owner-directed): no emissive, no shine — the ramp
+    // mark is physically CUT OUT of the back cover (alphaTest against the
+    // authored stencil, inverted: black = hole) and an unlit warm plane
+    // inside the book shows through the letterforms. The edge is an
+    // occlusion boundary, not a light effect — brightness cannot blur it.
+    // Both atlas back-panels carry the mark, so outer and inner cover
+    // faces open into a true through-hole.
+    const cut = new THREE.TextureLoader().load("/masks/ramp-cutout-alpha.png");
+    cut.flipY = false; // glTF UV convention — must match the atlas
+    cut.anisotropy = 16; // alpha data stays linear — no SRGB here
     mats.forEach((m) => {
       // sharper sampling at glancing angles on the asset's own maps —
       // these are already on the GPU, so the sampler must be re-uploaded
@@ -401,6 +404,10 @@ export function GlbBook({
           tex.needsUpdate = true;
         }
       });
+      if (m.name !== "Book_Outer") return; // only the covers are cut
+      m.alphaMap = cut;
+      m.alphaTest = 0.5; // binary cut at the stencil's anti-aliased midline
+      m.needsUpdate = true;
     });
   }, [mats]);
 
@@ -458,9 +465,29 @@ export function GlbBook({
     root.scale.setScalar(s);
     const center = box.getCenter(new THREE.Vector3()).multiplyScalar(s);
     root.position.sub(center);
+    // the book's world-space thickness, for seating the lantern planes
+    // inside the cover boards
+    root.userData.depth = size.z * s;
     return root;
   }, [scene]);
-  return <primitive object={normalized} />;
+  const lanternZ = ((normalized.userData.depth as number) ?? D) / 2 - 0.015;
+  return (
+    <group>
+      <primitive object={normalized} />
+      {/* the light inside the book: unlit planes seated within each cover
+          board, visible only through the cut letterforms. Color luminance
+          sits just under the Bloom threshold (0.55) so the composer never
+          smears it — the cut stays knife-sharp at any brightness. Two
+          planes so the effect is orientation-proof; the uncut front cover
+          simply hides its one. */}
+      {[lanternZ, -lanternZ].map((z) => (
+        <mesh key={z} position={[0, 0, z]}>
+          <planeGeometry args={[W, H]} />
+          <meshBasicMaterial color="#c97f2e" side={THREE.DoubleSide} toneMapped={false} />
+        </mesh>
+      ))}
+    </group>
+  );
 }
 
 /* ------------------------------------------------------------------ */
