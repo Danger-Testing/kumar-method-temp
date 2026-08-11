@@ -1097,6 +1097,13 @@ video.smokeHidden {
   pointer-events: none;
 }
 
+/* CRITICAL: the tagline button re-enables its own pointer events, so it
+   must be explicitly silenced in standby — otherwise an invisible
+   full-width button floats over the reader and eats page-turn taps */
+.closedBook.closedStandby .tagBiz {
+  pointer-events: none;
+}
+
 .closedBook:active {
   cursor: grabbing;
 }
