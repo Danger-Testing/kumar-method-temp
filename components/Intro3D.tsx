@@ -495,6 +495,8 @@ function IntroScene({
   emerge,
   plain = false,
   holeRef,
+  holdGate,
+  onHold,
   onFade,
   onDive,
   onAtmos,
@@ -505,6 +507,10 @@ function IntroScene({
   /** inspection mode: flat white rig, no ignition, no bloom, no glow */
   plain?: boolean;
   holeRef?: MutableRefObject<HoleRect | null>;
+  /** EXPERIMENT (owner, 2026-08-11): the book holds after arrival until
+      a click releases the dive. Shared gate with the root's click. */
+  holdGate?: MutableRefObject<{ holding: boolean; released: boolean }>;
+  onHold?: () => void;
   onFade: (v: number) => void;
   onDive: (v: number) => void;
   onAtmos: (ignite: number, dive: number, t: number) => void;
@@ -517,6 +523,7 @@ function IntroScene({
   const emergeShade = useRef(1);
   const doneRef = useRef(false);
   const startRef = useRef<number | null>(null);
+  const heldFor = useRef<number | null>(null); // hold duration, once released
   const { camera, size } = useThree();
 
   useFrame(({ clock }) => {
@@ -532,7 +539,26 @@ function IntroScene({
     // the familiar timeline begins
     // (turtle-hold experiment removed at the owner's call)
     const E = emerge ? 0.85 : 0;
-    const tt = Math.max(0, t - E);
+    // HOLD EXPERIMENT: freeze the dive clock (tt) at the chill point
+    // after arrival; the click releases it exactly where it froze. All
+    // t-based motion (bob, settle, boom decay, chamber flicker) keeps
+    // living during the hold, so the book breathes in place.
+    const HOLD_AT = 2.4;
+    const raw = Math.max(0, t - E);
+    let tt = raw;
+    const gate = holdGate?.current;
+    if (gate && E > 0) {
+      if (gate.released) {
+        if (heldFor.current === null) heldFor.current = raw - HOLD_AT;
+        tt = raw - heldFor.current;
+      } else if (raw >= HOLD_AT) {
+        if (!gate.holding) {
+          gate.holding = true;
+          onHold?.();
+        }
+        tt = HOLD_AT;
+      }
+    }
     let riseEase = 1;
     let rise = 1;
     if (E > 0) {
@@ -669,7 +695,7 @@ function IntroScene({
 
   return (
     <>
-      <BookLights plain={plain} />
+      <BookLights plain={plain} sweep />
       <group ref={group}>
         <TheBook igniteRef={bookIgnite} shadeRef={emergeShade} plain={plain} />
       </group>
@@ -710,6 +736,9 @@ export default function Intro3D({
   const canvasWrapRef = useRef<HTMLDivElement>(null);
   const grainRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
+  // HOLD EXPERIMENT: the book chills after arrival; a click enters it
+  const holdGate = useRef({ holding: false, released: false });
+  const [holding, setHolding] = useState(false);
 
   useEffect(() => {
     const skip = (e: KeyboardEvent) => {
@@ -720,7 +749,19 @@ export default function Intro3D({
   }, [onDone]);
 
   return (
-    <div className={`introRoot ${emerge ? "overTomb" : ""}`} onClick={() => onDone(false)}>
+    <div
+      className={`introRoot ${emerge ? "overTomb" : ""}`}
+      onClick={() => {
+        const g = holdGate.current;
+        if (g.holding && !g.released) {
+          // the held book: this click opens it (releases the dive)
+          g.released = true;
+          setHolding(false);
+        } else {
+          onDone(false);
+        }
+      }}
+    >
       <div className="introGlow" ref={glowRef} aria-hidden="true" />
       <div className="introCanvas" ref={canvasWrapRef}>
         <Canvas
@@ -732,6 +773,8 @@ export default function Intro3D({
             emerge={emerge}
             plain={plain}
             holeRef={holeRect}
+            holdGate={holdGate}
+            onHold={() => setHolding(true)}
             onEmerge={(rise, t, ignite, doorGlow) => {
               // the tomb (persistent layer behind us) settles into its
               // 70/40 grade through the rise, then the ignition's own
@@ -770,7 +813,7 @@ export default function Intro3D({
       <div className="introFade" ref={fadeRef} aria-hidden="true">
         <div className="rampLogo" aria-label="ramp" />
       </div>
-      <div className="skipHint">tap to skip</div>
+      <div className="skipHint">{holding ? "tap to open the book" : "tap to skip"}</div>
     </div>
   );
 }
