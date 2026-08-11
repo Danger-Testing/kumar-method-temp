@@ -740,18 +740,64 @@ body {
   will-change: opacity;
 }
 
-/* the doorway blazing bright yellow as the book wakes — sits inside
-   .km-landing-tomb-interior so the parent clip-path keeps it exactly
-   within the doorway opening */
+/* light inside the tomb as the book wakes — not a solid fill: it rakes
+   the doorway's inner walls at angles and bounces, left and right
+   trading intensity on different rhythms like something luminous is
+   moving in there. Ramp's highlighter yellow, #E4F222. Sits inside
+   .km-landing-tomb-interior so the clip-path keeps it in the opening. */
 .tombDoorGlow {
   position: absolute;
   inset: 0;
   pointer-events: none;
   opacity: 0;
   mix-blend-mode: screen;
-  /* Ramp's highlighter yellow, #E4F222 */
-  background: radial-gradient(ellipse 72% 62% at 50% 58%, rgba(228, 242, 34, 0.95), rgba(228, 242, 34, 0.5) 52%, rgba(228, 242, 34, 0.14) 78%, transparent 95%);
+  /* dim base: floor bounce low, darkness up top — the smoke video
+     underneath catches this and adds volume */
+  background: linear-gradient(to top, rgba(228, 242, 34, 0.42), rgba(228, 242, 34, 0.1) 55%, transparent 85%);
   will-change: opacity;
+}
+
+/* light raking the LEFT inner wall */
+.tombDoorGlow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(104deg, rgba(228, 242, 34, 0.85), rgba(228, 242, 34, 0.25) 34%, transparent 62%);
+  animation: doorBounceL 2.3s ease-in-out infinite;
+}
+
+/* light raking the RIGHT inner wall — different rhythm, so the two
+   never sync and the interplay reads as bouncing */
+.tombDoorGlow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(-104deg, rgba(228, 242, 34, 0.85), rgba(228, 242, 34, 0.25) 34%, transparent 62%);
+  animation: doorBounceR 1.7s ease-in-out infinite;
+}
+
+@keyframes doorBounceL {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 0.25;
+    transform: translateX(-6%);
+  }
+}
+
+@keyframes doorBounceR {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translateX(5%);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* the ignition's light landing on real surfaces, not a haze: */
