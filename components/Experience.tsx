@@ -65,7 +65,9 @@ export default function Experience() {
               bg.style.filter = `saturate(.78) contrast(1.05) brightness(${(1 - 0.7 * fade).toFixed(3)})`;
             }
             if (frame) frame.style.filter = `brightness(${(1 - 0.4 * fade).toFixed(3)})`;
-            if (smoke) smoke.style.opacity = (1 - 0.7 * fade).toFixed(3);
+            // scale Marc's base opacity (.52), never replace it — writing
+            // 1.0 here doubled the smoke into a fog wall on click
+            if (smoke) smoke.style.opacity = (0.52 * (1 - 0.7 * fade)).toFixed(3);
           }}
           onDone={(finished) => {
             setFlash(finished);
