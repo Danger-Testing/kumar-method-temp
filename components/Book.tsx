@@ -424,6 +424,17 @@ export default function Book() {
         tap the page · or use ← → to turn
       </div>
 
+      <a
+        className="bizLink"
+        href="https://ramp.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span>Try Kumar Method for business</span>
+        <span className="bizRamp" aria-hidden="true" />
+      </a>
+
       <div
         className={`scrubber ${scrubbing ? "scrubbing" : ""} ${hasTurned ? "" : "scrubHidden"}`}
         role="slider"

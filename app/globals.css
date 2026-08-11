@@ -591,6 +591,36 @@ body {
   opacity: 0;
 }
 
+/* quiet corner CTA: Kumar Method for business, signed with the ramp mark */
+.bizLink {
+  position: fixed;
+  bottom: 2.2vh;
+  right: max(2.5vw, 18px);
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-fell), serif;
+  font-style: italic;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: rgba(233, 214, 178, 0.45);
+  text-decoration: none;
+  transition: color 0.25s;
+}
+
+.bizLink:hover {
+  color: rgba(233, 214, 178, 0.95);
+}
+
+.bizRamp {
+  width: 46px;
+  height: 13px;
+  background: currentColor;
+  -webkit-mask: url("/covers/ramp.webp") center / contain no-repeat;
+  mask: url("/covers/ramp.webp") center / contain no-repeat;
+}
+
 /* page scrubber: a short, quiet ornament — one flourish line that IS
    the scrub track (diamond thumb rides it), "n / 110" centered below.
    Drag to fast-travel. */
