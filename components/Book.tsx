@@ -534,7 +534,7 @@ export default function Book({ onBusiness }: { onBusiness?: () => void }) {
       {/* the corner tagline: same copy and behavior as the hero version */}
       <div className="readerTagline">
         <span className="tagLife">
-          Use The <strong>Kumar Method</strong> to run your life.
+          Use The Kumar Method to run your life.
         </span>
         <button
           type="button"
@@ -544,7 +544,7 @@ export default function Book({ onBusiness }: { onBusiness?: () => void }) {
             onBusiness?.();
           }}
         >
-          Use <strong>Ramp</strong> to run your business.
+          Use <span className="rampMark" aria-hidden="true" /><strong>ramp</strong> to run your business.
         </button>
       </div>
 

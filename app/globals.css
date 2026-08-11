@@ -1200,6 +1200,19 @@ video.smokeHidden {
   }
 }
 
+/* the ramp swoosh, inline before the lowercase wordmark — scales and
+   colors with the text (extracted from the book's own lockup art) */
+.rampMark {
+  display: inline-block;
+  width: 0.92em;
+  height: 0.74em;
+  margin-right: 0.22em;
+  vertical-align: -0.04em;
+  background: currentColor;
+  mask: url("/masks/ramp-mark.png") center / contain no-repeat;
+  -webkit-mask: url("/masks/ramp-mark.png") center / contain no-repeat;
+}
+
 /* the life line steps back so the business line leads */
 .tagLife {
   font-size: 0.82em;
@@ -1218,7 +1231,7 @@ video.smokeHidden {
   pointer-events: auto;
   /* a real border, not text-decoration: the native underline draws in
      fragments around the bold span and the seams read as breaks */
-  border-bottom: 2px solid rgba(233, 214, 178, 0.55);
+  border-bottom: 1px solid rgba(233, 214, 178, 0.38);
   /* hug the letters: without this the inherited 1.55 line-height pushes
      the border into looking like a separate divider */
   display: inline-block;

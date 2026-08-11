@@ -118,7 +118,7 @@ export default function ClosedBook({
           tagline is a button that opens the access modal */}
       <div className="closedTitle">Drag to turn it over. Tap to open.</div>
       <div className="closedTagline">
-        <span className="tagLife">Use The <strong>Kumar Method</strong> to run your life.</span>
+        <span className="tagLife">Use The Kumar Method to run your life.</span>
         <br />
         <button
           type="button"
@@ -130,7 +130,7 @@ export default function ClosedBook({
             onBusiness?.();
           }}
         >
-          Use <strong>Ramp</strong> to run your business.
+          Use <span className="rampMark" aria-hidden="true" /><strong>ramp</strong> to run your business.
         </button>
       </div>
     </div>

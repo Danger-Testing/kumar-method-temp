@@ -844,7 +844,7 @@ export default function Intro3D({
             Tap to open the book.
           </div>
           <div className={`closedTagline heroWait ${holding ? "heroShow" : ""}`}>
-            <span className="tagLife">Use The <strong>Kumar Method</strong> to run your life.</span>
+            <span className="tagLife">Use The Kumar Method to run your life.</span>
             <br />
             <button
               type="button"
@@ -854,7 +854,7 @@ export default function Intro3D({
                 onBusiness?.();
               }}
             >
-              Use <strong>Ramp</strong> to run your business.
+              Use <span className="rampMark" aria-hidden="true" /><strong>ramp</strong> to run your business.
             </button>
           </div>
         </>
