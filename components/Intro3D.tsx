@@ -501,30 +501,31 @@ function IntroScene({
     // visibly in the doorway for HOLD seconds before shooting out.
     // To remove the hold, set HOLD to 0.
     const HOLD = emerge ? 1.5 : 0;
-    const E = emerge ? 1.5 : 0;
+    const E = emerge ? 0.6 : 0;
     const tt = Math.max(0, t - HOLD - E);
     let riseEase = 1;
     let rise = 1;
     if (E > 0) {
       rise = Math.min(1, Math.max(0, (t - HOLD) / E));
-      // quintic: the book SHOOTS out of the doorway, then settles
-      riseEase = 1 - Math.pow(1 - rise, 5);
+      // true ballistics: exponential snap — near-instant launch, hard stop
+      riseEase = 1 - Math.pow(2, -11 * rise);
     }
     // no transparency: it emerges shaded, as if in the cave's shadow, and
     // brightens as it comes out — bright enough during the hold to SEE it
     emergeShade.current = E > 0 ? 0.5 + 0.5 * smooth(0.15, 0.85, rise) : 1;
 
-    // grand spin settling to face us — starts mid-rise so the book is
-    // already turning as it clears the doorway. One clean turn (2π) over
-    // a tighter window: fewer flips, quicker to upright.
+    // NO flip gymnastics in the emergence: the book lies flat with its
+    // cover facing UP, snaps out flat, then ONE smooth pitch swings the
+    // cover down to face the camera — a single rotation does the whole
+    // reveal. (Non-emerge path keeps the original grand 2π spin.)
     const tSpin = Math.max(0, t - HOLD - E * 0.45);
     const spin = easeOutQuart(Math.min(1, tSpin / 2.6));
-    g.rotation.y = (1 - spin) * Math.PI * 2;
-    // it comes out FLAT and STAYS flat through most of the rise — the
-    // pitch to upright happens only in the final stretch
+    g.rotation.y = E > 0 ? (1 - spin) * 0.45 : (1 - spin) * Math.PI * 2;
     const pitchBase = -0.06 + Math.sin(t * 1.1) * 0.012;
-    const pitchEase = smooth(0.62, 1, rise);
-    g.rotation.x = E > 0 ? -Math.PI / 2 + (pitchBase + Math.PI / 2) * pitchEase : pitchBase;
+    const pitchEase = E > 0 ? smooth(HOLD + E * 0.6, HOLD + E + 0.7, t) : 1;
+    // -1.32 rad, not a full -π/2: the "flat" pose tips a few degrees
+    // toward the camera so the small turtling cover is actually visible
+    g.rotation.x = -1.32 * (1 - pitchEase) + pitchBase * pitchEase;
     // the book starts small and DEEP INSIDE the doorway and comes forward
     // as it rises. The doorway's measured screen rect is unprojected to
     // world space at the start depth, so the rise begins in the actual
@@ -549,7 +550,7 @@ function IntroScene({
     // straight out of the doorway: x/y HOLD at the hole's center for the
     // whole rise (the zoom is pure z), then the book floats gently to
     // frame center after it's fully out
-    const lift = E > 0 ? smooth(HOLD + E, HOLD + E + 1.3, t) : 1;
+    const lift = E > 0 ? smooth(HOLD + E, HOLD + E + 1.1, t) : 1;
     g.position.x = startX * (1 - lift);
     g.position.y = startY * (1 - lift) + Math.sin(t * 1.3) * 0.03;
     // deeper start = the exit reads as a ZOOM straight at the camera
