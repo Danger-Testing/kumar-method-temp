@@ -115,9 +115,11 @@ export function TheBook({
       map: plumF,
       bumpMap: bumpF,
       bumpScale: 1.6,
-      roughnessMap: bumpF,
-      roughness: 0.9,
-      metalness: 0.25,
+      // NO roughnessMap: the scan-as-roughness made dark leather glossy,
+      // so the point lights glinted off the embossing at grazing angles
+      // ("sparkle reflections"). Real leather is matte.
+      roughness: 0.8,
+      metalness: 0.12,
       emissive: new THREE.Color("#ffb763"),
       emissiveIntensity: 0,
     });

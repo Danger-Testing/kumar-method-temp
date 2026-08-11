@@ -630,9 +630,10 @@ function IntroScene({
         (0.82 + 0.18 * Math.sin(t * 6.3) * Math.sin(t * 2.7)) *
         (1 + d * 0.9);
     igniteRef.current = ig;
-    // TheBook consumes the same timeline scaled to the canonical glow —
-    // its peak lands on exactly the approved demo brightness
-    bookIgnite.current = ig * IGNITE_FULL;
+    // TheBook consumes the same timeline scaled to the canonical glow.
+    // CAPPED at 1: the dive surge used to push ~2x past the owner's
+    // dialed level — nothing may exceed the calibrated brightness.
+    bookIgnite.current = Math.min(1, ig) * IGNITE_FULL;
     // the tomb layers hear about both the rise and the ignition, so the
     // awakening glow can light the whole chamber
     if (E > 0) {
