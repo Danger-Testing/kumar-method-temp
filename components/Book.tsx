@@ -136,7 +136,7 @@ function RampCandidates() {
     { id: "blue", cls: "prBottomOuter", dot: "#2e6fdb", oval: false },
     { id: "green", cls: "prTopOuter", dot: "#2f9e44", oval: false },
     { id: "orange", cls: "prTopLeft", dot: "#e67e22", oval: false },
-    { id: "teal", cls: "prGapSpace", dot: "#129d8f", oval: true },
+    { id: "pink", cls: "prGapSpace", dot: "#e84393", oval: true },
   ];
   return (
     <>

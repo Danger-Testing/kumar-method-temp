@@ -1302,8 +1302,8 @@ video.smokeHidden {
 }
 
 .prMark {
-  /* the full lockup: swoosh + wordmark together (aspect ~5.3) */
-  width: 11cqw;
+  /* the complete brand lockup (ramp.webp already ends with the swoosh) */
+  width: 7.8cqw;
   height: 2.1cqw;
   background: rgba(74, 56, 36, 0.55);
   mask: url("/masks/ramp-lockup.png") center / contain no-repeat;
