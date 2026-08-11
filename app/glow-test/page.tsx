@@ -26,28 +26,9 @@ const CT = 0.05;
 
 type Spin = { rx: number; ry: number; vx: number; vy: number };
 
-/* gilded page-block edges (same trick as the site's BuiltBook) */
-function makePageEdgeTexture(): THREE.CanvasTexture {
-  const c = document.createElement("canvas");
-  c.width = 64;
-  c.height = 512;
-  const ctx = c.getContext("2d")!;
-  ctx.fillStyle = "#b3924f";
-  ctx.fillRect(0, 0, 64, 512);
-  for (let y = 0; y < 512; y += 2) {
-    const shade = 150 + ((y * 37) % 70);
-    ctx.fillStyle = `rgba(${shade}, ${Math.round(shade * 0.78)}, ${Math.round(shade * 0.42)}, 0.55)`;
-    ctx.fillRect(0, y, 64, 1);
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
-
 /* ③ the recreation: code-built book wearing the plum/copper design */
 function PlumBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) {
-  const [plumF, plumB, plumS, igF, igB, igS, bumpF, bumpB, bumpS] = useTexture([
+  const [plumF, plumB, plumS, igF, igB, igS, bumpF, bumpB, bumpS, pages] = useTexture([
     "/masks/plum-front.jpg",
     "/masks/plum-back.jpg",
     "/masks/plum-spine.jpg",
@@ -57,12 +38,12 @@ function PlumBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) 
     "/covers/front.jpeg",
     "/covers/back.jpeg",
     "/covers/spine.jpeg",
+    "/masks/plum-pages.jpg", // the GLB's own page-edge stripes
   ]);
-  [plumF, plumB, plumS, igF, igB, igS].forEach((t) => {
+  [plumF, plumB, plumS, igF, igB, igS, pages].forEach((t) => {
     t.colorSpace = THREE.SRGBColorSpace;
     t.anisotropy = 16;
   });
-  const pageEdge = useMemo(makePageEdgeTexture, []);
 
   const frontMat = useMemo(() => {
     const m = new THREE.MeshStandardMaterial({
@@ -111,15 +92,15 @@ function PlumBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) 
     () => new THREE.MeshStandardMaterial({ color: "#3a2630", roughness: 0.62, metalness: 0.06 }),
     []
   );
+  // the GLB's own striped paper edges, not the red book's gilded ones
   const pageMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        map: pageEdge,
-        color: "#d8b878",
-        roughness: 0.38,
-        metalness: 0.55,
+        map: pages,
+        roughness: 0.65,
+        metalness: 0.05,
       }),
-    [pageEdge]
+    [pages]
   );
 
   useFrame(() => {
@@ -227,15 +208,19 @@ function Trio({
     });
   });
 
+  // reference book temporarily hidden per the owner, for a close ①/③ read
+  const SHOW_REFERENCE = false;
   return (
     <>
-      <group ref={gL} position={[-1.55, 0, 0]} scale={0.82}>
+      <group ref={gL} position={[SHOW_REFERENCE ? -1.55 : -0.95, 0, 0]} scale={0.82}>
         <GlbBookAsDelivered />
       </group>
-      <group ref={gM} position={[0, 0, 0]} scale={0.82}>
-        <BuiltBook igniteRef={igHot} />
-      </group>
-      <group ref={gR} position={[1.55, 0, 0]} scale={0.82}>
+      {SHOW_REFERENCE && (
+        <group ref={gM} position={[0, 0, 0]} scale={0.82}>
+          <BuiltBook igniteRef={igHot} />
+        </group>
+      )}
+      <group ref={gR} position={[SHOW_REFERENCE ? 1.55 : 0.95, 0, 0]} scale={0.82}>
         <PlumBook igniteRef={igHot} />
       </group>
     </>
@@ -381,25 +366,16 @@ export default function GlowTest() {
         drag anywhere — all three turn together
       </div>
 
-      <div style={{ ...col, left: "1.5%" }}>
+      <div style={{ ...col, width: "44%", left: "4%" }}>
         <div style={colTitle}>① the object you gave us</div>
-        bookNew2.glb exactly as delivered, untouched. Its whole design
-        lives in one 1024-pixel image, which is why anything light-based
-        on it goes soft.
+        bookNew2.glb exactly as delivered, untouched.
       </div>
-      <div style={{ ...col, left: "34.5%" }}>
-        <div style={colTitle}>② the object we built in code</div>
-        The old red book from your screenshots: geometry assembled in
-        code, covers mapped from your original 700×1088 scans. The
-        sharpness benchmark.
-      </div>
-      <div style={{ ...col, right: "1.5%" }}>
+      <div style={{ ...col, width: "44%", right: "4%" }}>
         <div style={colTitle}>③ the recreation</div>
-        Your plum book&rsquo;s design rebuilt the way ② was built: the
-        same hi-res scans, recolored offline to match ①&rsquo;s palette
-        exactly, the ramp lockup traced from ①&rsquo;s own art and
-        painted onto the back at full resolution. Same design as ①,
-        same sharpness as ② — including when the glow is on.
+        The same design rebuilt in code from the hi-res scans: palette
+        matched to ①, ramp lockup traced from ①&rsquo;s own art, page
+        edges now ①&rsquo;s actual stripes. (② is temporarily hidden
+        for this comparison.)
       </div>
     </main>
   );
