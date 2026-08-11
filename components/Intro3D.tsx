@@ -27,9 +27,64 @@ const smooth = (a: number, b: number, t: number) => {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Gold-mask: pull the gilded emblems out of the cover scan so only   */
-/*  they ignite and bloom                                              */
+/*  Gold-mask: pull the gilded emblems out of a texture so only they   */
+/*  ignite and bloom. Two rules, tuned against the real art:           */
+/*  1. strict yellow-ness (green near red, blue well below green) —    */
+/*     pinkish worn-leather highlights never pass                      */
+/*  2. cluster density — a gold pixel only survives if its             */
+/*     neighborhood is also gold, killing lone glints on the leather   */
 /* ------------------------------------------------------------------ */
+
+function buildGoldMask(
+  img: CanvasImageSource & { width: number; height: number }
+): HTMLCanvasElement | null {
+  const w = Math.min(1024, img.width);
+  const h = Math.round((img.height / img.width) * w);
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.drawImage(img, 0, 0, w, h);
+  const data = ctx.getImageData(0, 0, w, h);
+  const px = data.data;
+  for (let i = 0; i < px.length; i += 4) {
+    const r = px[i];
+    const g = px[i + 1];
+    const b = px[i + 2];
+    const gold = r > 105 && g > 70 && g > r * 0.58 && b < g * 0.8 && r + g > 195;
+    const v = gold ? 255 : 0;
+    px[i] = v;
+    px[i + 1] = v;
+    px[i + 2] = v;
+    px[i + 3] = 255;
+  }
+  ctx.putImageData(data, 0, 0);
+
+  // density pass: blur a copy, keep only clustered gold
+  const dcan = document.createElement("canvas");
+  dcan.width = w;
+  dcan.height = h;
+  const dctx = dcan.getContext("2d");
+  if (!dctx) return null;
+  dctx.filter = `blur(${Math.max(3, w / 205)}px)`;
+  dctx.drawImage(canvas, 0, 0);
+  const dens = dctx.getImageData(0, 0, w, h).data;
+  const m = ctx.getImageData(0, 0, w, h);
+  for (let i = 0; i < m.data.length; i += 4) {
+    if (m.data[i] > 0 && dens[i] <= 75) {
+      m.data[i] = 0;
+      m.data[i + 1] = 0;
+      m.data[i + 2] = 0;
+    }
+  }
+  ctx.putImageData(m, 0, 0);
+
+  // soften so the glow feathers
+  ctx.filter = "blur(1.2px)";
+  ctx.drawImage(canvas, 0, 0);
+  return canvas;
+}
 
 function useGoldMask(src: string): THREE.CanvasTexture | null {
   const [tex, setTex] = useState<THREE.CanvasTexture | null>(null);
@@ -37,32 +92,8 @@ function useGoldMask(src: string): THREE.CanvasTexture | null {
     const img = new Image();
     img.src = src;
     img.onload = () => {
-      const w = 512;
-      const h = Math.round((img.height / img.width) * w);
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      ctx.drawImage(img, 0, 0, w, h);
-      const data = ctx.getImageData(0, 0, w, h);
-      const px = data.data;
-      for (let i = 0; i < px.length; i += 4) {
-        const r = px[i];
-        const g = px[i + 1];
-        const b = px[i + 2];
-        // gilding reads warm and bright; leather reads red and dark-green-channel.
-        // threshold kept strict so stray bright leather pixels don't speckle.
-        const gold = r > 128 && g > 84 && g > r * 0.5 && b < g * 0.92 && r + g > 236;
-        const v = gold ? 255 : 0;
-        px[i] = v;
-        px[i + 1] = v;
-        px[i + 2] = v;
-      }
-      ctx.putImageData(data, 0, 0);
-      // soften the mask so the glow feathers
-      ctx.filter = "blur(1.2px)";
-      ctx.drawImage(canvas, 0, 0);
+      const canvas = buildGoldMask(img);
+      if (!canvas) return;
       const t = new THREE.CanvasTexture(canvas);
       t.colorSpace = THREE.SRGBColorSpace;
       setTex(t);
@@ -277,29 +308,8 @@ function GlbBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) {
       const src = m.map;
       const img = src?.image as (CanvasImageSource & { width: number; height: number }) | undefined;
       if (!src || !img || !img.width) return;
-      const w = Math.min(1024, img.width);
-      const h = Math.round((img.height / img.width) * w);
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      ctx.drawImage(img, 0, 0, w, h);
-      const data = ctx.getImageData(0, 0, w, h);
-      const px = data.data;
-      for (let i = 0; i < px.length; i += 4) {
-        const r = px[i];
-        const g = px[i + 1];
-        const b = px[i + 2];
-        const gold = r > 128 && g > 84 && g > r * 0.5 && b < g * 0.92 && r + g > 236;
-        const v = gold ? 255 : 0;
-        px[i] = v;
-        px[i + 1] = v;
-        px[i + 2] = v;
-      }
-      ctx.putImageData(data, 0, 0);
-      ctx.filter = "blur(1.2px)";
-      ctx.drawImage(canvas, 0, 0);
+      const canvas = buildGoldMask(img);
+      if (!canvas) return;
       const t = new THREE.CanvasTexture(canvas);
       // glTF textures use flipY=false — the mask must match or it lands upside down
       t.flipY = src.flipY;
