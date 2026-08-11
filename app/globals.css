@@ -577,9 +577,10 @@ body {
   bottom: 2.6vh;
   left: 50%;
   transform: translateX(-50%);
-  font-family: var(--font-fell), serif;
+  /* the book's own body face — the Fell italic here read as cheap */
+  font-family: var(--font-garamond), Georgia, serif;
   font-style: italic;
-  font-size: 14px;
+  font-size: 15px;
   color: rgba(233, 214, 178, 0.48);
   letter-spacing: 0.06em;
   pointer-events: none;
