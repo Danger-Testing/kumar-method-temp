@@ -637,6 +637,21 @@ body {
   will-change: filter;
 }
 
+/* the room's answer to the ignition: builds, breathes, then detonates */
+.introGlow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(68vh, 80vw);
+  aspect-ratio: 0.82;
+  transform: translate(-50%, -50%) scale(0.9);
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 186, 99, 0.5), rgba(255, 140, 50, 0.14) 55%, transparent 75%);
+  filter: blur(60px);
+  will-change: transform, opacity;
+}
+
 /* film grain that breathes in with the dive, so the extreme close-up
    reads as texture instead of magnified pixels */
 .introGrain {

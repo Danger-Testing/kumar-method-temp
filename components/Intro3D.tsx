@@ -231,11 +231,13 @@ function IntroScene({
   useGlb,
   onFade,
   onDive,
+  onAtmos,
   onDone,
 }: {
   useGlb: boolean;
   onFade: (v: number) => void;
   onDive: (v: number) => void;
+  onAtmos: (ignite: number, dive: number, t: number) => void;
   onDone: (finished: boolean) => void;
 }) {
   const group = useRef<THREE.Group>(null);
@@ -283,6 +285,10 @@ function IntroScene({
     // the cover rushes past the focal plane: blur + grain ramp with the dive
     onDive(d);
 
+    // the room answers: a glow that builds with the ignition and detonates
+    // into the dive
+    onAtmos(ig, d, t);
+
     // the last beats dissolve into golden light, not black
     onFade(smooth(4.82, 5.18, t));
 
@@ -326,6 +332,7 @@ export default function Intro3D({ onDone }: { onDone: (finished: boolean) => voi
   const fadeRef = useRef<HTMLDivElement>(null);
   const canvasWrapRef = useRef<HTMLDivElement>(null);
   const grainRef = useRef<HTMLDivElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/book.glb", { method: "HEAD" })
@@ -343,6 +350,7 @@ export default function Intro3D({ onDone }: { onDone: (finished: boolean) => voi
 
   return (
     <div className="introRoot" onClick={() => onDone(false)}>
+      <div className="introGlow" ref={glowRef} aria-hidden="true" />
       <div className="introCanvas" ref={canvasWrapRef}>
         <Canvas
           camera={{ position: [0, 0, 4.15], fov: 40 }}
@@ -361,6 +369,17 @@ export default function Intro3D({ onDone }: { onDone: (finished: boolean) => voi
                 canvasWrapRef.current.style.filter = blur > 0.1 ? `blur(${blur.toFixed(1)}px)` : "";
               }
               if (grainRef.current) grainRef.current.style.opacity = String(d * 0.34);
+            }}
+            onAtmos={(ig, d, t) => {
+              const el = glowRef.current;
+              if (!el) return;
+              // breathe while the gilding ignites, then detonate with the dive:
+              // d*(1-d) spikes mid-dive and dies into the golden flash
+              const breathe = 1 + 0.06 * Math.sin(t * 2.1);
+              const burst = d * (1 - d) * 4;
+              const scale = (0.9 + ig * 0.28 + d * 2.1) * breathe;
+              el.style.transform = `translate(-50%, -50%) scale(${scale.toFixed(3)})`;
+              el.style.opacity = Math.min(1, ig * 0.42 * breathe + burst).toFixed(3);
             }}
             onDone={onDone}
           />
