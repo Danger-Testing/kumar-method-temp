@@ -211,13 +211,20 @@ The book is NOT an AI-generated mesh and NOT a video. It is a real
 ----------------------------------------------------------------
 7. OPERATIONS
 ----------------------------------------------------------------
-- Deploy: `vercel --prod --yes` from repo root (CLI is logged in
-  as ctmventuresinc, team dangertesting). Alias:
-  https://plain-rules.vercel.app. Push to GitHub too — repo and
-  Vercel are NOT git-linked; deploys are CLI-from-local.
+- Deploy: the repo IS git-connected to Vercel (discovered 2026-08-11
+  after a day of redundant CLI double-deploys): push to main =
+  production deploy, push to any branch = preview build. SHIP = merge
+  + push, then ONE verification after Vercel's auto-build lands
+  (vercel ls or a curl). Don't run `vercel --prod` on top of a push.
+  (CLI is logged in as ctmventuresinc, team dangertesting; alias
+  https://plain-rules.vercel.app.)
 - Verify after deploy: curl the alias AND a static asset
-  (/covers/front.jpeg, /paper/vintage.jpg). CDN may take a few
-  seconds; a 404 right after aliasing is usually propagation.
+  (/book.glb, /paper/vintage.jpg). CDN may take a few seconds; a 404
+  right after aliasing is usually propagation.
+- CAUTION (shared checkout): `vercel` CLI deploys upload the WORKING
+  DIRECTORY, untracked files included — with git-connected deploys
+  this mostly doesn't matter anymore, but never CLI-deploy while a
+  peer has uncommitted/untracked files in the tree.
 - REVERT PROTOCOL: find the commit in git log (messages are
   written to be revert-targets), `git revert <sha>`, rebuild,
   push, `vercel --prod --yes`. The owner explicitly wants this to
