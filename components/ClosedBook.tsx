@@ -4,7 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { BuiltBook, GlbBook } from "@/components/Intro3D";
+
+/** coarse pointer ≈ phone/tablet: render leaner there (mirrors Intro3D) */
+function isCoarse(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+}
 
 /* The dismissed state: the tomb stays behind, and the closed tome hangs
    in the room in front of it. Drag turns it in your hands; a tap (not a
@@ -21,6 +27,7 @@ function SpinnableBook({
 }) {
   const group = useRef<THREE.Group>(null);
   const igniteRef = useRef(0);
+  const bloomRef = useRef<{ intensity: number } | null>(null);
 
   // plain mode: strip the relief so the raw art shows — zero every
   // bump/normal map (originals stashed in userData, restored on untoggle)
@@ -71,9 +78,11 @@ function SpinnableBook({
     g.position.y = Math.sin(t * 1.3) * 0.03;
 
     // embers only: the gilding keeps a candle-lit life, well below the
-    // intro's ignition (and with no bloom composer to amplify it).
-    // Plain mode kills the glow entirely.
-    igniteRef.current = plain ? 0 : 0.32 + 0.05 * Math.sin(t * 2.3) * Math.sin(t * 0.7);
+    // intro's ignition. Plain mode kills the glow entirely.
+    const ig = plain ? 0 : 0.32 + 0.05 * Math.sin(t * 2.3) * Math.sin(t * 0.7);
+    igniteRef.current = ig;
+    // same drive curve as the intro so the two states read identically
+    if (bloomRef.current) bloomRef.current.intensity = plain ? 0 : 0.1 + ig * 0.85;
   });
 
   return (
@@ -94,6 +103,19 @@ function SpinnableBook({
       <group ref={group} scale={0.92}>
         {useGlb ? <GlbBook igniteRef={igniteRef} /> : <BuiltBook igniteRef={igniteRef} />}
       </group>
+
+      {/* the same output pipeline as the intro — without it the closed
+          book rendered through a different tone transform and read darker */}
+      <EffectComposer multisampling={isCoarse() ? 0 : 2}>
+        <Bloom
+          ref={bloomRef as never}
+          intensity={0.12}
+          luminanceThreshold={0.55}
+          luminanceSmoothing={0.22}
+          radius={0.42}
+          mipmapBlur
+        />
+      </EffectComposer>
     </>
   );
 }
