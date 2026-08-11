@@ -10,7 +10,7 @@
    code-built recreation era lives in git history and in
    experiments/glow-test-page.tsx if it's ever wanted back. */
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
@@ -42,15 +42,35 @@ export const BLOOM = {
    Near-white color keeps the artist's palette true. Raking-angle
    points and warm tints are what caused every artifact; do not
    reintroduce them. */
-export function BookLights({ plain }: { plain: boolean }) {
+export function BookLights({ plain, sweep = false }: { plain: boolean; sweep?: boolean }) {
+  const key = useRef<THREE.DirectionalLight>(null);
+  const target = useMemo(() => new THREE.Object3D(), []);
+  const start = useRef<number | null>(null);
+
+  useFrame(({ clock }) => {
+    const light = key.current;
+    if (!light) return;
+    if (start.current === null) start.current = clock.getElapsedTime();
+    const tm = clock.getElapsedTime() - start.current;
+    // the flashlight tilt: aimed at the floor while the book emerges,
+    // then swept up to find the cover as it settles (sweep=false —
+    // e.g. the closed-book view — holds full aim from the first frame)
+    const x = sweep ? Math.min(1, Math.max(0, (tm - 1.5) / 1.2)) : 1;
+    const aim = x * x * (3 - 2 * x);
+    target.position.set(0, -4.2 * (1 - aim), 0);
+    light.target = target;
+    light.intensity = 0.25 + 1.45 * aim;
+  });
+
   return plain ? (
     <ambientLight intensity={1.35} color="#ffffff" />
   ) : (
     <>
-      {/* dimmer, gold — candlelight that compliments the plum leather
-          and copper gilding; the on-axis angle stays sacred */}
+      {/* dim gold candlelight; the key's on-axis END angle stays sacred —
+          only its aim animates, floor → cover */}
       <ambientLight intensity={0.45} color="#f6e3bd" />
-      <directionalLight position={[0, 0.5, 5]} intensity={1.7} color="#ffd98f" />
+      <directionalLight ref={key} position={[0, 0.5, 5]} intensity={1.7} color="#ffd98f" />
+      <primitive object={target} />
     </>
   );
 }
