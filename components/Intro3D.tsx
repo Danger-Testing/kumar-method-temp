@@ -519,35 +519,32 @@ function IntroScene({
 
     // emergence prefix: the book rises out of the tomb's doorway before
     // the familiar timeline begins
-    // EXPERIMENT (owner asked, may be undone): the tiny book "turtles"
-    // visibly in the doorway for HOLD seconds before shooting out.
-    // To remove the hold, set HOLD to 0.
-    const HOLD = emerge ? 1.5 : 0;
+    // (turtle-hold experiment removed at the owner's call)
     const E = emerge ? 1.0 : 0;
-    const tt = Math.max(0, t - HOLD - E);
+    const tt = Math.max(0, t - E);
     let riseEase = 1;
     let rise = 1;
     if (E > 0) {
-      rise = Math.min(1, Math.max(0, (t - HOLD) / E));
+      rise = Math.min(1, Math.max(0, t / E));
       // slow → fast: it CREEPS out of the dark, accelerating the whole
       // way, and arrives at maximum velocity
       riseEase = easeInExpo(rise);
     }
     // no transparency: it emerges shaded, as if in the cave's shadow, and
-    // brightens as it comes out — bright enough during the hold to SEE it
+    // brightens as it comes out
     emergeShade.current = E > 0 ? 0.5 + 0.5 * smooth(0.15, 0.85, rise) : 1;
 
     // NO flip gymnastics in the emergence: the book lies flat with its
     // cover facing UP, snaps out flat, then ONE smooth pitch swings the
     // cover down to face the camera — a single rotation does the whole
     // reveal. (Non-emerge path keeps the original grand 2π spin.)
-    const tSpin = Math.max(0, t - HOLD - E * 0.45);
+    const tSpin = Math.max(0, t - E * 0.45);
     const spin = easeOutQuart(Math.min(1, tSpin / 2.6));
     g.rotation.y = E > 0 ? (1 - spin) * 0.45 : (1 - spin) * Math.PI * 2;
     const pitchBase = -0.06 + Math.sin(t * 1.1) * 0.012;
-    const pitchEase = E > 0 ? smooth(HOLD + E * 0.6, HOLD + E + 0.7, t) : 1;
-    // -1.32 rad, not a full -π/2: the "flat" pose tips a few degrees
-    // toward the camera so the small turtling cover is actually visible
+    const pitchEase = E > 0 ? smooth(E * 0.6, E + 0.7, t) : 1;
+    // -1.32 rad, not a full -π/2: the flat pose tips a few degrees toward
+    // the camera so the small cover reads on the way out
     g.rotation.x = -1.32 * (1 - pitchEase) + pitchBase * pitchEase;
     // the book starts small and DEEP INSIDE the doorway and comes forward
     // as it rises. The doorway's measured screen rect is unprojected to
@@ -557,7 +554,7 @@ function IntroScene({
     const hole = E > 0 ? holeRef?.current : null;
     let startX = 0;
     let startY = -1.7;
-    let startK = 0.1;
+    let startK = 0.06;
     if (hole) {
       // the camera is static until the dive: (0, 0, 4.15), fov 40
       const dist = 4.15 + 2.4;
@@ -568,12 +565,13 @@ function IntroScene({
       startY = (1 - hole.cy * 2) * (worldH / 2) + hole.h * worldH * 0.28;
       // MUCH smaller than the doorway at first — it grows to full size
       // as it shoots out
-      startK = Math.min(0.22, Math.max(0.06, (hole.w * worldW * 0.62) / (W * 0.78)) * 0.35);
+      // even smaller than before — a speck that grows to full size
+      startK = Math.min(0.13, Math.max(0.04, (hole.w * worldW * 0.62) / (W * 0.78)) * 0.2);
     }
     // straight out of the doorway: x/y HOLD at the hole's center for the
     // whole rise (the zoom is pure z), then the book floats gently to
     // frame center after it's fully out
-    const lift = E > 0 ? smooth(HOLD + E, HOLD + E + 1.1, t) : 1;
+    const lift = E > 0 ? smooth(E, E + 1.1, t) : 1;
     g.position.x = startX * (1 - lift);
     g.position.y = startY * (1 - lift) + Math.sin(t * 1.3) * 0.03;
     // deeper start = the exit reads as a ZOOM straight at the camera
@@ -582,9 +580,7 @@ function IntroScene({
     // from the first frame until the dive takes over
     const s =
       (0.78 + (1 - Math.pow(1 - Math.min(1, tSpin / 5), 3)) * 0.34) *
-      (startK + (1 - startK) * riseEase) *
-      // a faint breathing pulse while it turtles in the doorway
-      (E > 0 && rise <= 0 ? 1 + 0.05 * Math.sin(t * 3.1) : 1);
+      (startK + (1 - startK) * riseEase);
     g.scale.setScalar(s);
 
     // the dolly: no let-up — it accelerates until the cover kisses the lens
@@ -738,9 +734,8 @@ export default function Intro3D({
               // the tomb (persistent layer behind us) settles into its
               // 70/40 grade through the rise, then the ignition's own
               // flicker lights the chamber back up
-              // window shifted past the turtle-hold: the room only starts
-              // dimming as the book shoots out (HOLD 1.5 + mid-rise)
-              onTombFade?.(smooth(2.3, 4.2, t), Math.min(1.2, ignite));
+              // the room starts dimming as the book shoots out
+              onTombFade?.(smooth(0.6, 2.4, t), Math.min(1.2, ignite));
               void rise;
             }}
             onFade={(v) => {
