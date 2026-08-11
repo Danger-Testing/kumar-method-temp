@@ -249,18 +249,27 @@ function BuiltBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> })
   );
 }
 
-/* optional: drop a generated mesh at public/book.glb and it replaces the
-   built one automatically */
+/* optional: drop a mesh at public/book.glb and it replaces the built one
+   automatically */
 function GlbBook() {
   const { scene } = useGLTF("/book.glb");
   const normalized = useMemo(() => {
-    const box = new THREE.Box3().setFromObject(scene);
+    const root = new THREE.Group();
+    // the provided asset lies flat (y = thickness, z = height):
+    // pitch it upright so the cover faces the camera
+    const pre = new THREE.Box3().setFromObject(scene);
+    const preSize = pre.getSize(new THREE.Vector3());
+    if (preSize.z >= preSize.x && preSize.z >= preSize.y) {
+      scene.rotation.x = -Math.PI / 2;
+    }
+    root.add(scene);
+    const box = new THREE.Box3().setFromObject(root);
     const size = box.getSize(new THREE.Vector3());
     const s = H / size.y;
-    scene.scale.setScalar(s);
+    root.scale.setScalar(s);
     const center = box.getCenter(new THREE.Vector3()).multiplyScalar(s);
-    scene.position.sub(center);
-    return scene;
+    root.position.sub(center);
+    return root;
   }, [scene]);
   return <primitive object={normalized} />;
 }
