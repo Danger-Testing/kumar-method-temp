@@ -450,14 +450,20 @@ function IntroScene({
     // already turning as it clears the doorway
     const tSpin = Math.max(0, t - E * 0.45);
     const spin = easeOutQuart(Math.min(1, tSpin / 3.3));
-    g.rotation.y = (1 - spin) * Math.PI * 2.7;
+    // 3π: the rise shows the book face-on (back cover), never the thin
+    // edge-on slab that read as a confusing black shape
+    g.rotation.y = (1 - spin) * Math.PI * 3;
     g.rotation.x = -0.06 + Math.sin(t * 1.1) * 0.012;
-    g.position.y = -2.15 * (1 - riseEase) + Math.sin(t * 1.3) * 0.03;
+    // the book starts small and DEEP INSIDE the doorway and comes forward
+    // as it rises — doorway-scale on the way up (never a huge dark slab
+    // across the lit tomb), growing by perspective as it approaches
+    g.position.y = -1.7 * (1 - riseEase) + Math.sin(t * 1.3) * 0.03;
+    g.position.z = -1.6 * (1 - riseEase);
     // the book never stops growing in the frame — presence keeps building
     // from the first frame until the dive takes over
     const s =
       (0.78 + (1 - Math.pow(1 - Math.min(1, tSpin / 5), 3)) * 0.34) *
-      (0.55 + 0.45 * riseEase);
+      (0.3 + 0.7 * riseEase);
     g.scale.setScalar(s);
 
     // the dolly: no let-up — it accelerates until the cover kisses the lens
@@ -503,7 +509,7 @@ function IntroScene({
       <ambientLight intensity={0.22} color="#ffdcb0" />
       <spotLight position={[2.4, 2.6, 3.4]} intensity={38} angle={0.7} penumbra={0.6} color="#ffd9a2" />
       <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
-      <pointLight position={[-1.6, -1.4, 2.6]} intensity={6} color="#ffc890" />
+      <pointLight position={[-1.6, -1.4, 2.6]} intensity={10} color="#ffc890" />
       <group ref={group}>
         {useGlb ? <GlbBook igniteRef={igniteRef} /> : <BuiltBook igniteRef={igniteRef} />}
       </group>
