@@ -395,6 +395,13 @@ export function GlbBook({
     recolored.flipY = false; // glTF UV convention — must match the atlas
     recolored.colorSpace = THREE.SRGBColorSpace;
     recolored.anisotropy = 16;
+    // shine, not glow: the same stencil applied to the metallicRoughness
+    // map turns the ramp pixels foil-like (roughness 0.14, metalness 0.75)
+    // so they catch and slide the room's light as the book turns. Leather
+    // channels are byte-identical. MR maps are non-color data — no SRGB.
+    const shine = new THREE.TextureLoader().load("/masks/book-outer-mr-shine.png");
+    shine.flipY = false;
+    shine.anisotropy = 16;
     mats.forEach((m) => {
       // sharper sampling at glancing angles on the asset's own maps —
       // these are already on the GPU, so the sampler must be re-uploaded
@@ -406,10 +413,12 @@ export function GlbBook({
       });
       if (m.name !== "Book_Outer") return; // only the covers atlas is recolored
       if (m.map) {
-        recolored.wrapS = m.map.wrapS;
-        recolored.wrapT = m.map.wrapT;
+        recolored.wrapS = shine.wrapS = m.map.wrapS;
+        recolored.wrapT = shine.wrapT = m.map.wrapT;
       }
       m.map = recolored;
+      m.roughnessMap = shine;
+      m.metalnessMap = shine;
       m.needsUpdate = true;
     });
   }, [mats]);
