@@ -94,17 +94,18 @@ export default function Experience() {
             const smoke = el.querySelector<HTMLVideoElement>(".km-landing-general-smoke");
             const wash = el.querySelector<HTMLElement>(".tombGlowWash");
             if (bg) {
-              // preserve Marc's base grade, add the darkening + glow lift
-              bg.style.filter = `saturate(.78) contrast(1.05) brightness(${((1 - 0.7 * fade) * (1 + 0.55 * glow)).toFixed(3)})`;
+              // preserve Marc's base grade, add the darkening + glow lift —
+              // at full ignition the room floods with light
+              bg.style.filter = `saturate(.78) contrast(1.05) brightness(${((1 - 0.7 * fade) * (1 + 1.7 * glow)).toFixed(3)})`;
             }
             if (frame) {
-              // the stone catches the most light
-              frame.style.filter = `brightness(${((1 - 0.4 * fade) * (1 + 0.7 * glow)).toFixed(3)})`;
+              // the stone catches the most light — it blazes at the crest
+              frame.style.filter = `brightness(${((1 - 0.4 * fade) * (1 + 2 * glow)).toFixed(3)})`;
             }
             // scale Marc's base opacity (.52), never replace it — writing
             // 1.0 here doubled the smoke into a fog wall on click
             if (smoke) smoke.style.opacity = (0.52 * (1 - 0.7 * fade)).toFixed(3);
-            if (wash) wash.style.opacity = (0.5 * glow).toFixed(3);
+            if (wash) wash.style.opacity = Math.min(1, 0.9 * glow).toFixed(3);
           }}
           onDone={(finished) => {
             setFlash(finished);

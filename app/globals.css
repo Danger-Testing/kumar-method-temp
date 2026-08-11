@@ -745,7 +745,8 @@ body {
   pointer-events: none;
   opacity: 0;
   mix-blend-mode: screen;
-  background: radial-gradient(ellipse 55% 60% at 50% 55%, rgba(255, 178, 92, 0.55), rgba(255, 140, 50, 0.18) 55%, transparent 78%);
+  /* wide and hot: at full ignition this floods the whole chamber */
+  background: radial-gradient(ellipse 80% 80% at 50% 55%, rgba(255, 196, 116, 0.8), rgba(255, 152, 60, 0.35) 55%, rgba(255, 130, 40, 0.08) 78%, transparent 95%);
   will-change: opacity;
   z-index: 5;
 }
