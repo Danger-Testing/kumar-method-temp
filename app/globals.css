@@ -607,9 +607,8 @@ body {
   bottom: 2.2vh;
   right: max(2.5vw, 18px);
   z-index: 45;
-  display: flex;
-  align-items: center;
-  gap: 7px;
+  display: block;
+  text-align: right;
   font-family: "Switzer", -apple-system, "Helvetica Neue", sans-serif;
   font-weight: 500;
   font-size: 12px;
@@ -618,6 +617,18 @@ body {
   color: rgba(233, 214, 178, 0.5);
   text-decoration: none;
   transition: color 0.25s;
+}
+
+.bizLine1 {
+  display: block;
+}
+
+.bizLine2 {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  margin-top: 4px;
 }
 
 .bizArrow {

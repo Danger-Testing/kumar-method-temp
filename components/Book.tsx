@@ -431,18 +431,20 @@ export default function Book() {
         rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
       >
-        try kumar method for business
-        <span className="bizRamp" aria-hidden="true" />
-        <svg className="bizArrow" viewBox="0 0 12 12" aria-hidden="true">
-          <path
-            d="M3.2 8.8 L8.8 3.2 M4.4 3.2 H8.8 V7.6"
-            stroke="currentColor"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
-          />
-        </svg>
+        <span className="bizLine1">try kumar method for business</span>
+        <span className="bizLine2">
+          <span className="bizRamp" aria-hidden="true" />
+          <svg className="bizArrow" viewBox="0 0 12 12" aria-hidden="true">
+            <path
+              d="M3.2 8.8 L8.8 3.2 M4.4 3.2 H8.8 V7.6"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </svg>
+        </span>
       </a>
 
       <div
