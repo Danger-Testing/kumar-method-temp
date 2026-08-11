@@ -1,0 +1,509 @@
+/* ================================================================
+   PLAIN RULES — an old book, glowing in a dark room
+   ================================================================ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: #050302;
+  color: #241c12;
+  font-family: var(--font-garamond), Georgia, serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(120, 84, 34, 0.35);
+}
+
+/* ----------------------------------------------------------------
+   The dark room
+   ---------------------------------------------------------------- */
+
+.scene {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.haze {
+  position: absolute;
+  inset: -10%;
+  background: radial-gradient(ellipse 70% 60% at 50% 46%, #241a10 0%, #120c07 45%, #050302 100%);
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 75% 68% at 50% 48%, transparent 42%, rgba(0, 0, 0, 0.45) 78%, rgba(0, 0, 0, 0.82) 100%);
+}
+
+/* dust motes drifting through the glow */
+.dust {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dust span {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 222, 168, 0.9);
+  filter: blur(1px);
+  animation: drift linear infinite alternate;
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(3vw, -7vh, 0);
+  }
+}
+
+/* ----------------------------------------------------------------
+   The page — sizing container
+   ---------------------------------------------------------------- */
+
+.bookArea {
+  position: relative;
+  height: min(94svh, 140vw);
+  aspect-ratio: 0.66;
+  container-type: size;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.leaf {
+  position: absolute;
+  inset: 0;
+}
+
+/* the page's drop into darkness */
+.leaf::before {
+  content: "";
+  position: absolute;
+  inset: 1.5% 2%;
+  border-radius: 4px;
+  box-shadow: 0 5cqw 14cqw rgba(0, 0, 0, 0.6);
+}
+
+/* ----------------------------------------------------------------
+   Paper
+   ---------------------------------------------------------------- */
+
+.paper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 85% at 50% 38%, rgba(255, 250, 233, 0.55), rgba(255, 250, 233, 0) 70%),
+    linear-gradient(104deg, #cdb488 0%, #e5d6b2 10%, #ecdfc0 30%, #f0e5c9 50%, #eaddbb 74%, #ddcba1 92%, #c3a976 100%),
+    #e9dcbc;
+  /* edges: a real book page is nearly straight, with only a faint waviness
+     and softly worn, rounded corners — keep the displacement very gentle */
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='660' height='1000'%3E%3Cfilter id='r' x='-5%25' y='-5%25' width='110%25' height='110%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.009' numOctaves='3' seed='11' result='n'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='n' scale='5'/%3E%3C/filter%3E%3Crect x='4' y='4' width='652' height='992' rx='12' ry='12' fill='white' filter='url(%23r)'/%3E%3C/svg%3E");
+  mask-size: 100% 100%;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='660' height='1000'%3E%3Cfilter id='r' x='-5%25' y='-5%25' width='110%25' height='110%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.009' numOctaves='3' seed='11' result='n'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='n' scale='5'/%3E%3C/filter%3E%3Crect x='4' y='4' width='652' height='992' rx='12' ry='12' fill='white' filter='url(%23r)'/%3E%3C/svg%3E");
+  -webkit-mask-size: 100% 100%;
+}
+
+/* alternative: dead-square corners, same faint edge waviness */
+.paper.cornersSquare {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='660' height='1000'%3E%3Cfilter id='r' x='-5%25' y='-5%25' width='110%25' height='110%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.009' numOctaves='3' seed='11' result='n'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='n' scale='4'/%3E%3C/filter%3E%3Crect x='3' y='3' width='654' height='994' fill='white' filter='url(%23r)'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='660' height='1000'%3E%3Cfilter id='r' x='-5%25' y='-5%25' width='110%25' height='110%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.009' numOctaves='3' seed='11' result='n'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='n' scale='4'/%3E%3C/filter%3E%3Crect x='3' y='3' width='654' height='994' fill='white' filter='url(%23r)'/%3E%3C/svg%3E");
+}
+
+/* fine paper grain */
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='280' height='280' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 42cqw 42cqw;
+  opacity: 0.24;
+  mix-blend-mode: multiply;
+}
+
+/* large-scale uneven toning, like damp got to it once */
+.blotch {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='1050'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011 0.008' numOctaves='4' seed='7'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='700' height='1050' filter='url(%23b)'/%3E%3C/svg%3E");
+  background-size: 100% 100%;
+  opacity: 0.16;
+  mix-blend-mode: multiply;
+}
+
+/* darkened, handled edges; heavier along the binding side */
+.edgeShade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  background:
+    radial-gradient(16cqw 16cqw at 100% 100%, rgba(82, 60, 32, 0.22), rgba(82, 60, 32, 0) 62%),
+    radial-gradient(14cqw 14cqw at 0% 100%, rgba(82, 60, 32, 0.18), rgba(82, 60, 32, 0) 62%),
+    radial-gradient(12cqw 12cqw at 100% 0%, rgba(82, 60, 32, 0.14), rgba(82, 60, 32, 0) 62%),
+    linear-gradient(to right, rgba(82, 60, 32, 0.42), rgba(82, 60, 32, 0.12) 3.5%, rgba(82, 60, 32, 0) 10%),
+    linear-gradient(to left, rgba(82, 60, 32, 0.3), rgba(82, 60, 32, 0) 6%),
+    linear-gradient(to bottom, rgba(82, 60, 32, 0.24), rgba(82, 60, 32, 0) 5%),
+    linear-gradient(to top, rgba(82, 60, 32, 0.32), rgba(82, 60, 32, 0) 7%);
+}
+
+/* foxing stains + smudge */
+.stain {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(0.8cqw);
+}
+
+.warmStain {
+  background: radial-gradient(circle, rgba(133, 84, 36, 0.95), rgba(133, 84, 36, 0) 70%);
+}
+
+.greyStain {
+  background: radial-gradient(circle, rgba(66, 58, 44, 0.9), rgba(66, 58, 44, 0) 70%);
+}
+
+.smudge {
+  position: absolute;
+  left: 0;
+  width: 7cqw;
+  height: 16cqw;
+  pointer-events: none;
+  background: radial-gradient(ellipse, rgba(56, 42, 24, 0.55), transparent 70%);
+  filter: blur(1.2cqw);
+  opacity: 0.28;
+}
+
+/* faint show-through of the next leaf, mirrored */
+.ghost {
+  position: absolute;
+  inset: 0;
+  transform: scaleX(-1);
+  filter: blur(0.45cqw);
+  opacity: 0.055;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ----------------------------------------------------------------
+   Typography
+   ---------------------------------------------------------------- */
+
+.pageInner {
+  position: relative;
+  height: 100%;
+  padding: 6.5cqw 9cqw 10cqw;
+  font-size: 3.25cqw;
+  line-height: 1.56;
+  font-feature-settings: "onum", "liga";
+  color: #2b2214;
+  text-shadow: 0 0 0.06cqw rgba(43, 34, 20, 0.55);
+  z-index: 1;
+}
+
+/* --- chapter opening page --- */
+
+.chapterPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.chapterPage.dense {
+  font-size: 3.02cqw;
+}
+
+.chapterPage.denser {
+  font-size: 2.82cqw;
+}
+
+.tinyFleuron {
+  font-size: 3.6cqw;
+  opacity: 0.85;
+  margin-bottom: 2.2cqw;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 2.6cqw;
+  font-family: var(--font-fell), serif;
+  font-size: 4.6cqw;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  margin-bottom: 1.6cqw;
+  width: 100%;
+  justify-content: center;
+}
+
+.eyebrowLine {
+  position: relative;
+  height: 0.28cqw;
+  width: 13cqw;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+
+.eyebrowLine::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 1.5cqw;
+  height: 1.5cqw;
+  background: currentColor;
+  transform: translateY(-50%) rotate(45deg) scale(0.62);
+}
+
+.eyebrowLine:first-child::before {
+  left: -1.5cqw;
+}
+
+.eyebrowLine:last-child::before {
+  right: -1.5cqw;
+}
+
+.bigTitle {
+  font-family: var(--font-garamond), Georgia, serif;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  line-height: 1.02;
+  margin: 1cqw 0 2.6cqw;
+}
+
+.bigTitle span {
+  display: block;
+}
+
+.flourish {
+  width: 44cqw;
+  height: auto;
+  color: #2b2214;
+  opacity: 0.9;
+  margin-bottom: 5cqw;
+}
+
+.intro {
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  width: 100%;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.intro p + p {
+  margin-top: 3.6cqw;
+}
+
+.dropcap {
+  float: left;
+  font-family: var(--font-fell), serif;
+  font-size: 3.1em;
+  line-height: 0.78;
+  padding: 0.09em 0.13em 0 0;
+}
+
+/* --- rules pages --- */
+
+.rulesPage {
+  display: flex;
+  flex-direction: column;
+}
+
+.runningHead {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.4cqw;
+  font-family: var(--font-fell-sc), serif;
+  font-size: 2.9cqw;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  opacity: 0.82;
+  margin-bottom: 1cqw;
+}
+
+.runningStar {
+  font-size: 0.62em;
+  letter-spacing: 0;
+  text-indent: 0;
+  transform: translateY(-8%);
+}
+
+.rules {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  padding-bottom: 10cqw;
+}
+
+.rule {
+  font-size: 3.7cqw;
+  line-height: 1.68;
+}
+
+.ruleNum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3.2cqw;
+  font-family: var(--font-fell), serif;
+  font-size: 7.4cqw;
+  margin-bottom: 5cqw;
+}
+
+.ruleNumLine {
+  height: 0.22cqw;
+  width: 8cqw;
+  background: currentColor;
+  opacity: 0.65;
+}
+
+.ruleText {
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+.folio {
+  position: absolute;
+  bottom: 3.4cqw;
+  left: 9cqw;
+  font-size: 2.5cqw;
+  letter-spacing: 0.1em;
+  opacity: 0.72;
+}
+
+/* ----------------------------------------------------------------
+   First reveal only — page turns themselves are instant
+   ---------------------------------------------------------------- */
+
+.enterFirst {
+  animation: enterFirst 1.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes enterFirst {
+  from {
+    opacity: 0;
+    transform: rotate(var(--rot, 0deg)) scale(0.985);
+    filter: blur(14px);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(var(--rot, 0deg)) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* ----------------------------------------------------------------
+   Chrome
+   ---------------------------------------------------------------- */
+
+.hint {
+  position: fixed;
+  bottom: 2.6vh;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-fell), serif;
+  font-style: italic;
+  font-size: 14px;
+  color: rgba(233, 214, 178, 0.48);
+  letter-spacing: 0.06em;
+  pointer-events: none;
+  z-index: 30;
+  transition: opacity 1.2s;
+}
+
+.hintGone {
+  opacity: 0;
+}
+
+.cornerToggle {
+  position: fixed;
+  bottom: 2.2vh;
+  right: max(2.5vw, 18px);
+  z-index: 40;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-fell), serif;
+  font-style: italic;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: rgba(233, 214, 178, 0.4);
+  transition: color 0.25s;
+}
+
+.cornerToggle:hover {
+  color: rgba(233, 214, 178, 0.85);
+}
+
+/* ----------------------------------------------------------------
+   Launch intro — the tome in the dark
+   ---------------------------------------------------------------- */
+
+.introRoot {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: radial-gradient(ellipse 70% 60% at 50% 46%, #1c130b 0%, #0e0906 45%, #050302 100%);
+  cursor: pointer;
+}
+
+.introRoot canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.introFade {
+  position: absolute;
+  inset: 0;
+  background: #070402;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.skipHint {
+  position: absolute;
+  bottom: 2.4vh;
+  right: max(2.5vw, 18px);
+  font-family: var(--font-fell), serif;
+  font-style: italic;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: rgba(233, 214, 178, 0.35);
+  pointer-events: none;
+}
+
+/* ----------------------------------------------------------------
+   Accessibility
+   ---------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .leaf {
+    animation-duration: 0.01s !important;
+  }
+  .dust span {
+    animation: none;
+  }
+}
