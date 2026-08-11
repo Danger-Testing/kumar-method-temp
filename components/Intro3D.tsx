@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture, useGLTF } from "@react-three/drei";
@@ -14,6 +14,10 @@ const D = H * (230 / 852) * 0.9;
 const CT = 0.05; // cover board thickness
 
 const TOTAL = 5.3; // seconds
+
+/** the tomb doorway's screen rect, as viewport fractions (measured by
+    Experience off .km-tomb-frame + the clip-path polygon in kumar.css) */
+export type HoleRect = { cx: number; cy: number; w: number; h: number };
 
 // start fetching the cover scans the moment this module loads
 useTexture.preload("/covers/front.jpeg");
@@ -405,6 +409,7 @@ function GlbBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) {
 function IntroScene({
   useGlb,
   emerge,
+  holeRef,
   onFade,
   onDive,
   onAtmos,
@@ -413,6 +418,7 @@ function IntroScene({
 }: {
   useGlb: boolean;
   emerge: boolean;
+  holeRef?: MutableRefObject<HoleRect | null>;
   onFade: (v: number) => void;
   onDive: (v: number) => void;
   onAtmos: (ignite: number, dive: number, t: number) => void;
@@ -424,7 +430,7 @@ function IntroScene({
   const bloomRef = useRef<{ intensity: number } | null>(null);
   const doneRef = useRef(false);
   const startRef = useRef<number | null>(null);
-  const { camera } = useThree();
+  const { camera, size } = useThree();
 
   useFrame(({ clock }) => {
     // the timeline starts on the first *rendered* frame, so slow texture
@@ -455,15 +461,33 @@ function IntroScene({
     g.rotation.y = (1 - spin) * Math.PI * 3;
     g.rotation.x = -0.06 + Math.sin(t * 1.1) * 0.012;
     // the book starts small and DEEP INSIDE the doorway and comes forward
-    // as it rises — doorway-scale on the way up (never a huge dark slab
-    // across the lit tomb), growing by perspective as it approaches
-    g.position.y = -1.7 * (1 - riseEase) + Math.sin(t * 1.3) * 0.03;
+    // as it rises. The doorway's measured screen rect is unprojected to
+    // world space at the start depth, so the rise begins in the actual
+    // gap at every viewport — old eyeballed constants as the fallback
+    // when there's no tomb to measure.
+    const hole = E > 0 ? holeRef?.current : null;
+    let startX = 0;
+    let startY = -1.7;
+    let startK = 0.3;
+    if (hole) {
+      // the camera is static until the dive: (0, 0, 4.15), fov 40
+      const dist = 4.15 + 1.6;
+      const worldH = 2 * dist * Math.tan((40 * Math.PI) / 360);
+      const worldW = worldH * (size.width / size.height);
+      startX = (hole.cx * 2 - 1) * (worldW / 2);
+      // a touch below the hole's center, so the book rises up through it
+      startY = (1 - hole.cy * 2) * (worldH / 2) - hole.h * worldH * 0.18;
+      // narrow enough to sit inside the doorway when the rise begins
+      startK = Math.min(0.5, Math.max(0.16, (hole.w * worldW * 0.62) / (W * 0.78)));
+    }
+    g.position.x = startX * (1 - riseEase);
+    g.position.y = startY * (1 - riseEase) + Math.sin(t * 1.3) * 0.03;
     g.position.z = -1.6 * (1 - riseEase);
     // the book never stops growing in the frame — presence keeps building
     // from the first frame until the dive takes over
     const s =
       (0.78 + (1 - Math.pow(1 - Math.min(1, tSpin / 5), 3)) * 0.34) *
-      (0.3 + 0.7 * riseEase);
+      (startK + (1 - startK) * riseEase);
     g.scale.setScalar(s);
 
     // the dolly: no let-up — it accelerates until the cover kisses the lens
@@ -539,11 +563,14 @@ export default function Intro3D({
   onDone,
   emerge = false,
   onTombFade,
+  holeRect,
 }: {
   onDone: (finished: boolean) => void;
   emerge?: boolean;
   /** drives the persistent tomb layer (owned by Experience) behind us */
   onTombFade?: (fade: number) => void;
+  /** the tomb doorway, measured by Experience — anchors the emergence */
+  holeRect?: MutableRefObject<HoleRect | null>;
 }) {
   // null = still checking. The scene must not mount until this resolves:
   // flipping the book type mid-flight remounts the scene and restarts the
@@ -585,11 +612,28 @@ export default function Intro3D({
           <IntroScene
             useGlb={glb}
             emerge={emerge}
+            holeRef={holeRect}
             onEmerge={(rise, t) => {
               // the tomb (persistent layer behind us) holds through the
               // rise, then dissolves into the dark room as the spin takes
               // over
               onTombFade?.(smooth(1.1, 3, t));
+              // the canvas stays clipped to the doorway while the book is
+              // inside it, releasing as the book crosses the threshold —
+              // so the rise never draws over the stone frame
+              const el = canvasWrapRef.current;
+              const hole = holeRect?.current;
+              if (!el || !hole) return;
+              const open = 1 - smooth(0.55, 0.95, rise);
+              if (open <= 0) {
+                if (el.style.clipPath) el.style.clipPath = "";
+                return;
+              }
+              const top = (hole.cy - hole.h / 2) * 100 * open;
+              const bottom = (1 - hole.cy - hole.h / 2) * 100 * open;
+              const left = (hole.cx - hole.w / 2) * 100 * open;
+              const right = (1 - hole.cx - hole.w / 2) * 100 * open;
+              el.style.clipPath = `inset(${top.toFixed(2)}% ${right.toFixed(2)}% ${bottom.toFixed(2)}% ${left.toFixed(2)}%)`;
             }}
             onFade={(v) => {
               if (fadeRef.current) fadeRef.current.style.opacity = String(v);

@@ -7,10 +7,36 @@ import TombScene from "@/components/TombScene";
 
 const Intro3D = dynamic(() => import("@/components/Intro3D"), { ssr: false });
 
+import type { HoleRect } from "@/components/Intro3D";
+
 export default function Experience() {
   const [phase, setPhase] = useState<"tomb" | "intro" | "book">("tomb");
   const [flash, setFlash] = useState(false);
   const tombHostRef = useRef<HTMLDivElement>(null);
+  // the doorway hole, as viewport fractions: derived from .km-tomb-frame's
+  // rect and its interior clip-path polygon in kumar.css
+  // (x 45.9–54.1%, y 49–78.6% of the frame)
+  const holeRef = useRef<HoleRect | null>(null);
+
+  useEffect(() => {
+    const measure = () => {
+      const frame = tombHostRef.current?.querySelector<HTMLElement>(".km-tomb-frame");
+      if (!frame) return;
+      const r = frame.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      if (!vw || !vh) return;
+      holeRef.current = {
+        cx: (r.left + r.width * 0.5) / vw,
+        cy: (r.top + r.height * ((0.49 + 0.786) / 2)) / vh,
+        w: (r.width * (0.541 - 0.459)) / vw,
+        h: (r.height * (0.786 - 0.49)) / vh,
+      };
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [phase]);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -52,6 +78,7 @@ export default function Experience() {
       {phase === "intro" && (
         <Intro3D
           emerge
+          holeRect={holeRef}
           onTombFade={(fade) => {
             // the scene stays alive behind the book instead of dying to
             // black: the room settles at 70% dark, the tomb at 40%
