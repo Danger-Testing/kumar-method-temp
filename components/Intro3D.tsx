@@ -217,10 +217,13 @@ function makePageEdgeTexture(): THREE.CanvasTexture {
 export function BuiltBook({
   igniteRef,
   shadeRef,
+  plain = false,
 }: {
   igniteRef: React.MutableRefObject<number>;
   /** 0..1 darkness multiplier — the book in the cave's shadow */
   shadeRef?: React.MutableRefObject<number>;
+  /** inspection mode: strip surface relief */
+  plain?: boolean;
 }) {
   const [front, back, spine] = useTexture([
     "/covers/front.jpeg",
@@ -304,6 +307,8 @@ export function BuiltBook({
     for (const m of [frontMat, backMat, spineMat, leather, pageMat]) {
       if (!m.userData.baseColor) m.userData.baseColor = m.color.clone();
       m.color.copy(m.userData.baseColor as THREE.Color).multiplyScalar(shade);
+      if (m.userData.baseBump === undefined) m.userData.baseBump = m.bumpScale;
+      m.bumpScale = plain ? 0 : (m.userData.baseBump as number);
     }
   });
 
@@ -347,10 +352,13 @@ export function BuiltBook({
 export function GlbBook({
   igniteRef,
   shadeRef,
+  plain = false,
 }: {
   igniteRef: React.MutableRefObject<number>;
   /** 0..1 darkness multiplier — the book in the cave's shadow */
   shadeRef?: React.MutableRefObject<number>;
+  /** inspection mode: strip surface relief */
+  plain?: boolean;
 }) {
   const { scene } = useGLTF("/book.glb");
 
@@ -400,15 +408,25 @@ export function GlbBook({
       if (m.emissiveMap) m.emissiveIntensity = igniteRef.current * 2.8;
       if (!m.userData.baseColor) m.userData.baseColor = m.color.clone();
       m.color.copy(m.userData.baseColor as THREE.Color).multiplyScalar(shade);
+      // inspection mode strips surface relief (moiré source)
+      if (m.userData.baseBump === undefined) m.userData.baseBump = m.bumpScale;
+      if (!m.userData.baseNormal && m.normalScale) m.userData.baseNormal = m.normalScale.clone();
+      m.bumpScale = plain ? 0 : (m.userData.baseBump as number);
+      if (m.userData.baseNormal) {
+        m.normalScale.copy(m.userData.baseNormal as THREE.Vector2);
+        if (plain) m.normalScale.set(0, 0);
+      }
     }
   });
 
   // the GLTF scene is cache-shared (ClosedBook renders the same materials
-  // later) — never leave them darkened if we unmount mid-rise
+  // later) — never leave them darkened or relief-stripped on unmount
   useEffect(() => {
     return () => {
       mats.forEach((m) => {
         if (m.userData.baseColor) m.color.copy(m.userData.baseColor as THREE.Color);
+        if (m.userData.baseBump !== undefined) m.bumpScale = m.userData.baseBump as number;
+        if (m.userData.baseNormal) m.normalScale.copy(m.userData.baseNormal as THREE.Vector2);
       });
     };
   }, [mats]);
@@ -600,9 +618,9 @@ function IntroScene({
       )}
       <group ref={group}>
         {useGlb ? (
-          <GlbBook igniteRef={igniteRef} shadeRef={emergeShade} />
+          <GlbBook igniteRef={igniteRef} shadeRef={emergeShade} plain={plain} />
         ) : (
-          <BuiltBook igniteRef={igniteRef} shadeRef={emergeShade} />
+          <BuiltBook igniteRef={igniteRef} shadeRef={emergeShade} plain={plain} />
         )}
       </group>
 
