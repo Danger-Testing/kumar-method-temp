@@ -504,7 +504,10 @@ function isCoarse(): boolean {
 }
 
 export default function Intro3D({ onDone }: { onDone: (finished: boolean) => void }) {
-  const [glb, setGlb] = useState(false);
+  // null = still checking. The scene must not mount until this resolves:
+  // flipping the book type mid-flight remounts the scene and restarts the
+  // timeline (the start-stop-start glitch).
+  const [glb, setGlb] = useState<boolean | null>(null);
   const fadeRef = useRef<HTMLDivElement>(null);
   const canvasWrapRef = useRef<HTMLDivElement>(null);
   const grainRef = useRef<HTMLDivElement>(null);
@@ -512,7 +515,11 @@ export default function Intro3D({ onDone }: { onDone: (finished: boolean) => voi
 
   useEffect(() => {
     fetch("/book.glb", { method: "HEAD" })
-      .then((r) => setGlb(r.ok && (r.headers.get("content-type") ?? "").includes("model")))
+      .then((r) => {
+        const ok = r.ok && (r.headers.get("content-type") ?? "").includes("model");
+        if (ok) useGLTF.preload("/book.glb");
+        setGlb(ok);
+      })
       .catch(() => setGlb(false));
   }, []);
 
@@ -528,6 +535,7 @@ export default function Intro3D({ onDone }: { onDone: (finished: boolean) => voi
     <div className="introRoot" onClick={() => onDone(false)}>
       <div className="introGlow" ref={glowRef} aria-hidden="true" />
       <div className="introCanvas" ref={canvasWrapRef}>
+        {glb !== null && (
         <Canvas
           camera={{ position: [0, 0, 4.15], fov: 40 }}
           gl={{ antialias: !isCoarse() }}
@@ -560,6 +568,7 @@ export default function Intro3D({ onDone }: { onDone: (finished: boolean) => voi
             onDone={onDone}
           />
         </Canvas>
+        )}
       </div>
       <div className="introGrain" ref={grainRef} aria-hidden="true" />
       <div className="introFade" ref={fadeRef} aria-hidden="true">
