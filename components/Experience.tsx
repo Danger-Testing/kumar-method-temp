@@ -53,18 +53,19 @@ export default function Experience() {
         <Intro3D
           emerge
           onTombFade={(fade) => {
+            // the scene stays alive behind the book instead of dying to
+            // black: the room settles at 70% dark, the tomb at 40%
             const el = tombHostRef.current;
             if (!el) return;
-            el.style.opacity = String(1 - fade);
-            // shed video decode cost as soon as it stops being visible:
-            // the fullscreen smoke goes first, everything once hidden
-            if (fade > 0.5) {
-              el.querySelector<HTMLVideoElement>(".km-landing-general-smoke")?.pause();
+            const bg = el.querySelector<HTMLElement>(".km-landing-background");
+            const frame = el.querySelector<HTMLElement>(".km-tomb-frame");
+            const smoke = el.querySelector<HTMLVideoElement>(".km-landing-general-smoke");
+            if (bg) {
+              // preserve Marc's base grade, add the darkening on top
+              bg.style.filter = `saturate(.78) contrast(1.05) brightness(${(1 - 0.7 * fade).toFixed(3)})`;
             }
-            if (fade >= 1 && el.style.visibility !== "hidden") {
-              el.style.visibility = "hidden";
-              el.querySelectorAll("video").forEach((v) => v.pause());
-            }
+            if (frame) frame.style.filter = `brightness(${(1 - 0.4 * fade).toFixed(3)})`;
+            if (smoke) smoke.style.opacity = (1 - 0.7 * fade).toFixed(3);
           }}
           onDone={(finished) => {
             setFlash(finished);
