@@ -72,9 +72,6 @@ export default function Experience() {
               />
             </div>
           </main>
-          {/* the awakening's light on the chamber — opacity driven per
-              frame by the ignition */}
-          <div className="tombGlowWash" aria-hidden="true" />
         </div>
       )}
 
@@ -92,7 +89,8 @@ export default function Experience() {
             const bg = el.querySelector<HTMLElement>(".km-landing-background");
             const frame = el.querySelector<HTMLElement>(".km-tomb-frame");
             const smoke = el.querySelector<HTMLVideoElement>(".km-landing-general-smoke");
-            const wash = el.querySelector<HTMLElement>(".tombGlowWash");
+            const stone = el.querySelector<HTMLElement>(".tombLitStone");
+            const floor = el.querySelector<HTMLElement>(".tombFloorLight");
             if (bg) {
               // preserve Marc's base grade, add the darkening + glow lift —
               // at full ignition the room floods with light
@@ -105,7 +103,8 @@ export default function Experience() {
             // scale Marc's base opacity (.52), never replace it — writing
             // 1.0 here doubled the smoke into a fog wall on click
             if (smoke) smoke.style.opacity = (0.52 * (1 - 0.7 * fade)).toFixed(3);
-            if (wash) wash.style.opacity = Math.min(1, 0.9 * glow).toFixed(3);
+            if (stone) stone.style.opacity = Math.min(1, glow).toFixed(3);
+            if (floor) floor.style.opacity = Math.min(1, 0.95 * glow).toFixed(3);
           }}
           onDone={(finished) => {
             setFlash(finished);

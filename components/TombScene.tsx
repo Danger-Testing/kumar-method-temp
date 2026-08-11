@@ -112,7 +112,13 @@ export default function TombScene({
             aria-hidden="true"
             sizes="100vw"
           />
+          {/* the awakening's light landing on the stone itself — masked by
+              the tomb sprite so only real surfaces catch it (driven per
+              frame by Experience during the intro; inert on the landing) */}
+          <div className="tombLitStone" aria-hidden="true" />
         </div>
+        {/* light pooling on the chamber floor beneath the doorway */}
+        <div className="tombFloorLight" aria-hidden="true" />
         <svg className="km-landing-filters" aria-hidden="true" focusable="false">
           <defs>
             <filter id="km-general-smoke-alpha" colorInterpolationFilters="sRGB">
