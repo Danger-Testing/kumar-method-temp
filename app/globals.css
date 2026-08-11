@@ -106,6 +106,84 @@ body {
   left: 50%;
 }
 
+/* --- the turning leaf: fast, majestic, hinged at the spine --- */
+
+.bookArea.spreadOpen {
+  perspective: 2600px;
+}
+
+.flipper {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  transform-style: preserve-3d;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.flipFwd {
+  left: 50%;
+  right: 0;
+  transform-origin: left center;
+  animation: flipFwd 0.74s cubic-bezier(0.32, 0.04, 0.14, 1) both;
+}
+
+.flipRev {
+  left: 0;
+  right: 50%;
+  transform-origin: right center;
+  animation: flipRev 0.74s cubic-bezier(0.32, 0.04, 0.14, 1) both;
+}
+
+@keyframes flipFwd {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(-180deg);
+  }
+}
+
+@keyframes flipRev {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(180deg);
+  }
+}
+
+.flipFace {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  container-type: size;
+}
+
+.faceBack {
+  transform: rotateY(180deg);
+}
+
+/* spine-side shading on the turning leaf */
+.flipFace::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.flipFwd .faceFront::after,
+.flipRev .faceBack::after {
+  background: linear-gradient(to right, rgba(20, 12, 5, 0.28), rgba(20, 12, 5, 0) 26%);
+}
+
+.flipFwd .faceBack::after,
+.flipRev .faceFront::after {
+  background: linear-gradient(to left, rgba(20, 12, 5, 0.28), rgba(20, 12, 5, 0) 26%);
+}
+
 .spreadOpen::after {
   content: "";
   position: absolute;

@@ -138,13 +138,31 @@ function PageLeaf({
   }));
   const smudgeTop = 12 + rand() * 70;
 
+  // every leaf samples the paper scan differently: mirrored, panned, zoomed —
+  // so no two pages share the same cracks
+  const photo = {
+    flipX: rand() > 0.5 ? -1 : 1,
+    flipY: rand() > 0.5 ? -1 : 1,
+    size: 115 + rand() * 45,
+    x: rand() * 100,
+    y: rand() * 100,
+  };
+
   const ghost = pages[index + 1];
 
   return (
     <div className={`leaf ${animClass}`}>
       <div className={`paper ${squareCorners ? "cornersSquare" : ""} side-${side}`}>
         {/* a real scanned sheet of old paper, toned to match */}
-        <div className="photoPaper" aria-hidden="true" />
+        <div
+          className="photoPaper"
+          aria-hidden="true"
+          style={{
+            transform: `scale(${photo.flipX}, ${photo.flipY})`,
+            backgroundSize: `auto ${photo.size.toFixed(0)}%`,
+            backgroundPosition: `${photo.x.toFixed(1)}% ${photo.y.toFixed(1)}%`,
+          }}
+        />
 
         {/* show-through of the following leaf, mirrored, like thin old stock */}
         {ghost && (
@@ -237,15 +255,22 @@ export default function Book() {
 
   const base = spread ? current - (current % 2) : current;
   const step = spread ? 2 : 1;
+  const [flip, setFlip] = useState<{ from: number; dir: 1 | -1 } | null>(null);
+  const flipTimer = useRef<number | undefined>(undefined);
 
   const go = useCallback(
     (to: number) => {
       if (to < 0) to = 0;
       if (to >= pages.length || to === current) return;
+      if (spread && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setFlip({ from: base, dir: to > current ? 1 : -1 });
+        window.clearTimeout(flipTimer.current);
+        flipTimer.current = window.setTimeout(() => setFlip(null), 760);
+      }
       setCurrent(to);
       setHasTurned(true);
     },
-    [current]
+    [current, spread, base]
   );
 
   useEffect(() => {
@@ -294,24 +319,61 @@ export default function Book() {
         role="region"
         aria-label={`Book page ${base + 1}${spread ? ` and ${Math.min(base + 2, pages.length)}` : ""} of ${pages.length}`}
       >
-        <div className="leafBox boxLeft" key={`L${base}`}>
-          <PageLeaf
-            index={base}
-            animClass={hasTurned ? "" : "enterFirst"}
-            squareCorners={squareCorners}
-            side={spread ? "left" : "single"}
-          />
-        </div>
-        {spread && base + 1 < pages.length && (
-          <div className="leafBox boxRight" key={`R${base + 1}`}>
-            <PageLeaf
-              index={base + 1}
-              animClass={hasTurned ? "" : "enterFirst"}
-              squareCorners={squareCorners}
-              side="right"
-            />
-          </div>
-        )}
+        {(() => {
+          // while a leaf is mid-flip, the layers underneath already show the
+          // pages that will be revealed when it lands
+          const underLeft = flip ? (flip.dir === 1 ? flip.from : flip.from - 2) : base;
+          const underRight = flip ? (flip.dir === 1 ? flip.from + 3 : flip.from + 1) : base + 1;
+          const ok = (i: number) => i >= 0 && i < pages.length;
+          return (
+            <>
+              {ok(underLeft) && (
+                <div className="leafBox boxLeft" key={`L${underLeft}`}>
+                  <PageLeaf
+                    index={underLeft}
+                    animClass={hasTurned ? "" : "enterFirst"}
+                    squareCorners={squareCorners}
+                    side={spread ? "left" : "single"}
+                  />
+                </div>
+              )}
+              {spread && ok(underRight) && (
+                <div className="leafBox boxRight" key={`R${underRight}`}>
+                  <PageLeaf
+                    index={underRight}
+                    animClass={hasTurned ? "" : "enterFirst"}
+                    squareCorners={squareCorners}
+                    side="right"
+                  />
+                </div>
+              )}
+              {spread && flip && (
+                <div className={`flipper ${flip.dir === 1 ? "flipFwd" : "flipRev"}`}>
+                  <div className="flipFace faceFront">
+                    {ok(flip.dir === 1 ? flip.from + 1 : flip.from) && (
+                      <PageLeaf
+                        index={flip.dir === 1 ? flip.from + 1 : flip.from}
+                        animClass=""
+                        squareCorners={squareCorners}
+                        side={flip.dir === 1 ? "right" : "left"}
+                      />
+                    )}
+                  </div>
+                  <div className="flipFace faceBack">
+                    {ok(flip.dir === 1 ? flip.from + 2 : flip.from - 1) && (
+                      <PageLeaf
+                        index={flip.dir === 1 ? flip.from + 2 : flip.from - 1}
+                        animClass=""
+                        squareCorners={squareCorners}
+                        side={flip.dir === 1 ? "left" : "right"}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
 
       <div className="vignette" aria-hidden="true" />
