@@ -749,7 +749,8 @@ body {
   pointer-events: none;
   opacity: 0;
   mix-blend-mode: screen;
-  background: radial-gradient(ellipse 72% 62% at 50% 58%, rgba(255, 236, 130, 0.98), rgba(255, 196, 64, 0.6) 52%, rgba(255, 160, 40, 0.18) 78%, transparent 95%);
+  /* Ramp's highlighter yellow, #E4F222 */
+  background: radial-gradient(ellipse 72% 62% at 50% 58%, rgba(228, 242, 34, 0.95), rgba(228, 242, 34, 0.5) 52%, rgba(228, 242, 34, 0.14) 78%, transparent 95%);
   will-change: opacity;
 }
 
