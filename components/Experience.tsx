@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Book from "@/components/Book";
 import TombScene from "@/components/TombScene";
+import EnterpriseAccessModal from "@/components/EnterpriseAccessModal";
 
 const Intro3D = dynamic(() => import("@/components/Intro3D"), { ssr: false });
 const ClosedBook = dynamic(() => import("@/components/ClosedBook"), { ssr: false });
@@ -13,6 +14,7 @@ import type { HoleRect } from "@/components/Intro3D";
 export default function Experience() {
   const [phase, setPhase] = useState<"tomb" | "intro" | "book" | "closed">("tomb");
   const [flash, setFlash] = useState(false);
+  const [enterpriseOpen, setEnterpriseOpen] = useState(false);
   // Lights are ON, period (owner call, 2026-08-11 after the glow was
   // dialed to its final level). The plain/inspection plumbing survives
   // in the components; there is deliberately no UI for it anymore.
@@ -125,6 +127,7 @@ export default function Experience() {
       {phase === "book" && (
         <>
           <Book />
+          <button className="enterpriseAccessButton" type="button" onClick={() => setEnterpriseOpen(true)}>Get access</button>
           {/* closing the book: back to the tomb, with the closed tome
               hanging in the room — not all the way back to square one.
               Waits out the handoff flash. */}
@@ -156,6 +159,7 @@ export default function Experience() {
           )}
         </>
       )}
+      {enterpriseOpen && <EnterpriseAccessModal onClose={() => setEnterpriseOpen(false)} />}
     </>
   );
 }

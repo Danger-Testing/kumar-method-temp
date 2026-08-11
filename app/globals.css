@@ -1071,3 +1071,20 @@ body {
     animation: none;
   }
 }
+
+.enterpriseAccessButton { position: fixed; right: 2.5vw; top: 2.2vh; z-index: 45; border: 1px solid rgba(233,214,178,.45); padding: 11px 18px; background: rgba(18,10,5,.72); color: #e9d6b2; font: 16px var(--font-garamond), Georgia, serif; cursor: pointer; letter-spacing: .08em; text-transform: uppercase; }
+.enterpriseAccessButton:hover, .enterpriseAccessButton:focus-visible { border-color: #e9d6b2; background: rgba(36,18,8,.92); }
+.enterpriseModalBackdrop { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 24px; background: rgba(0,0,0,.78); }
+.enterpriseModal { position: relative; width: min(420px,100%); padding: 34px; border: 1px solid #a90000; background: #090807; color: #c40000; box-shadow: 0 24px 80px rgba(0,0,0,.55); }
+.enterpriseModal h2 { margin: 0 0 24px; font: 400 30px var(--font-fell), Georgia, serif; text-transform: uppercase; }
+.enterpriseModalClose { position: absolute; top: 10px; right: 13px; border: 0; background: none; color: #c40000; cursor: pointer; font: 32px/1 Georgia, serif; }
+.enterpriseModal form { display: grid; gap: 14px; }
+.enterpriseModal label { display: grid; gap: 6px; font: 400 17px var(--font-fell), Georgia, serif; text-transform: uppercase; }
+.enterpriseModal input { box-sizing: border-box; width: 100%; border: 1px solid #a90000; padding: 11px; background: #000; color: #f3f0ea; font: 17px var(--font-garamond), Georgia, serif; }
+.enterpriseModal input:focus { outline: 1px solid #e9d6b2; }
+.enterpriseModal form > button { border: 1px solid #c40000; padding: 12px; background: #c40000; color: #080604; cursor: pointer; font: 700 16px var(--font-garamond), Georgia, serif; text-transform: uppercase; }
+.enterpriseModal form > button:hover, .enterpriseModal form > button:focus-visible { background: #e9d6b2; border-color: #e9d6b2; }
+.enterpriseModal form > button:disabled { opacity: .6; cursor: wait; }
+.enterpriseFormSuccess, .enterpriseFormError { margin: 0; font: 16px var(--font-garamond), Georgia, serif; }
+.enterpriseFormSuccess { color: #b8e6b8; }
+.enterpriseFormError { color: #ffb0a8; }
