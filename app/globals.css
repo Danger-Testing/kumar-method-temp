@@ -80,10 +80,12 @@ body {
 
 .bookArea {
   position: relative;
-  height: min(94svh, 140vw);
+  /* leaves breathing room beneath the pages for the scrubber */
+  height: min(88svh, 140vw);
   aspect-ratio: 0.66;
   cursor: pointer;
   z-index: 2;
+  margin-bottom: 3vh;
 }
 
 /* an open book on wide screens: two facing leaves and a center spine */
@@ -592,46 +594,87 @@ body {
   opacity: 0;
 }
 
-/* Kindle-style page scrubber: a hairline that wakes on touch */
+/* page scrubber: a short, quiet ornament — flourish line, "n / 110"
+   counter, and a small progress track. Drag to fast-travel. */
 .scrubber {
   position: fixed;
-  left: 8vw;
-  right: 8vw;
-  bottom: 0;
-  height: 36px;
+  left: 50%;
+  bottom: 2vh;
+  transform: translateX(-50%);
+  width: min(280px, 62vw);
+  padding: 8px 0 10px;
   z-index: 45;
   cursor: pointer;
   touch-action: none;
-  opacity: 0.28;
+  opacity: 0.38;
   transition: opacity 0.3s;
+  color: rgba(233, 214, 178, 0.9);
 }
 
 .scrubber:hover,
 .scrubber.scrubbing {
-  opacity: 0.92;
+  opacity: 0.95;
+}
+
+.scrubFlourish {
+  display: block;
+  width: 100%;
+  height: 12px;
+  margin-bottom: 6px;
+  opacity: 0.8;
+}
+
+.scrubRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.scrubCount {
+  font-family: var(--font-garamond), Georgia, serif;
+  font-feature-settings: "onum";
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
 }
 
 .scrubTrack {
+  position: relative;
+  flex: 1;
+  height: 16px;
+}
+
+.scrubTrack::before {
+  content: "";
   position: absolute;
   left: 0;
   right: 0;
   top: 50%;
   height: 1px;
-  background: rgba(233, 214, 178, 0.35);
+  background: rgba(233, 214, 178, 0.25);
+}
+
+.scrubFill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(233, 214, 178, 0.85);
 }
 
 .scrubThumb {
   position: absolute;
   top: 50%;
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   transform: translate(-50%, -50%) rotate(45deg);
-  background: rgba(233, 214, 178, 0.85);
+  background: rgba(233, 214, 178, 0.9);
 }
 
 .scrubLabel {
   position: absolute;
-  bottom: 26px;
+  bottom: calc(100% + 2px);
+  left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
   font-family: var(--font-fell), serif;

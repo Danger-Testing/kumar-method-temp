@@ -362,7 +362,10 @@ export default function Book() {
                 </div>
               )}
               {spread && flip && (
-                <div className={`flipper ${flip.dir === 1 ? "flipFwd" : "flipRev"}`}>
+                <div
+                  className={`flipper ${flip.dir === 1 ? "flipFwd" : "flipRev"}`}
+                  key={`flip-${flip.from}-${flip.dir}`}
+                >
                   <div className="flipFace faceFront">
                     {ok(flip.dir === 1 ? flip.from + 1 : flip.from) && (
                       <PageLeaf
@@ -397,7 +400,6 @@ export default function Book() {
       </div>
 
       <div
-        ref={scrubRef}
         className={`scrubber ${scrubbing ? "scrubbing" : ""}`}
         role="slider"
         aria-label="Scrub through pages"
@@ -419,22 +421,38 @@ export default function Book() {
         onPointerUp={() => setScrubbing(false)}
         onPointerCancel={() => setScrubbing(false)}
       >
-        <div className="scrubTrack" aria-hidden="true" />
-        <div
-          className="scrubThumb"
-          aria-hidden="true"
-          style={{ left: `${((base / (pages.length - 1)) * 100).toFixed(2)}%` }}
-        />
-        {scrubbing && (
-          <div
-            className="scrubLabel"
-            style={{
-              left: `${Math.min(94, Math.max(6, (base / (pages.length - 1)) * 100)).toFixed(2)}%`,
-            }}
-          >
-            P. {base + 1} · {chapters[pages[base].chapter].shortName}
+        {scrubbing && <div className="scrubLabel">{chapters[pages[base].chapter].shortName}</div>}
+        <svg className="scrubFlourish" viewBox="0 0 300 12" aria-hidden="true">
+          <path
+            d="M14 6 C 6 11, 2 4, 9 3 C 13 2, 15 4, 14 6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.1"
+          />
+          <path
+            d="M14 5.5 C 90 3, 210 7, 296 4.8"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+          />
+        </svg>
+        <div className="scrubRow">
+          <span className="scrubCount">
+            {base + 1} / {pages.length}
+          </span>
+          <div className="scrubTrack" ref={scrubRef}>
+            <div
+              className="scrubFill"
+              style={{ width: `${((base / (pages.length - 1)) * 100).toFixed(2)}%` }}
+            />
+            <div
+              className="scrubThumb"
+              aria-hidden="true"
+              style={{ left: `${((base / (pages.length - 1)) * 100).toFixed(2)}%` }}
+            />
           </div>
-        )}
+        </div>
       </div>
 
       <button
