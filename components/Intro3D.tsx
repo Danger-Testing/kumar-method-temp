@@ -431,7 +431,9 @@ export function GlbBook({
       // can resolve, so its authoritative base strength is 60% of the
       // asset's — stashed once, so cache-shared materials never compound
       if (!m.userData.baseNormal && m.normalScale) {
-        m.userData.baseNormal = m.normalScale.clone().multiplyScalar(0.6);
+        // 0.05 = owner's call (2026-08-11): relief at a whisper — the
+        // asset's normal map is the moiré engine, so it barely registers
+        m.userData.baseNormal = m.normalScale.clone().multiplyScalar(0.05);
       }
       m.bumpScale = plain ? 0 : (m.userData.baseBump as number);
       if (m.userData.baseNormal) {
