@@ -112,20 +112,22 @@ export default function ClosedBook({
           above (book voice), the tagline below (ramp voice) — and the
           tagline is a button that opens the access modal */}
       <div className="closedTitle">Drag to turn it over. Tap to open.</div>
-      <button
-        type="button"
-        className="closedTagline"
-        onPointerDown={(e) => e.stopPropagation()}
-        onPointerUp={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation(); // must not read as a tap-to-open-the-reader
-          onBusiness?.();
-        }}
-      >
+      <div className="closedTagline">
         Use The Kumar Method to run your life.
         <br />
-        Use Ramp to run your business.
-      </button>
+        <button
+          type="button"
+          className="tagBiz"
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation(); // must not read as a tap-to-open-the-reader
+            onBusiness?.();
+          }}
+        >
+          Use <strong>Ramp</strong> to run your business.
+        </button>
+      </div>
     </div>
   );
 }

@@ -843,18 +843,20 @@ export default function Intro3D({
           <div className={`closedTitle heroWait ${holding ? "heroShow" : ""}`}>
             Tap to open the book.
           </div>
-          <button
-            type="button"
-            className={`closedTagline heroWait ${holding ? "heroShow" : ""}`}
-            onClick={(e) => {
-              e.stopPropagation(); // must not release the hold
-              onBusiness?.();
-            }}
-          >
+          <div className={`closedTagline heroWait ${holding ? "heroShow" : ""}`}>
             Use The Kumar Method to run your life.
             <br />
-            Use Ramp to run your business.
-          </button>
+            <button
+              type="button"
+              className="tagBiz"
+              onClick={(e) => {
+                e.stopPropagation(); // must not release the hold
+                onBusiness?.();
+              }}
+            >
+              Use <strong>Ramp</strong> to run your business.
+            </button>
+          </div>
         </>
       )}
     </div>
