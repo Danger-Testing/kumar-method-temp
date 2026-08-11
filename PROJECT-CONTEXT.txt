@@ -46,10 +46,10 @@ get the work rejected:
   740ms, cubic-bezier(0.32, 0.04, 0.14, 1) — because it mimics a
   real book leaf. That was requested: "really fast and really
   majestic.")
-- SPARKLE LEVEL IS 10%. The gilding ignition was reduced twice
-  (100% -> 75% -> 10%). Current: emissiveIntensity multipliers 0.3
-  front / 0.26 spine, bloom 0.12 + ignite*0.08 + dive*0.9. Do not
-  raise without being asked.
+- THE GLOW LEVEL IS FROZEN: IGNITE_FULL = 1.65 in TheBook.tsx,
+  user-dialed via slider on 2026-08-11 (they chose ×0.50 of the demo
+  level). ONE glow everywhere — TheBook is the only place it's set.
+  (The older 10%-era constants are history; this supersedes them.)
 - NO Contents menu / ribbon. Navigation is only: click zones
   (left third back on single page, halves on spread), arrow keys,
   space, swipe.
@@ -63,10 +63,10 @@ get the work rejected:
 - EVERY risky/aesthetic change goes in ITS OWN COMMIT with a clear
   message, so the owner can say "revert that" and it's one
   git revert + redeploy. This is a standing contract. Honor it.
-- PLAIN (lights-off) MODE IS THE DEFAULT as of 2026-08-11, owner-
-  temporary ("just for now") while judging the moiré. Ask before
-  reverting to the lit default. The flag: `plain` state in
-  Experience.tsx; the corner toggle flips it.
+- LIGHTS ARE ON, PERIOD (owner call, 2026-08-11, after dialing the
+  final glow). The lights toggle and glow slider are REMOVED. The
+  plain/inspection plumbing stays dormant in TheBook/Intro3D/
+  ClosedBook props for future diagnostics — no UI for it.
 - The owner dictates by voice; messages arrive mid-work and may
   contain transcription noise ("she" for "you", etc.). Read intent.
 - User's other conventions (from their global memory): ⌥Space is

@@ -29,7 +29,9 @@ const CT = 0.05; // cover board thickness
    straight into TheBook's igniteRef. The intro's scripted awakening
    ramps its own 0→~1 timeline and multiplies by IGNITE_FULL so its
    peak lands on the exact same brightness. */
-export const IGNITE_FULL = 3.3;
+// 1.65 = the demo's 3.3 × the owner's dialed 0.50 (slider session,
+// 2026-08-11). This is THE glow level; don't retune per scene.
+export const IGNITE_FULL = 1.65;
 export function igniteDrive(t: number): number {
   return (0.55 + 0.45 * Math.sin(t * 0.9)) * (0.9 + 0.1 * Math.sin(t * 5.1)) * IGNITE_FULL;
 }

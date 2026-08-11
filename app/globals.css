@@ -979,8 +979,7 @@ body {
 
 .skipHint {
   position: absolute;
-  /* stacked above the lights-off toggle, which owns the corner itself */
-  bottom: calc(2.2vh + 40px);
+  bottom: 2.4vh;
   right: max(2.5vw, 18px);
   font-family: var(--font-fell), serif;
   font-style: italic;
@@ -1057,51 +1056,8 @@ body {
   pointer-events: none;
 }
 
-/* TEMPORARY tuning tool: glow brightness slider in the closed view.
-   The owner dials the level, reports the number, it bakes into
-   TheBook's IGNITE_FULL, and this retires. */
-.glowTuner {
-  position: fixed;
-  top: 2.2vh;
-  left: max(2.5vw, 18px);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  z-index: 95;
-  font-family: var(--font-garamond), Georgia, serif;
-  font-style: italic;
-  font-size: 14px;
-  color: rgba(233, 214, 178, 0.8);
-}
-
-.glowTuner input {
-  width: 140px;
-  accent-color: #c9a15e;
-}
-
-/* inspection toggle: strips the warm rig, bump relief, and gilding glow.
-   Sits above the tomb (90) and the intro (100) so it works mid-flight. */
-.plainToggle {
-  position: fixed;
-  bottom: 2.2vh;
-  right: max(2.5vw, 18px);
-  z-index: 120;
-  padding: 8px 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-garamond), Georgia, serif;
-  font-style: italic;
-  font-size: 14px;
-  letter-spacing: 0.06em;
-  color: rgba(233, 214, 178, 0.45);
-  transition: color 0.25s;
-}
-
-.plainToggle:hover,
-.plainToggle:focus-visible {
-  color: rgba(233, 214, 178, 0.95);
-}
+/* (the lights toggle and glow slider lived here — retired 2026-08-11
+   once the owner dialed the final glow level; lights are on, period) */
 
 /* ----------------------------------------------------------------
    Accessibility
