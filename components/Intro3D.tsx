@@ -406,9 +406,13 @@ export function GlbBook({
       m.emissiveMap = t;
       m.emissiveIntensity = 0;
       m.needsUpdate = true;
-      // sharper sampling at glancing angles on the asset's own maps
+      // sharper sampling at glancing angles on the asset's own maps —
+      // these are already on the GPU, so the sampler must be re-uploaded
       [m.map, m.normalMap, m.roughnessMap, m.metalnessMap].forEach((tex) => {
-        if (tex) tex.anisotropy = 16;
+        if (tex) {
+          tex.anisotropy = 16;
+          tex.needsUpdate = true;
+        }
       });
     });
   }, [mats]);
