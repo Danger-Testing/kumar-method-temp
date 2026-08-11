@@ -82,6 +82,7 @@ export default function Experience() {
       {phase === "intro" && (
         <Intro3D
           emerge
+          plain={plain}
           holeRect={holeRef}
           onTombFade={(fade, glow) => {
             // the scene stays alive behind the book instead of dying to
