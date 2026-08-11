@@ -3,8 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
-import { TheBook, BookLights, BLOOM, igniteDrive } from "@/components/TheBook";
+import { TheBook, BookLights, igniteDrive } from "@/components/TheBook";
 
 /** coarse pointer ≈ phone/tablet: render leaner there (mirrors Intro3D) */
 function isCoarse(): boolean {
@@ -24,7 +23,6 @@ function SpinnableBook({
 }) {
   const group = useRef<THREE.Group>(null);
   const igniteRef = useRef(0);
-  const bloomRef = useRef<{ intensity: number } | null>(null);
 
   useFrame(({ clock }) => {
     const g = group.current;
@@ -49,7 +47,6 @@ function SpinnableBook({
     // ONE glow: the canonical drive from TheBook — restored after the
     // sparkle artifact turned out to be bump-map glints, not the glow
     igniteRef.current = plain ? 0 : igniteDrive(t);
-    if (bloomRef.current) bloomRef.current.intensity = plain ? 0 : BLOOM.intensity;
   });
 
   return (
@@ -59,18 +56,6 @@ function SpinnableBook({
         <TheBook igniteRef={igniteRef} plain={plain} />
       </group>
 
-      {/* the same output pipeline as the intro — without it the closed
-          book rendered through a different tone transform and read darker */}
-      <EffectComposer multisampling={isCoarse() ? 0 : 2}>
-        <Bloom
-          ref={bloomRef as never}
-          intensity={BLOOM.intensity}
-          luminanceThreshold={BLOOM.luminanceThreshold}
-          luminanceSmoothing={BLOOM.luminanceSmoothing}
-          radius={BLOOM.radius}
-          mipmapBlur
-        />
-      </EffectComposer>
     </>
   );
 }

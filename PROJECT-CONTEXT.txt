@@ -46,10 +46,13 @@ get the work rejected:
   740ms, cubic-bezier(0.32, 0.04, 0.14, 1) — because it mimics a
   real book leaf. That was requested: "really fast and really
   majestic.")
-- THE GLOW LEVEL IS FROZEN: IGNITE_FULL = 1.65 in TheBook.tsx,
-  user-dialed via slider on 2026-08-11 (they chose ×0.50 of the demo
-  level). ONE glow everywhere — TheBook is the only place it's set.
-  (The older 10%-era constants are history; this supersedes them.)
+- ALL GLOW/LIGHT EFFECTS ARE OFF (owner call, 2026-08-11 afternoon,
+  after the 3D artist reviewed): TheBook renders the artist's
+  bookNew2.glb untouched — no emissive, BLOOM.intensity 0, room rig +
+  emergence shade only. The code-built recreation + its dialed glow
+  (IGNITE_FULL 1.65, user-chosen ×0.50) live in git history and
+  experiments/glow-test-page.tsx if ever wanted back. Ask before
+  reviving any of it.
 - NO Contents menu / ribbon. Navigation is only: click zones
   (left third back on single page, halves on spread), arrow keys,
   space, swipe.

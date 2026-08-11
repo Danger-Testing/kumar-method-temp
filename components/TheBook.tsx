@@ -1,44 +1,34 @@
 "use client";
 
 /* THE BOOK — the single source of truth for the physical tome, used by
-   the intro emergence (Intro3D), the dismissed state (ClosedBook), and
-   the /glow-test comparison page. ONE geometry, ONE set of materials,
-   ONE glow drive, ONE bloom config, ONE light rig. If a scene renders
-   the book any other way, that's a bug.
+   the intro emergence (Intro3D) and the dismissed state (ClosedBook).
+   ONE geometry, ONE set of materials, ONE light rig.
 
-   The design is the owner's plum/copper bookNew2, recreated at full
-   resolution: the original 700×1088 cover scans recolored offline to the
-   GLB's sampled palette, the ramp lockup transplanted from the GLB's own
-   atlas, and the GLB's page stripes. Authored per the recalibration
-   protocol — regenerate the /masks/plum-* set offline if the design
-   ever changes. */
+   CURRENT STATE (owner call, 2026-08-11 afternoon): the 3D artist's own
+   bookNew2.glb, rendered with ALL effects OFF — no glow, no ignition,
+   no bloom. Room light and the emergence's cave-shade only. The
+   code-built recreation era lives in git history and in
+   experiments/glow-test-page.tsx if it's ever wanted back. */
 
 import { useMemo } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
-import { useTexture } from "@react-three/drei";
+import { useGLTF } from "@react-three/drei";
 
 export const BOOK_H = 1.65;
 export const BOOK_W = BOOK_H * (700 / 1088);
 export const BOOK_D = BOOK_H * (230 / 852) * 0.9;
-const CT = 0.05; // cover board thickness
 
-/* ONE GLOW.
-   igniteDrive(t) is the canonical rhythm (the approved demo look) —
-   scenes with a free-running glow (ClosedBook, glow-test) feed it
-   straight into TheBook's igniteRef. The intro's scripted awakening
-   ramps its own 0→~1 timeline and multiplies by IGNITE_FULL so its
-   peak lands on the exact same brightness. */
-// 1.65 = the demo's 3.3 × the owner's dialed 0.50 (slider session,
-// 2026-08-11). This is THE glow level; don't retune per scene.
+/* Glow is OFF (owner call). The drive/constants remain so callers keep
+   compiling — they feed a value the materials no longer consume. */
 export const IGNITE_FULL = 1.65;
 export function igniteDrive(t: number): number {
   return (0.55 + 0.45 * Math.sin(t * 0.9)) * (0.9 + 0.1 * Math.sin(t * 5.1)) * IGNITE_FULL;
 }
 
-/* ONE BLOOM. Every composer that shows the book uses exactly this. */
+/* ONE BLOOM config — intensity 0: the pass idles (no glow, no smear). */
 export const BLOOM = {
-  intensity: 0.8,
+  intensity: 0,
   luminanceThreshold: 0.55,
   luminanceSmoothing: 0.22,
   radius: 0.42,
@@ -47,10 +37,8 @@ export const BLOOM = {
 /* ONE LIGHT RIG (and its lights-off counterpart). */
 export function BookLights({ plain }: { plain: boolean }) {
   return plain ? (
-    // pure ambient: flat albedo, zero hotspots — the inspection mode
     <ambientLight intensity={1.35} color="#ffffff" />
   ) : (
-    // no key spotlight: its raking angle dragged relief into moiré bands
     <>
       <ambientLight intensity={0.42} color="#ffdcb0" />
       <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
@@ -59,168 +47,80 @@ export function BookLights({ plain }: { plain: boolean }) {
   );
 }
 
-// warm the textures the moment this module loads
-useTexture.preload("/masks/plum-front.jpg");
-useTexture.preload("/masks/plum-back.jpg");
-useTexture.preload("/masks/plum-spine.jpg");
-useTexture.preload("/masks/plum-ignite-front.png");
-useTexture.preload("/masks/plum-ignite-back.png");
-useTexture.preload("/masks/plum-ignite-spine.png");
-useTexture.preload("/masks/bump-front.jpg");
-useTexture.preload("/masks/bump-back.jpg");
-useTexture.preload("/masks/bump-spine.jpg");
-useTexture.preload("/masks/plum-pages.jpg");
-useTexture.preload("/masks/plum-pages-rot.jpg");
+useGLTF.preload("/book.glb");
 
 export function TheBook({
   igniteRef,
   shadeRef,
   plain = false,
 }: {
-  /** glow level in canonical units — igniteDrive(t), or timeline × IGNITE_FULL */
-  igniteRef: React.MutableRefObject<number>;
+  /** accepted for API stability; the materials no longer consume it */
+  igniteRef?: React.MutableRefObject<number>;
   /** cave-shadow multiply for the emergence (1 = fully lit) */
   shadeRef?: React.MutableRefObject<number>;
-  /** inspection mode: no glow, no relief */
+  /** inspection mode (dormant, no UI) */
   plain?: boolean;
 }) {
-  const [plumF, plumB, plumS, igF, igB, igS, bumpF, bumpB, bumpS, pages, pagesRot] = useTexture([
-    "/masks/plum-front.jpg",
-    "/masks/plum-back.jpg",
-    "/masks/plum-spine.jpg",
-    "/masks/plum-ignite-front.png",
-    "/masks/plum-ignite-back.png",
-    "/masks/plum-ignite-spine.png",
-    // bump sources are BLURRED copies of the scans: the embossing keeps
-    // its relief, but the leather micro-grain is smoothed out — raw-scan
-    // bumps threw pinpoint glints at grazing angles that bloom inflated
-    // into a sparkle cloud while rotating (the closed-view artifact)
-    "/masks/bump-front.jpg",
-    "/masks/bump-back.jpg",
-    "/masks/bump-spine.jpg",
-    "/masks/plum-pages.jpg",
-    "/masks/plum-pages-rot.jpg",
-  ]);
-  [plumF, plumB, plumS, igF, igB, igS, pages, pagesRot].forEach((t) => {
-    t.colorSpace = THREE.SRGBColorSpace;
-    t.anisotropy = 16;
-  });
-  // the page stripes tile denser than a single wrap; wrap mode is
-  // sampler state, so it needs the re-upload flag
-  pagesRot.wrapS = pagesRot.wrapT = THREE.RepeatWrapping;
-  pagesRot.repeat.set(2, 1); // fore-edge: lines vary along u (depth)
-  pagesRot.needsUpdate = true;
-  pages.wrapS = pages.wrapT = THREE.RepeatWrapping;
-  pages.repeat.set(1, 2); // top/bottom: lines vary along v (depth)
-  pages.needsUpdate = true;
+  void igniteRef;
+  const { scene } = useGLTF("/book.glb");
 
-  const frontMat = useMemo(() => {
-    const m = new THREE.MeshStandardMaterial({
-      map: plumF,
-      bumpMap: bumpF,
-      bumpScale: 1.6,
-      // NO roughnessMap: the scan-as-roughness made dark leather glossy,
-      // so the point lights glinted off the embossing at grazing angles
-      // ("sparkle reflections"). Real leather is matte.
-      roughness: 0.8,
-      metalness: 0.12,
-      emissive: new THREE.Color("#ffb763"),
-      emissiveIntensity: 0,
+  const { root, mats } = useMemo(() => {
+    // clone hierarchy AND materials: each mount owns its state, so the
+    // emergence's shade can never leak into another scene
+    const clone = scene.clone(true);
+    const mats: THREE.MeshStandardMaterial[] = [];
+    clone.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const src = mesh.material;
+      const arr = Array.isArray(src) ? src : [src];
+      const cloned = arr.map((m) => {
+        const c = (m as THREE.MeshStandardMaterial).clone();
+        if (c.isMeshStandardMaterial) {
+          // moiré taming: the asset's normal map is denser than any
+          // screen — run it at 5% (established owner-approved level)
+          c.normalScale?.multiplyScalar(0.05);
+          [c.map, c.normalMap, c.roughnessMap, c.metalnessMap].forEach((t) => {
+            if (t) t.anisotropy = 16;
+          });
+          mats.push(c);
+        }
+        return c;
+      });
+      mesh.material = Array.isArray(src) ? cloned : cloned[0];
     });
-    m.emissiveMap = igF;
-    return m;
-  }, [plumF, bumpF, igF]);
-
-  const backMat = useMemo(() => {
-    const m = new THREE.MeshStandardMaterial({
-      map: plumB,
-      bumpMap: bumpB,
-      bumpScale: 1.2,
-      roughness: 0.75,
-      metalness: 0.15,
-      emissive: new THREE.Color("#ffb763"),
-      emissiveIntensity: 0,
-    });
-    m.emissiveMap = igB;
-    return m;
-  }, [plumB, bumpB, igB]);
-
-  const spineMat = useMemo(() => {
-    const m = new THREE.MeshStandardMaterial({
-      map: plumS,
-      bumpMap: bumpS,
-      bumpScale: 1.4,
-      roughness: 0.8,
-      metalness: 0.2,
-      emissive: new THREE.Color("#ffb763"),
-      emissiveIntensity: 0,
-    });
-    m.emissiveMap = igS;
-    return m;
-  }, [plumS, bumpS, igS]);
-
-  const leather = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: "#3a2630", roughness: 0.62, metalness: 0.06 }),
-    []
-  );
-  const pageEdgeMat = useMemo(
-    () => new THREE.MeshStandardMaterial({ map: pagesRot, roughness: 0.65, metalness: 0.05 }),
-    [pagesRot]
-  );
-  const pageFlatMat = useMemo(
-    () => new THREE.MeshStandardMaterial({ map: pages, roughness: 0.65, metalness: 0.05 }),
-    [pages]
-  );
+    // normalize: the asset lies flat (y = thickness, z = height) —
+    // pitch upright, scale to BOOK_H, center
+    const root = new THREE.Group();
+    const pre = new THREE.Box3().setFromObject(clone);
+    const preSize = pre.getSize(new THREE.Vector3());
+    if (preSize.z >= preSize.x && preSize.z >= preSize.y) {
+      clone.rotation.x = -Math.PI / 2;
+    }
+    root.add(clone);
+    const box = new THREE.Box3().setFromObject(root);
+    const size = box.getSize(new THREE.Vector3());
+    const s = BOOK_H / size.y;
+    root.scale.setScalar(s);
+    const center = box.getCenter(new THREE.Vector3()).multiplyScalar(s);
+    root.position.sub(center);
+    return { root, mats };
+  }, [scene]);
 
   useFrame(() => {
-    const ig = plain ? 0 : igniteRef.current;
-    frontMat.emissiveIntensity = ig * 0.3;
-    spineMat.emissiveIntensity = ig * 0.26;
-    backMat.emissiveIntensity = ig * 0.3;
-    // relief off in inspection mode (bumpScale is a uniform — cheap)
-    const bump = plain ? 0 : 1;
-    frontMat.bumpScale = 1.6 * bump;
-    backMat.bumpScale = 1.2 * bump;
-    spineMat.bumpScale = 1.4 * bump;
-    // the emergence's cave shadow: multiply every material's color
+    // the emergence's cave shadow — the only per-frame material write left
     const shade = shadeRef?.current ?? 1;
-    [frontMat, backMat, spineMat, leather, pageEdgeMat, pageFlatMat].forEach((m) => {
+    for (const m of mats) {
       if (!m.userData.baseColor) m.userData.baseColor = m.color.clone();
       m.color.copy(m.userData.baseColor as THREE.Color).multiplyScalar(shade);
-    });
+      if (m.normalScale) {
+        // plain/inspection: relief off (dormant path, no UI)
+        const k = plain ? 0 : 1;
+        if (m.userData.baseNormal === undefined) m.userData.baseNormal = m.normalScale.x;
+        m.normalScale.setScalar((m.userData.baseNormal as number) * k);
+      }
+    }
   });
 
-  // BoxGeometry face order: +x, -x, +y, -y, +z, -z
-  return (
-    <group>
-      {/* front cover */}
-      <mesh position={[0, 0, BOOK_D / 2 - CT / 2]}>
-        <boxGeometry args={[BOOK_W, BOOK_H, CT]} />
-        {[leather, leather, leather, leather, frontMat, leather].map((m, i) => (
-          <primitive key={i} object={m} attach={`material-${i}`} />
-        ))}
-      </mesh>
-      {/* back cover */}
-      <mesh position={[0, 0, -(BOOK_D / 2 - CT / 2)]}>
-        <boxGeometry args={[BOOK_W, BOOK_H, CT]} />
-        {[leather, leather, leather, leather, leather, backMat].map((m, i) => (
-          <primitive key={i} object={m} attach={`material-${i}`} />
-        ))}
-      </mesh>
-      {/* spine hub, slightly proud like a real binding */}
-      <mesh position={[-BOOK_W / 2, 0, 0]}>
-        <boxGeometry args={[CT * 1.5, BOOK_H * 1.012, BOOK_D * 1.03]} />
-        {[leather, spineMat, leather, leather, leather, leather].map((m, i) => (
-          <primitive key={i} object={m} attach={`material-${i}`} />
-        ))}
-      </mesh>
-      {/* page block */}
-      <mesh position={[0.02, 0, 0]}>
-        <boxGeometry args={[BOOK_W - 0.06, BOOK_H - 0.045, BOOK_D - CT * 2]} />
-        {[pageEdgeMat, leather, pageFlatMat, pageFlatMat, leather, leather].map((m, i) => (
-          <primitive key={i} object={m} attach={`material-${i}`} />
-        ))}
-      </mesh>
-    </group>
-  );
+  return <primitive object={root} />;
 }

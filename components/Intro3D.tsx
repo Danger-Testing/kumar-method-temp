@@ -4,8 +4,7 @@ import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "rea
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture, useGLTF } from "@react-three/drei";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
-import { TheBook, BookLights, BLOOM, IGNITE_FULL } from "@/components/TheBook";
+import { TheBook, BookLights, IGNITE_FULL } from "@/components/TheBook";
 
 /* Book proportions measured from the cover scans:
    front 700×1088, spine 230×852 → a thick, squat tome. */
@@ -516,7 +515,6 @@ function IntroScene({
   const igniteRef = useRef(0); // timeline units (0..~1.15), for the tomb callbacks
   const bookIgnite = useRef(0); // canonical units for TheBook (timeline × IGNITE_FULL)
   const emergeShade = useRef(1);
-  const bloomRef = useRef<{ intensity: number } | null>(null);
   const doneRef = useRef(false);
   const startRef = useRef<number | null>(null);
   const { camera, size } = useThree();
@@ -642,8 +640,6 @@ function IntroScene({
       const doorGlow = smooth(0.05, 0.95, t) * (1 - smooth(E + 0.35, E + 1.4, t));
       onEmerge(rise, t, ig, doorGlow);
     }
-    // ONE bloom, everywhere the book renders (TheBook.BLOOM)
-    if (bloomRef.current) bloomRef.current.intensity = plain ? 0 : BLOOM.intensity;
 
     // stop the magnification before the scan runs out of pixels — the
     // rack-focus blur and grain carry the final stretch instead
@@ -678,16 +674,6 @@ function IntroScene({
         <TheBook igniteRef={bookIgnite} shadeRef={emergeShade} plain={plain} />
       </group>
 
-      <EffectComposer multisampling={isCoarse() ? 0 : 2}>
-        <Bloom
-          ref={bloomRef as never}
-          intensity={BLOOM.intensity}
-          luminanceThreshold={BLOOM.luminanceThreshold}
-          luminanceSmoothing={BLOOM.luminanceSmoothing}
-          radius={BLOOM.radius}
-          mipmapBlur
-        />
-      </EffectComposer>
     </>
   );
 }
@@ -739,7 +725,7 @@ export default function Intro3D({
       <div className="introCanvas" ref={canvasWrapRef}>
         <Canvas
           camera={{ position: [0, 0, 4.15], fov: 40 }}
-          gl={{ antialias: !isCoarse() }}
+          gl={{ antialias: true }} // no composer anymore — MSAA must cover the edges
           dpr={isCoarse() ? [1, 1.5] : [1, 1.75]}
         >
           <IntroScene
