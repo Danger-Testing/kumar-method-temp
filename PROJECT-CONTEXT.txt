@@ -1,0 +1,242 @@
+================================================================
+THE KUMAR METHOD — PROJECT CONTEXT & AGENT HANDOFF
+================================================================
+Last updated: 2026-08-10
+Repo: https://github.com/Danger-Testing/kumar-method-temp (private)
+Live: https://plain-rules.vercel.app (Vercel team: dangertesting,
+      project name: plain-rules)
+Local dev: npm run dev -- --port 3777 (owner usually has it running)
+
+----------------------------------------------------------------
+1. WHAT THIS IS
+----------------------------------------------------------------
+A single-purpose website that feels like reading a very old,
+treasured book. The book is "The Kumar Method": ten chapters of
+plain rules about money and life, written in the voice of a
+Chartered Accountant who rebuilt his life across three countries
+(India -> Bahrain 1990 -> America 1995; wife Sheba). The chapters
+cover: the Basics, Financial Discipline, Family & Money, Friends &
+Money, Investing, Betting & Predicting, Starting Your Own Company,
+Moving Countries, Time Being Worth More Than Money, and Legacy.
+
+The experience: a cinematic 3D launch intro (the physical book
+spins out of darkness, its gold gilding ignites, the camera dives
+into the cover) that hands off into a page-by-page reading view of
+aged paper. 110 pages total: each chapter is 1 opener page (title +
+italic-voiced intro with drop caps, styled after the owner's print
+mockup) + 10 pages of one rule each.
+
+The spine of the physical book carries a "ramp" logo; the ramp
+logo also appears as a bronze sign-off inside the golden flash at
+the end of the intro. This appears to be a Ramp (fintech) branded
+artifact — treat the logo as intentional.
+
+----------------------------------------------------------------
+2. THE OWNER'S TASTE — HARD RULES, DO NOT VIOLATE
+----------------------------------------------------------------
+These were each learned from direct feedback. Breaking them will
+get the work rejected:
+
+- REALISM OVER FLASH. Anything that reads as a "web effect" gets
+  called cheesy. The fade+drift page turn was rejected. Heavy
+  deckled page edges were rejected ("in between vintage and UI").
+  Fake-feeling background circles were rejected.
+- Single-page turns are INSTANT. No animation. (Exception: the
+  two-page spread mode uses a fast 3D leaf flip around the spine —
+  740ms, cubic-bezier(0.32, 0.04, 0.14, 1) — because it mimics a
+  real book leaf. That was requested: "really fast and really
+  majestic.")
+- SPARKLE LEVEL IS 10%. The gilding ignition was reduced twice
+  (100% -> 75% -> 10%). Current: emissiveIntensity multipliers 0.3
+  front / 0.26 spine, bloom 0.12 + ignite*0.08 + dive*0.9. Do not
+  raise without being asked.
+- NO Contents menu / ribbon. Navigation is only: click zones
+  (left third back on single page, halves on spread), arrow keys,
+  space, swipe.
+- NO page tilt/rotation between pages.
+- NO glow behind the book in the READING view. (The intro's
+  build-and-detonate glow is separate and was requested.)
+- Page edges: nearly straight, long gentle waves, low-frequency.
+  High-frequency edge fuzz reads as "stubble" on mobile — rejected.
+- Corner style is A/B testable: a temporary toggle sits bottom-
+  right of the reader ("corners: square" vs "worn"). Default is
+  square. Remove the toggle once the owner picks a winner.
+- EVERY risky/aesthetic change goes in ITS OWN COMMIT with a clear
+  message, so the owner can say "revert that" and it's one
+  git revert + redeploy. This is a standing contract. Honor it.
+- The owner dictates by voice; messages arrive mid-work and may
+  contain transcription noise ("she" for "you", etc.). Read intent.
+- User's other conventions (from their global memory): ⌥Space is
+  taken by Superwhisper; they browse in Comet + Safari; never
+  launch Dia; ask before headless browser automation.
+
+----------------------------------------------------------------
+3. ARCHITECTURE
+----------------------------------------------------------------
+Next.js 16 App Router, TypeScript, NO Tailwind — all styling in
+app/globals.css. React 19. reactStrictMode is OFF in next.config.ts
+(strict-mode double-mounting created/destroyed WebGL contexts back
+to back and crashed the postprocessing EffectComposer with
+"Cannot read properties of null (reading 'alpha')").
+
+Files that matter:
+
+  lib/content.ts      — ALL book text, verbatim from the owner's
+                        Notion doc (3 typos fixed with permission,
+                        see §6). BOOK_TITLE = "The Kumar Method".
+                        Each chapter: roman numeral, eyebrow text,
+                        big-title lines, shortName (running heads),
+                        intro paragraphs, exactly 10 rules.
+  lib/pages.ts        — pagination (chapter opener + 1 rule/page =
+                        110 pages) and seeded() PRNG. ALL visual
+                        randomness (stains, smudges, paper-scan
+                        sampling) is seeded by page index so SSR
+                        and client render identically. NEVER use
+                        Math.random() in render paths.
+  components/Experience.tsx — phase machine: "intro" -> "book",
+                        plus the golden handoffFlash overlay that
+                        the first page emerges from (only when the
+                        intro finished naturally, not skipped).
+                        Skips intro on prefers-reduced-motion.
+  components/Intro3D.tsx — the whole 3D launch sequence (see §4).
+  components/Book.tsx — the reader (see §5).
+  app/globals.css     — every visual decision lives here, heavily
+                        commented by section.
+  public/covers/      — front.jpeg, back.jpeg, spine.jpeg (the
+                        owner's cover art), ramp.webp (logo).
+  public/paper/vintage.jpg — real aged-paper scan, James Puckett,
+                        CC BY 2.0, via Wikimedia Commons.
+                        ATTRIBUTION LIVES IN README.md — keep it.
+  public/book.glb     — DOES NOT EXIST, but if the owner ever adds
+                        a generated 3D book mesh here, Intro3D
+                        auto-detects (HEAD request) and uses it
+                        instead of the built book.
+
+----------------------------------------------------------------
+4. THE 3D INTRO — HOW THE BOOK IS BUILT (Intro3D.tsx)
+----------------------------------------------------------------
+The book is NOT an AI-generated mesh and NOT a video. It is a real
+3D object constructed at runtime in three.js (react-three-fiber):
+
+- GEOMETRY: four boxes — front cover, back cover, a spine hub that
+  sits slightly proud like real binding, and an inset page block.
+  Proportions are MEASURED FROM THE SCANS: H=1.65, W=H*(700/1088)
+  (front scan aspect), D=H*(230/852)*0.9 (spine scan aspect).
+- TEXTURES: the owner's actual cover scans are mapped onto the
+  outer faces. The same images double as bumpMap (embossing
+  relief) and roughnessMap. Page block edges use a procedural
+  gilded-stripe canvas texture.
+- WINE TINT: covers are recolored per-pixel at load (useWineTint):
+  non-gold pixels shift toward deep burgundy (r*0.66, g*0.52,
+  b*1.45+12); gold pixels are detected and left warm. Original
+  scans on disk are untouched — the tint is runtime-only.
+- GOLD MASK (useGoldMask): the front + spine scans are scanned
+  pixel-by-pixel (gold = r>128 && g>84 && g>r*0.5 && b<g*0.92 &&
+  r+g>236, then 1.2px feather blur) to build an emissiveMap, so
+  ONLY the gilded emblems/lettering ignite. Threshold is strict on
+  purpose: looser values make leather pixels "sparkle" (rejected).
+- TIMELINE (5.3s, driven in useFrame; clock zeroes on the FIRST
+  RENDERED FRAME so slow texture loads don't eat the opening):
+    0.0–3.3s  spin: rotY from 2.7π to 0, easeOutQuart; float bob;
+              scale 0.84 -> 1.
+    2.5–3.5s  ignition: emissive + bloom ramp (at 10% level), with
+              a subtle sin() flicker like candlelight.
+    3.85–5.05s dive: easeInExpo dolly from z=4.15 to z=0.43, FOV
+              widens 40->55, slight camera roll. The dolly STOPS
+              before the scan runs out of pixels; the last stretch
+              is carried by a DOM gaussian rack-focus blur (16px
+              desktop / 10px mobile) + animated film grain overlay.
+    ~4.8–5.2s dissolve into GOLDEN light (not black), ramp logo in
+              bronze; Experience then shows the reader under a
+              1.1s handoffFlash fade-out. Skip = click or key
+              (Enter/Esc/Space) — skipping cuts straight to the
+              reader with NO flash.
+- ATMOSPHERE: .introGlow, a blurred amber DOM layer behind the
+  canvas, breathes with the ignition then DETONATES mid-dive
+  (opacity/scale driven per-frame via onAtmos; burst = d*(1-d)*4).
+- POST: Bloom (mipmapBlur, radius 0.42, threshold 0.55) — radius
+  kept tight because a wide halo read as a fake "growing circle"
+  (rejected). EffectComposer multisampling: 4 desktop, 0 on coarse
+  pointers.
+- MOBILE: dpr capped [1,1.5], gl antialias off (composer covers
+  it), cheaper blur. Textures preload at module scope.
+
+----------------------------------------------------------------
+5. THE READER (Book.tsx + globals.css)
+----------------------------------------------------------------
+- LAYOUT: page proportions fixed (aspect 0.66), sized by container
+  queries — ALL page typography is in cqw units relative to each
+  leaf's own container (.leafBox has container-type: size). Fonts:
+  EB Garamond (body, old-style numerals via "onum"), IM Fell
+  English (drop caps, rule numbers, eyebrows), IM Fell English SC
+  (running heads). Loaded via next/font.
+- PAPER STACK (bottom to top inside .paper): tone gradients ->
+  photoPaper (the real scan, multiply-blended, saturate(0.5)
+  brightness(1.22) contrast(0.9), opacity 0.45, and PER-LEAF
+  sampling: seeded mirror/pan/zoom so no two pages share the same
+  creases) -> mirrored ghost show-through of the NEXT page ->
+  seeded foxing stains + edge smudge -> content -> SVG grain
+  (0.15) -> large blotch (0.08) -> edgeShade (binding-side
+  darkening + worn corners). Page silhouette is cut by an SVG
+  turbulence-displaced mask (low frequency 0.006/0.0045, 2
+  octaves, scale 4–5; rx=12 worn variant, rx=0 square variant).
+- SPREAD MODE: media query (min-width 900px + landscape) shows two
+  facing pages; navigation moves 2; verso/recto edge shading is
+  mirrored; folios sit on outer corners; a soft gradient spine
+  runs down the center; page turns use the 3D leaf flip (§2).
+  Portrait/phone = single page, instant turns.
+- The chapter opener auto-shrinks type for long intros (dense /
+  denser classes) and auto-fits the big title to its longest line.
+
+----------------------------------------------------------------
+6. CONTENT NOTES
+----------------------------------------------------------------
+- Text is otherwise VERBATIM from the owner. Do not edit voice.
+- 3 typo fixes were approved: "The market is built to price...",
+  "some app will cut your limits...", "work that pays well."
+- OPEN ITEM — the owner must supply the year in Chapter II:
+  "I qualified as a Chartered Accountant in ——". It is typeset as
+  an em-dash blank. REMIND THEM when relevant.
+- OPEN ITEMS: author credit line; whether a title page/front
+  matter should exist (would also bring the count toward the 122
+  pages the owner once estimated); repo is named -temp and may be
+  renamed; corner-style toggle needs a final verdict.
+
+----------------------------------------------------------------
+7. OPERATIONS
+----------------------------------------------------------------
+- Deploy: `vercel --prod --yes` from repo root (CLI is logged in
+  as ctmventuresinc, team dangertesting). Alias:
+  https://plain-rules.vercel.app. Push to GitHub too — repo and
+  Vercel are NOT git-linked; deploys are CLI-from-local.
+- Verify after deploy: curl the alias AND a static asset
+  (/covers/front.jpeg, /paper/vintage.jpg). CDN may take a few
+  seconds; a 404 right after aliasing is usually propagation.
+- REVERT PROTOCOL: find the commit in git log (messages are
+  written to be revert-targets), `git revert <sha>`, rebuild,
+  push, `vercel --prod --yes`. The owner explicitly wants this to
+  be one-step easy. Recent revert targets of note:
+    * background glow build/detonate  — "Background glow: builds..."
+    * wine leather recolor            — "Dark wine leather: ..."
+    * spread leaf flip + paper variety— "Spread page turns are..."
+    * two-page spread itself          — "Two-page spread on wide..."
+    * real paper scan + smooth edges  — "Ancient paper: ..."
+    * sparkle level                   — "Sparkle at 10%: ..."
+- Local dev logs land in /tmp/plain-rules-dev.log (browser console
+  errors are forwarded there by Next dev with [browser] prefix).
+
+----------------------------------------------------------------
+8. KNOWN TRAPS
+----------------------------------------------------------------
+- Turning reactStrictMode back on will crash the intro's
+  EffectComposer in dev (WebGL context churn). Leave it off or
+  re-test thoroughly.
+- Don't put `emissiveMap: undefined` in material constructor
+  params — three.js warns; assign conditionally after creation.
+- All page randomness must stay seeded (SSR/client hydration).
+- The gold-mask threshold and the sparkle multipliers are TASTE
+  CONSTANTS, not free parameters.
+- `vercel logs <url>` follows/streams — it will hang a foreground
+  shell; run with a timeout or in background.
+- The repo path contains a space ("app danger") — always quote.
+================================================================
