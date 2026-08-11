@@ -310,3 +310,25 @@
   .km-view-active,
   .km-view-inactive { transition-duration: .001ms !important; }
 }
+
+/* ---------------------------------------------------------------
+   marclos patch: aspect-correct fit.
+   Background may stretch/crop with the window (cover); the tomb,
+   pots, and doorway keep the artwork's exact aspect inside a
+   centered frame, so they never squish. Doorway clip-path
+   percentages remain calibrated because they are now relative to
+   this frame instead of the viewport.
+   --------------------------------------------------------------- */
+.km-landing-background {
+  object-fit: cover;
+}
+
+.km-tomb-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  aspect-ratio: 1728 / 1117;
+  width: min(100vw, calc(100svh * (1728 / 1117)));
+  z-index: 2;
+}

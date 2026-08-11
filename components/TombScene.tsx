@@ -80,32 +80,38 @@ export default function TombScene({
           priority
           sizes="100vw"
         />
-        <div className="km-landing-tomb-interior" onClick={interactive ? onWake : undefined}>
-          <video
-            className="km-landing-tomb-smoke"
-            src="/intomb-smoke.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
+        {/* marclos patch: the tomb layers live in a fixed-aspect frame so
+            they never squish — only the background stretches with the
+            window. The doorway clip-path percentages were calibrated to
+            the image frame, so inside this box they stay aligned. */}
+        <div className="km-tomb-frame">
+          <div className="km-landing-tomb-interior" onClick={interactive ? onWake : undefined}>
+            <video
+              className="km-landing-tomb-smoke"
+              src="/intomb-smoke.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          </div>
+          <Image
+            className="km-landing-image km-landing-tomb"
+            src="/kumar-tomb-final.png"
+            alt=""
+            fill
+            aria-hidden="true"
+            sizes="100vw"
+          />
+          <Image
+            className="km-landing-image km-landing-pots"
+            src="/kumar-pots5.webp"
+            alt=""
+            fill
+            aria-hidden="true"
+            sizes="100vw"
           />
         </div>
-        <Image
-          className="km-landing-image km-landing-tomb"
-          src="/kumar-tomb-final.png"
-          alt=""
-          fill
-          aria-hidden="true"
-          sizes="100vw"
-        />
-        <Image
-          className="km-landing-image km-landing-pots"
-          src="/kumar-pots5.webp"
-          alt=""
-          fill
-          aria-hidden="true"
-          sizes="100vw"
-        />
         <svg className="km-landing-filters" aria-hidden="true" focusable="false">
           <defs>
             <filter id="km-general-smoke-alpha" colorInterpolationFilters="sRGB">

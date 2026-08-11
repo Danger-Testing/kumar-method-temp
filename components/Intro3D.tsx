@@ -578,9 +578,15 @@ export default function Intro3D({
             emerge={emerge}
             onEmerge={(rise, t) => {
               // the tomb holds through the rise, then dissolves into the
-              // dark room as the spin takes over
-              if (tombRef.current) {
-                tombRef.current.style.opacity = String(1 - smooth(1.1, 3, t));
+              // dark room as the spin takes over. Once fully faded, hide
+              // it and pause its videos so they stop costing frames.
+              const el = tombRef.current;
+              if (!el) return;
+              const fade = smooth(1.1, 3, t);
+              el.style.opacity = String(1 - fade);
+              if (fade >= 1 && el.style.visibility !== "hidden") {
+                el.style.visibility = "hidden";
+                el.querySelectorAll("video").forEach((v) => v.pause());
               }
             }}
             onFade={(v) => {

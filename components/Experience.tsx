@@ -15,6 +15,10 @@ export default function Experience() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setPhase("book");
     }
+    // warm the 3D intro chunk (three.js + textures) while the visitor is
+    // still looking at the tomb, so the click swap is instant — no black
+    // flash while a bundle downloads
+    import("@/components/Intro3D");
   }, []);
 
   if (phase === "tomb") {
