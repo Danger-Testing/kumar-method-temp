@@ -257,6 +257,20 @@ export default function Book() {
   const step = spread ? 2 : 1;
   const [flip, setFlip] = useState<{ from: number; dir: 1 | -1 } | null>(null);
   const flipTimer = useRef<number | undefined>(undefined);
+  const [scrubbing, setScrubbing] = useState(false);
+  const scrubRef = useRef<HTMLDivElement>(null);
+
+  // Kindle-style scrubber: drag along the bottom to fast-travel the book
+  const scrubTo = (clientX: number) => {
+    const el = scrubRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const f = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+    let idx = Math.round(f * (pages.length - 1));
+    if (spread) idx -= idx % 2;
+    setCurrent(idx);
+    setHasTurned(true);
+  };
 
   const go = useCallback(
     (to: number) => {
@@ -380,6 +394,47 @@ export default function Book() {
 
       <div className={`hint ${hasTurned ? "hintGone" : ""}`} aria-hidden={hasTurned}>
         tap the page · or use ← → to turn
+      </div>
+
+      <div
+        ref={scrubRef}
+        className={`scrubber ${scrubbing ? "scrubbing" : ""}`}
+        role="slider"
+        aria-label="Scrub through pages"
+        aria-valuemin={1}
+        aria-valuemax={pages.length}
+        aria-valuenow={base + 1}
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setScrubbing(true);
+          scrubTo(e.clientX);
+        }}
+        onPointerMove={(e) => {
+          if (scrubbing) scrubTo(e.clientX);
+        }}
+        onPointerUp={() => setScrubbing(false)}
+        onPointerCancel={() => setScrubbing(false)}
+      >
+        <div className="scrubTrack" aria-hidden="true" />
+        <div
+          className="scrubThumb"
+          aria-hidden="true"
+          style={{ left: `${((base / (pages.length - 1)) * 100).toFixed(2)}%` }}
+        />
+        {scrubbing && (
+          <div
+            className="scrubLabel"
+            style={{
+              left: `${Math.min(94, Math.max(6, (base / (pages.length - 1)) * 100)).toFixed(2)}%`,
+            }}
+          >
+            P. {base + 1} · {chapters[pages[base].chapter].shortName}
+          </div>
+        )}
       </div>
 
       <button

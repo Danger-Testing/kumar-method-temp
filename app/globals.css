@@ -592,6 +592,56 @@ body {
   opacity: 0;
 }
 
+/* Kindle-style page scrubber: a hairline that wakes on touch */
+.scrubber {
+  position: fixed;
+  left: 8vw;
+  right: 8vw;
+  bottom: 0;
+  height: 36px;
+  z-index: 45;
+  cursor: pointer;
+  touch-action: none;
+  opacity: 0.28;
+  transition: opacity 0.3s;
+}
+
+.scrubber:hover,
+.scrubber.scrubbing {
+  opacity: 0.92;
+}
+
+.scrubTrack {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(233, 214, 178, 0.35);
+}
+
+.scrubThumb {
+  position: absolute;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: rgba(233, 214, 178, 0.85);
+}
+
+.scrubLabel {
+  position: absolute;
+  bottom: 26px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--font-fell), serif;
+  font-style: italic;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  color: rgba(233, 214, 178, 0.85);
+  pointer-events: none;
+}
+
 .cornerToggle {
   position: fixed;
   bottom: 2.2vh;
