@@ -110,14 +110,11 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
   );
 }
 
-/* The page's ramp marks (owner-picked placements: bottom center on the
-   folio row + the top-left corner), linking to ramp.com. */
+/* The page's ramp mark (owner-picked placement: bottom center on the
+   folio row), linking to ramp.com. */
 function RampMarks() {
   const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
-  const spots = [
-    { id: "bottom", cls: "prBottomCenter" },
-    { id: "corner", cls: "prTopLeft" },
-  ];
+  const spots = [{ id: "bottom", cls: "prBottomCenter" }];
   return (
     <>
       {spots.map((sp) => (

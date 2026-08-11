@@ -1291,7 +1291,7 @@ video.smokeHidden {
 /* (the lights toggle and glow slider lived here — retired 2026-08-11
    once the owner dialed the final glow level; lights are on, period) */
 
-/* the page's ramp marks: bottom center (folio row) + top-left corner */
+/* the page's ramp mark: bottom center, on the folio row */
 .pageRamp {
   position: absolute;
   z-index: 4;
@@ -1319,11 +1319,6 @@ video.smokeHidden {
   left: 50%;
   bottom: 3.4cqw; /* the folio's row */
   transform: translateX(-50%);
-}
-
-.prTopLeft {
-  top: 3cqw; /* the very corner */
-  left: 4cqw;
 }
 
 /* ----------------------------------------------------------------
