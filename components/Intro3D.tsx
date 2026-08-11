@@ -530,6 +530,10 @@ function IntroScene({
       // way, and arrives at maximum velocity
       riseEase = easeInExpo(rise);
     }
+    // scale gets its OWN curve: easeInExpo hides the first ~60% of the
+    // motion entirely (the "book just appears" complaint) — quadratic
+    // growth is visible from the first frame while still accelerating
+    const scaleEase = E > 0 ? rise * rise : 1;
     // no transparency: it emerges shaded, as if in the cave's shadow, and
     // brightens as it comes out
     emergeShade.current = E > 0 ? 0.5 + 0.5 * smooth(0.15, 0.85, rise) : 1;
@@ -639,7 +643,7 @@ function IntroScene({
               into diagonal moiré bands across the cover */}
           <ambientLight intensity={0.42} color="#ffdcb0" />
           <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
-          <pointLight position={[-1.6, -1.4, 2.6]} intensity={10} color="#ffc890" />
+          <pointLight position={[-1.6, -1.4, 2.6]} intensity={16} color="#ffc890" />
         </>
       )}
       <group ref={group}>

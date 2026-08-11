@@ -90,7 +90,7 @@ function SpinnableBook({
               into diagonal moiré bands across the cover */}
           <ambientLight intensity={0.42} color="#ffdcb0" />
           <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
-          <pointLight position={[-1.6, -1.4, 2.6]} intensity={10} color="#ffc890" />
+          <pointLight position={[-1.6, -1.4, 2.6]} intensity={16} color="#ffc890" />
         </>
       )}
       <group ref={group} scale={0.92}>
