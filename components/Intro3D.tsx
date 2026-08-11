@@ -622,9 +622,9 @@ function IntroScene({
     // the tomb layers hear about both the rise and the ignition, so the
     // awakening glow can light the whole chamber
     if (E > 0) {
-      // the doorway blazes bright yellow at the click: fast flare-in,
-      // held through the exit, dying away once the book is out
-      const doorGlow = smooth(0.05, 0.3, t) * (1 - smooth(E + 0.35, E + 1.4, t));
+      // the doorway blazes bright yellow at the click: a gradual fade
+      // into the glow, held through the exit, dying away once it's out
+      const doorGlow = smooth(0.05, 0.95, t) * (1 - smooth(E + 0.35, E + 1.4, t));
       onEmerge(rise, t, ig, doorGlow);
     }
     if (bloomRef.current) bloomRef.current.intensity = plain ? 0 : 0.1 + ig * 0.85 + d * 1.1;
