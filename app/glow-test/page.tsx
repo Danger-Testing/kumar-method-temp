@@ -1,164 +1,22 @@
 "use client";
 
 /* TEMPORARY — /glow-test
-   Three REAL 3D books, drag anywhere to turn them all together:
-   ① the owner's bookNew2.glb exactly as delivered
-   ② the scan-built red book from the beloved screenshots
-   ③ THE RECREATION — the plum/copper design of ①, rebuilt in code
-     the way ② was built: same geometry trick, but the textures are
-     the original 700×1088 scans recolored offline to match the GLB's
-     palette, with the ramp lockup traced from the GLB's own atlas and
-     painted onto the back at full resolution.
-   Apple-style toggle top-left turns the ignition on/off (default OFF).
+   Comparison page: ① the delivered bookNew2.glb vs ③ TheBook — the
+   site's single-source-of-truth book component (components/TheBook.tsx).
+   This page imports the SAME component, glow drive, light rig, and bloom
+   the site uses, so what you approve here is byte-identical to the app.
+   Apple-style toggle top-left = glow on/off (default OFF).
+   ?spin=&tilt=&glow=1 lock a deterministic pose for screenshot checks.
    Delete this route once the question is settled. */
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useGLTF, useTexture } from "@react-three/drei";
+import { useGLTF } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
-import { BuiltBook } from "@/components/Intro3D";
-
-const H = 1.65;
-const W = H * (700 / 1088);
-const D = H * (230 / 852) * 0.9;
-const CT = 0.05;
+import { TheBook, BookLights, BLOOM, BOOK_H, igniteDrive, IGNITE_FULL } from "@/components/TheBook";
 
 type Spin = { rx: number; ry: number; vx: number; vy: number };
-
-/* ③ the recreation: code-built book wearing the plum/copper design */
-function PlumBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) {
-  const [plumF, plumB, plumS, igF, igB, igS, bumpF, bumpB, bumpS, pages, pagesRot] = useTexture([
-    "/masks/plum-front.jpg",
-    "/masks/plum-back.jpg",
-    "/masks/plum-spine.jpg",
-    "/masks/plum-ignite-front.png",
-    "/masks/plum-ignite-back.png",
-    "/masks/plum-ignite-spine.png",
-    "/covers/front.jpeg",
-    "/covers/back.jpeg",
-    "/covers/spine.jpeg",
-    "/masks/plum-pages.jpg", // the GLB's own page stripes (lines along u)
-    "/masks/plum-pages-rot.jpg", // rotated: lines along v, for the fore-edge
-  ]);
-  [plumF, plumB, plumS, igF, igB, igS, pages, pagesRot].forEach((t) => {
-    t.colorSpace = THREE.SRGBColorSpace;
-    t.anisotropy = 16;
-  });
-  // the GLB tiles its page stripes denser than a single wrap — match it.
-  // wrap mode is sampler state: it needs a re-upload to take effect.
-  pagesRot.wrapS = pagesRot.wrapT = THREE.RepeatWrapping;
-  pagesRot.repeat.set(2, 1); // fore-edge: lines vary along u (depth)
-  pagesRot.needsUpdate = true;
-  pages.wrapS = pages.wrapT = THREE.RepeatWrapping;
-  pages.repeat.set(1, 2); // top/bottom: lines vary along v (depth)
-  pages.needsUpdate = true;
-
-  const frontMat = useMemo(() => {
-    const m = new THREE.MeshStandardMaterial({
-      map: plumF,
-      bumpMap: bumpF,
-      bumpScale: 1.6,
-      roughnessMap: bumpF,
-      roughness: 0.9,
-      metalness: 0.25,
-      emissive: new THREE.Color("#ffb763"),
-      emissiveIntensity: 0,
-    });
-    m.emissiveMap = igF;
-    return m;
-  }, [plumF, bumpF, igF]);
-
-  const backMat = useMemo(() => {
-    const m = new THREE.MeshStandardMaterial({
-      map: plumB,
-      bumpMap: bumpB,
-      bumpScale: 1.2,
-      roughness: 0.75,
-      metalness: 0.15,
-      emissive: new THREE.Color("#ffb763"),
-      emissiveIntensity: 0,
-    });
-    m.emissiveMap = igB;
-    return m;
-  }, [plumB, bumpB, igB]);
-
-  const spineMat = useMemo(() => {
-    const m = new THREE.MeshStandardMaterial({
-      map: plumS,
-      bumpMap: bumpS,
-      bumpScale: 1.4,
-      roughness: 0.8,
-      metalness: 0.2,
-      emissive: new THREE.Color("#ffb763"),
-      emissiveIntensity: 0,
-    });
-    m.emissiveMap = igS;
-    return m;
-  }, [plumS, bumpS, igS]);
-
-  const leather = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: "#3a2630", roughness: 0.62, metalness: 0.06 }),
-    []
-  );
-  // the GLB's own striped paper — pages are vertical sheets stacked
-  // through the book's depth, so the fore-edge shows VERTICAL lines
-  // (rotated copy) while top/bottom edges show lines running front-to-back
-  const pageEdgeMat = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        map: pagesRot,
-        roughness: 0.65,
-        metalness: 0.05,
-      }),
-    [pagesRot]
-  );
-  const pageFlatMat = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        map: pages,
-        roughness: 0.65,
-        metalness: 0.05,
-      }),
-    [pages]
-  );
-
-  useFrame(() => {
-    frontMat.emissiveIntensity = igniteRef.current * 0.3;
-    spineMat.emissiveIntensity = igniteRef.current * 0.26;
-    backMat.emissiveIntensity = igniteRef.current * 0.3;
-  });
-
-  // BoxGeometry face order: +x, -x, +y, -y, +z, -z
-  return (
-    <group>
-      <mesh position={[0, 0, D / 2 - CT / 2]}>
-        <boxGeometry args={[W, H, CT]} />
-        {[leather, leather, leather, leather, frontMat, leather].map((m, i) => (
-          <primitive key={i} object={m} attach={`material-${i}`} />
-        ))}
-      </mesh>
-      <mesh position={[0, 0, -(D / 2 - CT / 2)]}>
-        <boxGeometry args={[W, H, CT]} />
-        {[leather, leather, leather, leather, leather, backMat].map((m, i) => (
-          <primitive key={i} object={m} attach={`material-${i}`} />
-        ))}
-      </mesh>
-      <mesh position={[-W / 2, 0, 0]}>
-        <boxGeometry args={[CT * 1.5, H * 1.012, D * 1.03]} />
-        {[leather, spineMat, leather, leather, leather, leather].map((m, i) => (
-          <primitive key={i} object={m} attach={`material-${i}`} />
-        ))}
-      </mesh>
-      <mesh position={[0.02, 0, 0]}>
-        <boxGeometry args={[W - 0.06, H - 0.045, D - CT * 2]} />
-        {[pageEdgeMat, leather, pageFlatMat, pageFlatMat, leather, leather].map((m, i) => (
-          <primitive key={i} object={m} attach={`material-${i}`} />
-        ))}
-      </mesh>
-    </group>
-  );
-}
 
 /* ① the delivered GLB, untouched */
 function GlbBookAsDelivered() {
@@ -186,7 +44,7 @@ function GlbBookAsDelivered() {
     root.add(clone);
     const box = new THREE.Box3().setFromObject(root);
     const size = box.getSize(new THREE.Vector3());
-    const s = H / size.y;
+    const s = BOOK_H / size.y;
     root.scale.setScalar(s);
     const center = box.getCenter(new THREE.Vector3()).multiplyScalar(s);
     root.position.sub(center);
@@ -202,14 +60,10 @@ function Trio({
 }: {
   spinRef: React.MutableRefObject<Spin>;
   glowRef: React.MutableRefObject<boolean>;
-  /** deterministic pose for screenshot verification (?spin=&tilt= in deg) */
   fixed: { ry: number; rx: number } | null;
 }) {
-  // BuiltBook/PlumBook multiply internally by ~0.3 (the "10%" era) —
-  // compensate so ignition burns at the full power of the screenshots
-  const igHot = useRef(0);
+  const igRef = useRef(0);
   const gL = useRef<THREE.Group>(null);
-  const gM = useRef<THREE.Group>(null);
   const gR = useRef<THREE.Group>(null);
 
   useFrame(({ clock }) => {
@@ -227,11 +81,9 @@ function Trio({
       s.ry += 0.0012;
       s.rx = Math.max(-0.9, Math.min(0.9, s.rx));
     }
-    const ig = fixed
-      ? 0.85 // steady mid-burn for reproducible screenshots
-      : (0.55 + 0.45 * Math.sin(t * 0.9)) * (0.9 + 0.1 * Math.sin(t * 5.1));
-    igHot.current = glowRef.current ? ig * 3.3 : 0;
-    [gL, gM, gR].forEach((g) => {
+    // ONE glow: the canonical drive (steady mid-burn when pose-locked)
+    igRef.current = glowRef.current ? (fixed ? 0.85 * IGNITE_FULL : igniteDrive(t)) : 0;
+    [gL, gR].forEach((g) => {
       if (g.current) {
         g.current.rotation.y = s.ry;
         g.current.rotation.x = s.rx;
@@ -239,20 +91,13 @@ function Trio({
     });
   });
 
-  // reference book temporarily hidden per the owner, for a close ①/③ read
-  const SHOW_REFERENCE = false;
   return (
     <>
-      <group ref={gL} position={[SHOW_REFERENCE ? -1.55 : -0.95, 0, 0]} scale={0.82}>
+      <group ref={gL} position={[-0.95, 0, 0]} scale={0.82}>
         <GlbBookAsDelivered />
       </group>
-      {SHOW_REFERENCE && (
-        <group ref={gM} position={[0, 0, 0]} scale={0.82}>
-          <BuiltBook igniteRef={igHot} />
-        </group>
-      )}
-      <group ref={gR} position={[SHOW_REFERENCE ? 1.55 : 0.95, 0, 0]} scale={0.82}>
-        <PlumBook igniteRef={igHot} />
+      <group ref={gR} position={[0.95, 0, 0]} scale={0.82}>
+        <TheBook igniteRef={igRef} />
       </group>
     </>
   );
@@ -261,7 +106,7 @@ function Trio({
 const col: React.CSSProperties = {
   position: "fixed",
   bottom: "3vh",
-  width: "31%",
+  width: "44%",
   color: "rgba(233, 214, 178, 0.72)",
   fontFamily: "Georgia, serif",
   fontSize: 13,
@@ -285,7 +130,6 @@ export default function GlowTest() {
   useEffect(() => {
     glowRef.current = glowOn;
   }, [glowOn]);
-  // deterministic pose + glow via URL for screenshot verification
   const [fixed, setFixed] = useState<{ ry: number; rx: number } | null>(null);
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -317,18 +161,16 @@ export default function GlowTest() {
       onPointerCancel={() => (drag.current = null)}
     >
       <Canvas camera={{ position: [0, 0, 4.8], fov: 40 }} dpr={[1, 1.75]}>
-        <ambientLight intensity={0.42} color="#ffdcb0" />
-        <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
-        <pointLight position={[-1.6, -1.4, 2.6]} intensity={16} color="#ffc890" />
+        <BookLights plain={false} />
         <Suspense fallback={null}>
           <Trio spinRef={spinRef} glowRef={glowRef} fixed={fixed} />
         </Suspense>
         <EffectComposer multisampling={2}>
           <Bloom
-            intensity={0.8}
-            luminanceThreshold={0.55}
-            luminanceSmoothing={0.22}
-            radius={0.42}
+            intensity={BLOOM.intensity}
+            luminanceThreshold={BLOOM.luminanceThreshold}
+            luminanceSmoothing={BLOOM.luminanceSmoothing}
+            radius={BLOOM.radius}
             mipmapBlur
           />
         </EffectComposer>
@@ -406,19 +248,17 @@ export default function GlowTest() {
           pointerEvents: "none",
         }}
       >
-        drag anywhere — all three turn together
+        drag anywhere — both turn together
       </div>
 
-      <div style={{ ...col, width: "44%", left: "4%" }}>
+      <div style={{ ...col, left: "4%" }}>
         <div style={colTitle}>① the object you gave us</div>
         bookNew2.glb exactly as delivered, untouched.
       </div>
-      <div style={{ ...col, width: "44%", right: "4%" }}>
-        <div style={colTitle}>③ the recreation</div>
-        The same design rebuilt in code from the hi-res scans: palette
-        matched to ①, ramp lockup traced from ①&rsquo;s own art, page
-        edges now ①&rsquo;s actual stripes. (② is temporarily hidden
-        for this comparison.)
+      <div style={{ ...col, right: "4%" }}>
+        <div style={colTitle}>③ TheBook — now the site&rsquo;s book</div>
+        The exact component, glow, lights, and bloom the main site uses.
+        What you see here is what the intro and the dismissed book show.
       </div>
     </main>
   );

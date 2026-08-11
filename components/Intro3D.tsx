@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture, useGLTF } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import { TheBook, BookLights, BLOOM, IGNITE_FULL } from "@/components/TheBook";
 
 /* Book proportions measured from the cover scans:
    front 700×1088, spine 230×852 → a thick, squat tome. */
@@ -19,10 +20,7 @@ const TOTAL = 5.3; // seconds
     Experience off .km-tomb-frame + the clip-path polygon in kumar.css) */
 export type HoleRect = { cx: number; cy: number; w: number; h: number };
 
-// start fetching the cover scans the moment this module loads
-useTexture.preload("/covers/front.jpeg");
-useTexture.preload("/covers/back.jpeg");
-useTexture.preload("/covers/spine.jpeg");
+// texture warmup lives in TheBook's module scope — one source of truth
 const easeOutQuart = (x: number) => 1 - Math.pow(1 - x, 4);
 const easeInExpo = (x: number) => (x <= 0 ? 0 : Math.pow(2, 10 * x - 10));
 const smooth = (a: number, b: number, t: number) => {
@@ -495,7 +493,6 @@ export function GlbBook({
 /* ------------------------------------------------------------------ */
 
 function IntroScene({
-  useGlb,
   emerge,
   plain = false,
   holeRef,
@@ -505,7 +502,6 @@ function IntroScene({
   onEmerge,
   onDone,
 }: {
-  useGlb: boolean;
   emerge: boolean;
   /** inspection mode: flat white rig, no ignition, no bloom, no glow */
   plain?: boolean;
@@ -517,7 +513,8 @@ function IntroScene({
   onDone: (finished: boolean) => void;
 }) {
   const group = useRef<THREE.Group>(null);
-  const igniteRef = useRef(0);
+  const igniteRef = useRef(0); // timeline units (0..~1.15), for the tomb callbacks
+  const bookIgnite = useRef(0); // canonical units for TheBook (timeline × IGNITE_FULL)
   const emergeShade = useRef(1);
   const bloomRef = useRef<{ intensity: number } | null>(null);
   const doneRef = useRef(false);
@@ -633,6 +630,9 @@ function IntroScene({
         (0.82 + 0.18 * Math.sin(t * 6.3) * Math.sin(t * 2.7)) *
         (1 + d * 0.9);
     igniteRef.current = ig;
+    // TheBook consumes the same timeline scaled to the canonical glow —
+    // its peak lands on exactly the approved demo brightness
+    bookIgnite.current = ig * IGNITE_FULL;
     // the tomb layers hear about both the rise and the ignition, so the
     // awakening glow can light the whole chamber
     if (E > 0) {
@@ -641,7 +641,8 @@ function IntroScene({
       const doorGlow = smooth(0.05, 0.95, t) * (1 - smooth(E + 0.35, E + 1.4, t));
       onEmerge(rise, t, ig, doorGlow);
     }
-    if (bloomRef.current) bloomRef.current.intensity = plain ? 0 : 0.1 + ig * 0.85 + d * 1.1;
+    // ONE bloom, everywhere the book renders (TheBook.BLOOM)
+    if (bloomRef.current) bloomRef.current.intensity = plain ? 0 : BLOOM.intensity;
 
     // stop the magnification before the scan runs out of pixels — the
     // rack-focus blur and grain carry the final stretch instead
@@ -671,36 +672,18 @@ function IntroScene({
 
   return (
     <>
-      {plain ? (
-        <>
-          {/* pure ambient, no directed light at all: flat albedo, zero
-              hotspots — the directional here washed out the cover center */}
-          <ambientLight intensity={1.35} color="#ffffff" />
-        </>
-      ) : (
-        <>
-          {/* no key spotlight: its raking angle dragged the normal map
-              into diagonal moiré bands across the cover */}
-          <ambientLight intensity={0.42} color="#ffdcb0" />
-          <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
-          <pointLight position={[-1.6, -1.4, 2.6]} intensity={16} color="#ffc890" />
-        </>
-      )}
+      <BookLights plain={plain} />
       <group ref={group}>
-        {useGlb ? (
-          <GlbBook igniteRef={igniteRef} shadeRef={emergeShade} plain={plain} />
-        ) : (
-          <BuiltBook igniteRef={igniteRef} shadeRef={emergeShade} plain={plain} />
-        )}
+        <TheBook igniteRef={bookIgnite} shadeRef={emergeShade} plain={plain} />
       </group>
 
       <EffectComposer multisampling={isCoarse() ? 0 : 2}>
         <Bloom
           ref={bloomRef as never}
-          intensity={0.12}
-          luminanceThreshold={0.55}
-          luminanceSmoothing={0.22}
-          radius={0.42}
+          intensity={BLOOM.intensity}
+          luminanceThreshold={BLOOM.luminanceThreshold}
+          luminanceSmoothing={BLOOM.luminanceSmoothing}
+          radius={BLOOM.radius}
           mipmapBlur
         />
       </EffectComposer>
@@ -733,24 +716,13 @@ export default function Intro3D({
   /** the tomb doorway, measured by Experience — anchors the emergence */
   holeRect?: MutableRefObject<HoleRect | null>;
 }) {
-  // null = still checking. The scene must not mount until this resolves:
-  // flipping the book type mid-flight remounts the scene and restarts the
-  // timeline (the start-stop-start glitch).
-  const [glb, setGlb] = useState<boolean | null>(null);
+  // TheBook is THE book — no GLB detection, no mount gate. The timeline
+  // still starts on the first rendered frame (startRef in IntroScene),
+  // so slow texture loads stay safe.
   const fadeRef = useRef<HTMLDivElement>(null);
   const canvasWrapRef = useRef<HTMLDivElement>(null);
   const grainRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    fetch("/book.glb", { method: "HEAD" })
-      .then((r) => {
-        const ok = r.ok && (r.headers.get("content-type") ?? "").includes("model");
-        if (ok) useGLTF.preload("/book.glb");
-        setGlb(ok);
-      })
-      .catch(() => setGlb(false));
-  }, []);
 
   useEffect(() => {
     const skip = (e: KeyboardEvent) => {
@@ -764,14 +736,12 @@ export default function Intro3D({
     <div className={`introRoot ${emerge ? "overTomb" : ""}`} onClick={() => onDone(false)}>
       <div className="introGlow" ref={glowRef} aria-hidden="true" />
       <div className="introCanvas" ref={canvasWrapRef}>
-        {glb !== null && (
         <Canvas
           camera={{ position: [0, 0, 4.15], fov: 40 }}
           gl={{ antialias: !isCoarse() }}
           dpr={isCoarse() ? [1, 1.5] : [1, 1.75]}
         >
           <IntroScene
-            useGlb={glb}
             emerge={emerge}
             plain={plain}
             holeRef={holeRect}
@@ -808,7 +778,6 @@ export default function Intro3D({
             onDone={onDone}
           />
         </Canvas>
-        )}
       </div>
       <div className="introGrain" ref={grainRef} aria-hidden="true" />
       <div className="introFade" ref={fadeRef} aria-hidden="true">

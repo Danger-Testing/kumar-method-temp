@@ -48,10 +48,9 @@ export default function Experience() {
       setPhase("book");
     }
     // warm everything the click will need while the visitor looks at the
-    // tomb: the three.js chunk (which preloads the cover textures) and
-    // the book mesh itself
+    // tomb: the three.js chunk pulls in TheBook, whose module preloads
+    // all the book textures (~700KB total — no more 4.8MB GLB fetch)
     import("@/components/Intro3D");
-    fetch("/book.glb").catch(() => {});
   }, []);
 
   useEffect(() => {

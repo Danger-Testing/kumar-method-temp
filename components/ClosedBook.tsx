@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
-import { BuiltBook, GlbBook } from "@/components/Intro3D";
+import { TheBook, BookLights, BLOOM, igniteDrive } from "@/components/TheBook";
 
 /** coarse pointer ≈ phone/tablet: render leaner there (mirrors Intro3D) */
 function isCoarse(): boolean {
@@ -17,45 +16,15 @@ function isCoarse(): boolean {
    drag) opens the reader again. */
 
 function SpinnableBook({
-  useGlb,
   spinRef,
   plain,
 }: {
-  useGlb: boolean;
   spinRef: React.MutableRefObject<{ vx: number; vy: number; rx: number; ry: number }>;
   plain: boolean;
 }) {
   const group = useRef<THREE.Group>(null);
   const igniteRef = useRef(0);
   const bloomRef = useRef<{ intensity: number } | null>(null);
-
-  // plain mode: strip the relief so the raw art shows — zero every
-  // bump/normal map (originals stashed in userData, restored on untoggle)
-  useEffect(() => {
-    const g = group.current;
-    if (!g) return;
-    g.traverse((o) => {
-      const mesh = o as THREE.Mesh;
-      if (!mesh.isMesh) return;
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      mats.forEach((m) => {
-        const std = m as THREE.MeshStandardMaterial;
-        if (!std.isMeshStandardMaterial) return;
-        if (plain) {
-          if (std.userData.savedBump === undefined) std.userData.savedBump = std.bumpScale;
-          if (std.normalScale && std.userData.savedNormal === undefined) {
-            std.userData.savedNormal = std.normalScale.clone();
-          }
-          std.bumpScale = 0;
-          std.normalScale?.set(0, 0);
-        } else {
-          if (std.userData.savedBump !== undefined) std.bumpScale = std.userData.savedBump;
-          if (std.userData.savedNormal) std.normalScale.copy(std.userData.savedNormal);
-        }
-        // bump/normal scales are uniforms — no needsUpdate, no recompile
-      });
-    });
-  }, [plain]);
 
   useFrame(({ clock }) => {
     const g = group.current;
@@ -77,31 +46,17 @@ function SpinnableBook({
     g.rotation.x = s.rx + Math.sin(t * 1.1) * 0.012;
     g.position.y = Math.sin(t * 1.3) * 0.03;
 
-    // embers only: the gilding keeps a candle-lit life, well below the
-    // intro's ignition. Plain mode kills the glow entirely.
-    const ig = plain ? 0 : 0.32 + 0.05 * Math.sin(t * 2.3) * Math.sin(t * 0.7);
-    igniteRef.current = ig;
-    // same drive curve as the intro so the two states read identically
-    if (bloomRef.current) bloomRef.current.intensity = plain ? 0 : 0.1 + ig * 0.85;
+    // ONE glow: the canonical drive from TheBook, same as the demo and
+    // the intro's peak. Plain mode kills it entirely.
+    igniteRef.current = plain ? 0 : igniteDrive(t);
+    if (bloomRef.current) bloomRef.current.intensity = plain ? 0 : BLOOM.intensity;
   });
 
   return (
     <>
-      {plain ? (
-        // pure ambient, no directed light at all: flat albedo, zero
-        // hotspots — the directional here washed out the cover center
-        <ambientLight intensity={1.35} color="#ffffff" />
-      ) : (
-        <>
-          {/* no key spotlight: its raking angle dragged the normal map
-              into diagonal moiré bands across the cover */}
-          <ambientLight intensity={0.42} color="#ffdcb0" />
-          <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
-          <pointLight position={[-1.6, -1.4, 2.6]} intensity={16} color="#ffc890" />
-        </>
-      )}
+      <BookLights plain={plain} />
       <group ref={group} scale={0.92}>
-        {useGlb ? <GlbBook igniteRef={igniteRef} /> : <BuiltBook igniteRef={igniteRef} />}
+        <TheBook igniteRef={igniteRef} plain={plain} />
       </group>
 
       {/* the same output pipeline as the intro — without it the closed
@@ -109,10 +64,10 @@ function SpinnableBook({
       <EffectComposer multisampling={isCoarse() ? 0 : 2}>
         <Bloom
           ref={bloomRef as never}
-          intensity={0.12}
-          luminanceThreshold={0.55}
-          luminanceSmoothing={0.22}
-          radius={0.42}
+          intensity={BLOOM.intensity}
+          luminanceThreshold={BLOOM.luminanceThreshold}
+          luminanceSmoothing={BLOOM.luminanceSmoothing}
+          radius={BLOOM.radius}
           mipmapBlur
         />
       </EffectComposer>
@@ -128,20 +83,8 @@ export default function ClosedBook({
   /** inspection mode, owned by Experience: no warm rig, no relief, no glow */
   plain?: boolean;
 }) {
-  // same GLB detection as the intro; the HEAD hits the browser cache
-  const [glb, setGlb] = useState<boolean | null>(null);
   const spinRef = useRef({ vx: 0, vy: 0, rx: 0, ry: 0 });
   const drag = useRef<{ x: number; y: number; moved: number } | null>(null);
-
-  useEffect(() => {
-    fetch("/book.glb", { method: "HEAD" })
-      .then((r) => {
-        const ok = r.ok && (r.headers.get("content-type") ?? "").includes("model");
-        if (ok) useGLTF.preload("/book.glb");
-        setGlb(ok);
-      })
-      .catch(() => setGlb(false));
-  }, []);
 
   return (
     <div
@@ -170,19 +113,13 @@ export default function ClosedBook({
         drag.current = null;
       }}
     >
-      {glb !== null && (
-        <Canvas
-          camera={{ position: [0, 0, 4.15], fov: 40 }}
-          gl={{ antialias: true }}
-          dpr={
-            typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches
-              ? [1, 1.5]
-              : [1, 1.75]
-          }
-        >
-          <SpinnableBook useGlb={glb} spinRef={spinRef} plain={plain} />
-        </Canvas>
-      )}
+      <Canvas
+        camera={{ position: [0, 0, 4.15], fov: 40 }}
+        gl={{ antialias: true }}
+        dpr={isCoarse() ? [1, 1.5] : [1, 1.75]}
+      >
+        <SpinnableBook spinRef={spinRef} plain={plain} />
+      </Canvas>
       <div className="closedHint">drag to turn it over · tap to open</div>
     </div>
   );
