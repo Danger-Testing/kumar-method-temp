@@ -441,6 +441,7 @@ export function GlbBook({
 function IntroScene({
   useGlb,
   emerge,
+  plain = false,
   holeRef,
   onFade,
   onDive,
@@ -450,6 +451,8 @@ function IntroScene({
 }: {
   useGlb: boolean;
   emerge: boolean;
+  /** inspection mode: flat white rig, no ignition, no bloom, no glow */
+  plain?: boolean;
   holeRef?: MutableRefObject<HoleRect | null>;
   onFade: (v: number) => void;
   onDive: (v: number) => void;
@@ -542,15 +545,17 @@ function IntroScene({
 
     // the awakening: the gold stirs early, builds in waves, and is still
     // climbing when the dive begins — no dead air, no single hit
-    const ig =
-      (0.14 * smooth(1.6, 2.4, tt) + 0.36 * smooth(2.4, 3.4, tt) + 0.6 * smooth(3.4, 4.5, tt)) *
-      (0.82 + 0.18 * Math.sin(t * 6.3) * Math.sin(t * 2.7)) *
-      (1 + d * 0.9);
+    // (inspection mode kills the ignition entirely)
+    const ig = plain
+      ? 0
+      : (0.14 * smooth(1.6, 2.4, tt) + 0.36 * smooth(2.4, 3.4, tt) + 0.6 * smooth(3.4, 4.5, tt)) *
+        (0.82 + 0.18 * Math.sin(t * 6.3) * Math.sin(t * 2.7)) *
+        (1 + d * 0.9);
     igniteRef.current = ig;
     // the tomb layers hear about both the rise and the ignition, so the
     // awakening glow can light the whole chamber
     if (E > 0) onEmerge(rise, t, ig);
-    if (bloomRef.current) bloomRef.current.intensity = 0.1 + ig * 0.85 + d * 1.1;
+    if (bloomRef.current) bloomRef.current.intensity = plain ? 0 : 0.1 + ig * 0.85 + d * 1.1;
 
     // stop the magnification before the scan runs out of pixels — the
     // rack-focus blur and grain carry the final stretch instead
@@ -567,7 +572,7 @@ function IntroScene({
 
     // the room answers: a glow that builds with the ignition and detonates
     // into the dive
-    onAtmos(ig, d, t);
+    onAtmos(ig, plain ? 0 : d, t);
 
     // the last beats dissolve into golden light, not black
     onFade(smooth(4.82, 5.18, tt));
@@ -580,10 +585,19 @@ function IntroScene({
 
   return (
     <>
-      <ambientLight intensity={0.22} color="#ffdcb0" />
-      <spotLight position={[2.4, 2.6, 3.4]} intensity={38} angle={0.7} penumbra={0.6} color="#ffd9a2" />
-      <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
-      <pointLight position={[-1.6, -1.4, 2.6]} intensity={10} color="#ffc890" />
+      {plain ? (
+        <>
+          <ambientLight intensity={1.8} color="#ffffff" />
+          <directionalLight position={[0, 1, 5]} intensity={1.5} color="#ffffff" />
+        </>
+      ) : (
+        <>
+          <ambientLight intensity={0.22} color="#ffdcb0" />
+          <spotLight position={[2.4, 2.6, 3.4]} intensity={38} angle={0.7} penumbra={0.6} color="#ffd9a2" />
+          <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
+          <pointLight position={[-1.6, -1.4, 2.6]} intensity={10} color="#ffc890" />
+        </>
+      )}
       <group ref={group}>
         {useGlb ? (
           <GlbBook igniteRef={igniteRef} shadeRef={emergeShade} />
@@ -616,11 +630,14 @@ function isCoarse(): boolean {
 export default function Intro3D({
   onDone,
   emerge = false,
+  plain = false,
   onTombFade,
   holeRect,
 }: {
   onDone: (finished: boolean) => void;
   emerge?: boolean;
+  /** inspection mode: flat white rig, no ignition/bloom/glow */
+  plain?: boolean;
   /** drives the persistent tomb layer (owned by Experience) behind us:
       fade = settle into the dark grade, glow = the ignition lighting
       the chamber back up (flickers with the gilding) */
@@ -668,6 +685,7 @@ export default function Intro3D({
           <IntroScene
             useGlb={glb}
             emerge={emerge}
+            plain={plain}
             holeRef={holeRect}
             onEmerge={(rise, t, ignite) => {
               // the tomb (persistent layer behind us) settles into its
