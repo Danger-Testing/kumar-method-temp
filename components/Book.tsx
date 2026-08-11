@@ -67,22 +67,6 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
           ))}
         </h1>
         <Flourish />
-        {/* EXPERIMENT candidate: right underneath the chapter title */}
-        <a
-          className="pageRamp prUnderTitle"
-          href="https://ramp.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Ramp"
-          onClick={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-        >
-          <span className="prOval" aria-hidden="true">
-            <span className="prMark" />
-          </span>
-          <i className="prDot" style={{ background: "#111" }} aria-hidden="true" />
-        </a>
         <div className="intro">
           {ch.intro.map((para, i) => (
             <p key={i}>
@@ -120,39 +104,19 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
             <p className="ruleText">{ch.rules[ri]}</p>
           </div>
         ))}
-        {/* EXPERIMENT candidate: inline, right where the scripture ends */}
-        <a
-          className="pageRamp prInline"
-          href="https://ramp.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Ramp"
-          onClick={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-        >
-          <span className="prOval" aria-hidden="true">
-            <span className="prMark" />
-          </span>
-          <i className="prDot" style={{ background: "#8e44ad" }} aria-hidden="true" />
-        </a>
       </div>
       <div className="folio">P. {pageNumber}</div>
     </div>
   );
 }
 
-/* EXPERIMENT: candidate placements for a small ramp mark on the page,
-   linking to ramp.com. Colored dots identify each option — the owner
-   picks by color; losers + dots get deleted. */
-function RampCandidates() {
+/* The page's ramp marks (owner-picked placements: bottom center on the
+   folio row + the top-left corner), linking to ramp.com. */
+function RampMarks() {
   const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
   const spots = [
-    { id: "red", cls: "prBottomCenter", dot: "#c0392b", oval: false },
-    { id: "blue", cls: "prBottomOuter", dot: "#2e6fdb", oval: false },
-    { id: "green", cls: "prTopOuter", dot: "#2f9e44", oval: false },
-    { id: "orange", cls: "prTopLeft", dot: "#e67e22", oval: false },
-    { id: "pink", cls: "prGapSpace", dot: "#e84393", oval: true },
+    { id: "bottom", cls: "prBottomCenter" },
+    { id: "corner", cls: "prTopLeft" },
   ];
   return (
     <>
@@ -168,14 +132,7 @@ function RampCandidates() {
           onPointerDown={stop}
           onPointerUp={stop}
         >
-          {sp.oval ? (
-            <span className="prOval" aria-hidden="true">
-              <span className="prMark" />
-            </span>
-          ) : (
-            <span className="prMark" aria-hidden="true" />
-          )}
-          <i className="prDot" style={{ background: sp.dot }} aria-hidden="true" />
+          <span className="prMark" aria-hidden="true" />
         </a>
       ))}
     </>
@@ -264,7 +221,7 @@ function PageLeaf({
         <div className="grain" aria-hidden="true" />
         <div className="blotch" aria-hidden="true" />
         <div className="edgeShade" aria-hidden="true" />
-        <RampCandidates />
+        <RampMarks />
       </div>
     </div>
   );
