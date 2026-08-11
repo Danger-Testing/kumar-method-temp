@@ -28,7 +28,7 @@ type Spin = { rx: number; ry: number; vx: number; vy: number };
 
 /* ③ the recreation: code-built book wearing the plum/copper design */
 function PlumBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) {
-  const [plumF, plumB, plumS, igF, igB, igS, bumpF, bumpB, bumpS, pages] = useTexture([
+  const [plumF, plumB, plumS, igF, igB, igS, bumpF, bumpB, bumpS, pages, pagesRot] = useTexture([
     "/masks/plum-front.jpg",
     "/masks/plum-back.jpg",
     "/masks/plum-spine.jpg",
@@ -38,9 +38,10 @@ function PlumBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) 
     "/covers/front.jpeg",
     "/covers/back.jpeg",
     "/covers/spine.jpeg",
-    "/masks/plum-pages.jpg", // the GLB's own page-edge stripes
+    "/masks/plum-pages.jpg", // the GLB's own page stripes (lines along u)
+    "/masks/plum-pages-rot.jpg", // rotated: lines along v, for the fore-edge
   ]);
-  [plumF, plumB, plumS, igF, igB, igS, pages].forEach((t) => {
+  [plumF, plumB, plumS, igF, igB, igS, pages, pagesRot].forEach((t) => {
     t.colorSpace = THREE.SRGBColorSpace;
     t.anisotropy = 16;
   });
@@ -92,8 +93,19 @@ function PlumBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) 
     () => new THREE.MeshStandardMaterial({ color: "#3a2630", roughness: 0.62, metalness: 0.06 }),
     []
   );
-  // the GLB's own striped paper edges, not the red book's gilded ones
-  const pageMat = useMemo(
+  // the GLB's own striped paper — pages are vertical sheets stacked
+  // through the book's depth, so the fore-edge shows VERTICAL lines
+  // (rotated copy) while top/bottom edges show lines running front-to-back
+  const pageEdgeMat = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        map: pagesRot,
+        roughness: 0.65,
+        metalness: 0.05,
+      }),
+    [pagesRot]
+  );
+  const pageFlatMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
         map: pages,
@@ -132,7 +144,7 @@ function PlumBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) 
       </mesh>
       <mesh position={[0.02, 0, 0]}>
         <boxGeometry args={[W - 0.06, H - 0.045, D - CT * 2]} />
-        {[pageMat, leather, pageMat, pageMat, leather, leather].map((m, i) => (
+        {[pageEdgeMat, leather, pageFlatMat, pageFlatMat, leather, leather].map((m, i) => (
           <primitive key={i} object={m} attach={`material-${i}`} />
         ))}
       </mesh>
