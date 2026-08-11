@@ -983,11 +983,13 @@ body {
   pointer-events: none;
 }
 
-/* inspection toggle: strips the warm rig, bump relief, and gilding glow */
+/* inspection toggle: strips the warm rig, bump relief, and gilding glow.
+   Sits above the tomb (90) and the intro (100) so it works mid-flight. */
 .plainToggle {
   position: fixed;
   bottom: 2.2vh;
   right: max(2.5vw, 18px);
+  z-index: 120;
   padding: 8px 0;
   background: none;
   border: none;

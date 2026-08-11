@@ -13,6 +13,9 @@ import type { HoleRect } from "@/components/Intro3D";
 export default function Experience() {
   const [phase, setPhase] = useState<"tomb" | "intro" | "book" | "closed">("tomb");
   const [flash, setFlash] = useState(false);
+  // inspection mode: strips the added lighting, relief, and glow wherever
+  // the 3D book is on stage (closed view now; intro once it takes the prop)
+  const [plain, setPlain] = useState(false);
   const tombHostRef = useRef<HTMLDivElement>(null);
   // the doorway hole, as viewport fractions: derived from .km-tomb-frame's
   // rect and its interior clip-path polygon in kumar.css
@@ -114,7 +117,24 @@ export default function Experience() {
         />
       )}
 
-      {phase === "closed" && <ClosedBook onOpen={() => setPhase("book")} />}
+      {phase === "closed" && <ClosedBook onOpen={() => setPhase("book")} plain={plain} />}
+
+      {/* the lights-off toggle lives wherever the 3D book can appear —
+          landing, intro, and the closed book; the reader corner belongs
+          to the business CTA */}
+      {phase !== "book" && (
+        <button
+          className="plainToggle"
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            setPlain((p) => !p);
+          }}
+        >
+          {plain ? "lights on" : "lights off"}
+        </button>
+      )}
 
       {phase === "book" && (
         <>

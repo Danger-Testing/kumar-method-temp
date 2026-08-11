@@ -99,11 +99,16 @@ function SpinnableBook({
   );
 }
 
-export default function ClosedBook({ onOpen }: { onOpen: () => void }) {
+export default function ClosedBook({
+  onOpen,
+  plain = false,
+}: {
+  onOpen: () => void;
+  /** inspection mode, owned by Experience: no warm rig, no relief, no glow */
+  plain?: boolean;
+}) {
   // same GLB detection as the intro; the HEAD hits the browser cache
   const [glb, setGlb] = useState<boolean | null>(null);
-  // plain mode: no warm lighting, no bump relief, no gilding glow
-  const [plain, setPlain] = useState(false);
   const spinRef = useRef({ vx: 0, vy: 0, rx: 0, ry: 0 });
   const drag = useRef<{ x: number; y: number; moved: number } | null>(null);
 
@@ -158,17 +163,6 @@ export default function ClosedBook({ onOpen }: { onOpen: () => void }) {
         </Canvas>
       )}
       <div className="closedHint">drag to turn it over · tap to open</div>
-      <button
-        className="plainToggle"
-        onPointerDown={(e) => e.stopPropagation()}
-        onPointerUp={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          setPlain((p) => !p);
-        }}
-      >
-        {plain ? "lights on" : "lights off"}
-      </button>
     </div>
   );
 }
