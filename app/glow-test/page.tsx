@@ -2,36 +2,168 @@
 
 /* TEMPORARY — /glow-test
    Three REAL 3D books, drag anywhere to turn them all together:
-   ① the owner's bookNew2.glb glowing through today's 1024 stencil
-   ② the scan-built book from the beloved screenshots (700×1088 art)
-   ③ the owner's GLB again with the stencil re-drawn at 4096 — the
-     proposed fix that needs nothing from the 3D artist.
+   ① the owner's bookNew2.glb exactly as delivered
+   ② the scan-built red book from the beloved screenshots
+   ③ THE RECREATION — the plum/copper design of ①, rebuilt in code
+     the way ② was built: same geometry trick, but the textures are
+     the original 700×1088 scans recolored offline to match the GLB's
+     palette, with the ramp lockup traced from the GLB's own atlas and
+     painted onto the back at full resolution.
+   Apple-style toggle top-left turns the ignition on/off (default OFF).
    Delete this route once the question is settled. */
 
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
+import { useGLTF, useTexture } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { BuiltBook } from "@/components/Intro3D";
 
 const H = 1.65;
+const W = H * (700 / 1088);
+const D = H * (230 / 852) * 0.9;
+const CT = 0.05;
 
 type Spin = { rx: number; ry: number; vx: number; vy: number };
 
-function GlbGlowBook({
-  maskUrl,
-  igRef,
-}: {
-  maskUrl: string;
-  igRef: React.MutableRefObject<number>;
-}) {
-  const { scene } = useGLTF("/book.glb");
+/* gilded page-block edges (same trick as the site's BuiltBook) */
+function makePageEdgeTexture(): THREE.CanvasTexture {
+  const c = document.createElement("canvas");
+  c.width = 64;
+  c.height = 512;
+  const ctx = c.getContext("2d")!;
+  ctx.fillStyle = "#b3924f";
+  ctx.fillRect(0, 0, 64, 512);
+  for (let y = 0; y < 512; y += 2) {
+    const shade = 150 + ((y * 37) % 70);
+    ctx.fillStyle = `rgba(${shade}, ${Math.round(shade * 0.78)}, ${Math.round(shade * 0.42)}, 0.55)`;
+    ctx.fillRect(0, y, 64, 1);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
 
-  const { root, mats } = useMemo(() => {
-    // clone hierarchy AND materials so the two GLB panels stay independent
+/* ③ the recreation: code-built book wearing the plum/copper design */
+function PlumBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) {
+  const [plumF, plumB, plumS, igF, igB, igS, bumpF, bumpB, bumpS] = useTexture([
+    "/masks/plum-front.jpg",
+    "/masks/plum-back.jpg",
+    "/masks/plum-spine.jpg",
+    "/masks/plum-ignite-front.png",
+    "/masks/plum-ignite-back.png",
+    "/masks/plum-ignite-spine.png",
+    "/covers/front.jpeg",
+    "/covers/back.jpeg",
+    "/covers/spine.jpeg",
+  ]);
+  [plumF, plumB, plumS, igF, igB, igS].forEach((t) => {
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = 16;
+  });
+  const pageEdge = useMemo(makePageEdgeTexture, []);
+
+  const frontMat = useMemo(() => {
+    const m = new THREE.MeshStandardMaterial({
+      map: plumF,
+      bumpMap: bumpF,
+      bumpScale: 1.6,
+      roughnessMap: bumpF,
+      roughness: 0.9,
+      metalness: 0.25,
+      emissive: new THREE.Color("#ffb763"),
+      emissiveIntensity: 0,
+    });
+    m.emissiveMap = igF;
+    return m;
+  }, [plumF, bumpF, igF]);
+
+  const backMat = useMemo(() => {
+    const m = new THREE.MeshStandardMaterial({
+      map: plumB,
+      bumpMap: bumpB,
+      bumpScale: 1.2,
+      roughness: 0.75,
+      metalness: 0.15,
+      emissive: new THREE.Color("#ffb763"),
+      emissiveIntensity: 0,
+    });
+    m.emissiveMap = igB;
+    return m;
+  }, [plumB, bumpB, igB]);
+
+  const spineMat = useMemo(() => {
+    const m = new THREE.MeshStandardMaterial({
+      map: plumS,
+      bumpMap: bumpS,
+      bumpScale: 1.4,
+      roughness: 0.8,
+      metalness: 0.2,
+      emissive: new THREE.Color("#ffb763"),
+      emissiveIntensity: 0,
+    });
+    m.emissiveMap = igS;
+    return m;
+  }, [plumS, bumpS, igS]);
+
+  const leather = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: "#3a2630", roughness: 0.62, metalness: 0.06 }),
+    []
+  );
+  const pageMat = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        map: pageEdge,
+        color: "#d8b878",
+        roughness: 0.38,
+        metalness: 0.55,
+      }),
+    [pageEdge]
+  );
+
+  useFrame(() => {
+    frontMat.emissiveIntensity = igniteRef.current * 0.3;
+    spineMat.emissiveIntensity = igniteRef.current * 0.26;
+    backMat.emissiveIntensity = igniteRef.current * 0.3;
+  });
+
+  // BoxGeometry face order: +x, -x, +y, -y, +z, -z
+  return (
+    <group>
+      <mesh position={[0, 0, D / 2 - CT / 2]}>
+        <boxGeometry args={[W, H, CT]} />
+        {[leather, leather, leather, leather, frontMat, leather].map((m, i) => (
+          <primitive key={i} object={m} attach={`material-${i}`} />
+        ))}
+      </mesh>
+      <mesh position={[0, 0, -(D / 2 - CT / 2)]}>
+        <boxGeometry args={[W, H, CT]} />
+        {[leather, leather, leather, leather, leather, backMat].map((m, i) => (
+          <primitive key={i} object={m} attach={`material-${i}`} />
+        ))}
+      </mesh>
+      <mesh position={[-W / 2, 0, 0]}>
+        <boxGeometry args={[CT * 1.5, H * 1.012, D * 1.03]} />
+        {[leather, spineMat, leather, leather, leather, leather].map((m, i) => (
+          <primitive key={i} object={m} attach={`material-${i}`} />
+        ))}
+      </mesh>
+      <mesh position={[0.02, 0, 0]}>
+        <boxGeometry args={[W - 0.06, H - 0.045, D - CT * 2]} />
+        {[pageMat, leather, pageMat, pageMat, leather, leather].map((m, i) => (
+          <primitive key={i} object={m} attach={`material-${i}`} />
+        ))}
+      </mesh>
+    </group>
+  );
+}
+
+/* ① the delivered GLB, untouched */
+function GlbBookAsDelivered() {
+  const { scene } = useGLTF("/book.glb");
+  const root = useMemo(() => {
     const clone = scene.clone(true);
-    const mats: THREE.MeshStandardMaterial[] = [];
     clone.traverse((o) => {
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
@@ -40,12 +172,10 @@ function GlbGlowBook({
       const cloned = arr.map((m) => {
         const c = (m as THREE.MeshStandardMaterial).clone();
         c.normalScale?.multiplyScalar(0.05); // match the site's taming
-        if (c.name === "Book_Outer") mats.push(c);
         return c;
       });
       mesh.material = Array.isArray(src) ? cloned : cloned[0];
     });
-    // normalize exactly like the site: pitch upright, scale to H, center
     const root = new THREE.Group();
     const pre = new THREE.Box3().setFromObject(clone);
     const preSize = pre.getSize(new THREE.Vector3());
@@ -59,33 +189,20 @@ function GlbGlowBook({
     root.scale.setScalar(s);
     const center = box.getCenter(new THREE.Vector3()).multiplyScalar(s);
     root.position.sub(center);
-    return { root, mats };
+    return root;
   }, [scene]);
-
-  useEffect(() => {
-    const t = new THREE.TextureLoader().load(maskUrl);
-    t.flipY = false;
-    t.colorSpace = THREE.SRGBColorSpace;
-    t.anisotropy = 16;
-    mats.forEach((m) => {
-      m.emissive = new THREE.Color("#ffb763");
-      m.emissiveMap = t;
-      m.emissiveIntensity = 0;
-      m.needsUpdate = true;
-    });
-  }, [mats, maskUrl]);
-
-  useFrame(() => {
-    for (const m of mats) m.emissiveIntensity = igRef.current * 2.8;
-  });
-
   return <primitive object={root} />;
 }
 
-function Trio({ spinRef }: { spinRef: React.MutableRefObject<Spin> }) {
-  const igRef = useRef(0);
-  // BuiltBook multiplies its ignite by 0.3 internally (the "10%" taste
-  // era) — compensate so it burns at the full power of the screenshots
+function Trio({
+  spinRef,
+  glowRef,
+}: {
+  spinRef: React.MutableRefObject<Spin>;
+  glowRef: React.MutableRefObject<boolean>;
+}) {
+  // BuiltBook/PlumBook multiply internally by ~0.3 (the "10%" era) —
+  // compensate so ignition burns at the full power of the screenshots
   const igHot = useRef(0);
   const gL = useRef<THREE.Group>(null);
   const gM = useRef<THREE.Group>(null);
@@ -101,8 +218,7 @@ function Trio({ spinRef }: { spinRef: React.MutableRefObject<Spin> }) {
     s.ry += 0.0012;
     s.rx = Math.max(-0.9, Math.min(0.9, s.rx));
     const ig = (0.55 + 0.45 * Math.sin(t * 0.9)) * (0.9 + 0.1 * Math.sin(t * 5.1));
-    igRef.current = ig;
-    igHot.current = ig * 3.3;
+    igHot.current = glowRef.current ? ig * 3.3 : 0;
     [gL, gM, gR].forEach((g) => {
       if (g.current) {
         g.current.rotation.y = s.ry;
@@ -114,13 +230,13 @@ function Trio({ spinRef }: { spinRef: React.MutableRefObject<Spin> }) {
   return (
     <>
       <group ref={gL} position={[-1.55, 0, 0]} scale={0.82}>
-        <GlbGlowBook maskUrl="/masks/gilding-ignite-test.png" igRef={igRef} />
+        <GlbBookAsDelivered />
       </group>
       <group ref={gM} position={[0, 0, 0]} scale={0.82}>
         <BuiltBook igniteRef={igHot} />
       </group>
       <group ref={gR} position={[1.55, 0, 0]} scale={0.82}>
-        <GlbGlowBook maskUrl="/masks/gilding-ignite-4k-test.png" igRef={igRef} />
+        <PlumBook igniteRef={igHot} />
       </group>
     </>
   );
@@ -148,6 +264,11 @@ const colTitle: React.CSSProperties = {
 export default function GlowTest() {
   const spinRef = useRef<Spin>({ rx: 0, ry: 0, vx: 0, vy: 0 });
   const drag = useRef<{ x: number; y: number } | null>(null);
+  const [glowOn, setGlowOn] = useState(false); // default OFF per the owner
+  const glowRef = useRef(false);
+  useEffect(() => {
+    glowRef.current = glowOn;
+  }, [glowOn]);
 
   return (
     <main
@@ -172,7 +293,7 @@ export default function GlowTest() {
         <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
         <pointLight position={[-1.6, -1.4, 2.6]} intensity={16} color="#ffc890" />
         <Suspense fallback={null}>
-          <Trio spinRef={spinRef} />
+          <Trio spinRef={spinRef} glowRef={glowRef} />
         </Suspense>
         <EffectComposer multisampling={2}>
           <Bloom
@@ -184,6 +305,63 @@ export default function GlowTest() {
           />
         </EffectComposer>
       </Canvas>
+
+      {/* Apple-native-style toggle: ignition on/off */}
+      <div
+        style={{
+          position: "fixed",
+          top: "3vh",
+          left: "2.5vw",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          zIndex: 10,
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerMove={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
+      >
+        <button
+          role="switch"
+          aria-checked={glowOn}
+          aria-label="Glow"
+          onClick={() => setGlowOn((v) => !v)}
+          style={{
+            width: 51,
+            height: 31,
+            borderRadius: 16,
+            border: "none",
+            padding: 2,
+            cursor: "pointer",
+            background: glowOn ? "#34C759" : "rgba(120, 120, 128, 0.32)",
+            transition: "background 0.25s",
+            display: "block",
+          }}
+        >
+          <span
+            style={{
+              display: "block",
+              width: 27,
+              height: 27,
+              borderRadius: "50%",
+              background: "#fff",
+              boxShadow: "0 3px 8px rgba(0,0,0,0.35), 0 1px 1px rgba(0,0,0,0.16)",
+              transform: glowOn ? "translateX(20px)" : "translateX(0)",
+              transition: "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
+          />
+        </button>
+        <span
+          style={{
+            color: "rgba(233, 214, 178, 0.8)",
+            fontFamily: "Georgia, serif",
+            fontStyle: "italic",
+            fontSize: 14,
+          }}
+        >
+          glow
+        </span>
+      </div>
 
       <div
         style={{
@@ -200,29 +378,28 @@ export default function GlowTest() {
           pointerEvents: "none",
         }}
       >
-        drag anywhere — all three turn together, glowing through the same pipeline
+        drag anywhere — all three turn together
       </div>
 
       <div style={{ ...col, left: "1.5%" }}>
         <div style={colTitle}>① the object you gave us</div>
-        bookNew2.glb exactly as delivered, glowing through today&rsquo;s
-        1024-pixel stencil. This is the blur you&rsquo;ve been rejecting —
-        the glow edges can&rsquo;t be sharper than the texture they&rsquo;re
-        traced from.
+        bookNew2.glb exactly as delivered, untouched. Its whole design
+        lives in one 1024-pixel image, which is why anything light-based
+        on it goes soft.
       </div>
       <div style={{ ...col, left: "34.5%" }}>
         <div style={colTitle}>② the object we built in code</div>
-        The old red book from your screenshots: no 3D file — geometry built
-        in code, covers mapped from your 700×1088 scans, glow traced at
-        that full resolution. The look you love, shown for reference.
+        The old red book from your screenshots: geometry assembled in
+        code, covers mapped from your original 700×1088 scans. The
+        sharpness benchmark.
       </div>
       <div style={{ ...col, right: "1.5%" }}>
-        <div style={colTitle}>③ the new thing (the proposed fix)</div>
-        Your book again — same mesh, same 1024 cover art — but the glow
-        stencil re-drawn at 4096: the gilding&rsquo;s shapes upscaled and
-        their edges re-crisped into clean curves, so the light&rsquo;s
-        boundary is sharp even though the art under it isn&rsquo;t. Needs
-        nothing from your 3D artist.
+        <div style={colTitle}>③ the recreation</div>
+        Your plum book&rsquo;s design rebuilt the way ② was built: the
+        same hi-res scans, recolored offline to match ①&rsquo;s palette
+        exactly, the ramp lockup traced from ①&rsquo;s own art and
+        painted onto the back at full resolution. Same design as ①,
+        same sharpness as ② — including when the glow is on.
       </div>
     </main>
   );
