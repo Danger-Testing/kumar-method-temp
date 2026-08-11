@@ -14,8 +14,9 @@ export default function Experience() {
   const [phase, setPhase] = useState<"tomb" | "intro" | "book" | "closed">("tomb");
   const [flash, setFlash] = useState(false);
   // inspection mode: strips the added lighting, relief, and glow wherever
-  // the 3D book is on stage (closed view now; intro once it takes the prop)
-  const [plain, setPlain] = useState(false);
+  // the 3D book is on stage. Defaults ON per the owner ("just for now",
+  // 2026-08-11) — flip back to false when they call it.
+  const [plain, setPlain] = useState(true);
   const tombHostRef = useRef<HTMLDivElement>(null);
   // the doorway hole, as viewport fractions: derived from .km-tomb-frame's
   // rect and its interior clip-path polygon in kumar.css
