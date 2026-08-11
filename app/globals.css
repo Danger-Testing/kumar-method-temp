@@ -614,6 +614,13 @@ body {
   opacity: 0.95;
 }
 
+/* the first-visit hint owns the bottom zone until the first page turn;
+   the scrubber fades in as the hint fades out */
+.scrubber.scrubHidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .scrubLine {
   position: relative;
 }

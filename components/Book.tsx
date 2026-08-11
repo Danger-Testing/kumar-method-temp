@@ -425,7 +425,7 @@ export default function Book() {
       </div>
 
       <div
-        className={`scrubber ${scrubbing ? "scrubbing" : ""}`}
+        className={`scrubber ${scrubbing ? "scrubbing" : ""} ${hasTurned ? "" : "scrubHidden"}`}
         role="slider"
         aria-label="Scrub through pages"
         aria-valuemin={1}
