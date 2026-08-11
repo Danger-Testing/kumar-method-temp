@@ -324,11 +324,14 @@
 }
 
 .km-tomb-frame {
+  /* cover, anchored to the floor: the frame always fills the viewport
+     (cropping excess artwork at the top/sides) so the tomb never
+     shrinks or floats off the ground in tall windows */
   position: absolute;
   left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  bottom: 0;
+  transform: translateX(-50%);
   aspect-ratio: 1728 / 1117;
-  width: min(100vw, calc(100svh * (1728 / 1117)));
+  height: max(100svh, calc(100vw * (1117 / 1728)));
   z-index: 2;
 }

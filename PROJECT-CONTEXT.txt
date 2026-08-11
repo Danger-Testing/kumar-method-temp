@@ -249,4 +249,20 @@ The book is NOT an AI-generated mesh and NOT a video. It is a real
   the emissive gold mask from the leather's natural glints), NOT
   floating room particles — the owner explicitly rejected drei
   Sparkles fields twice. Don't re-add them.
+
+GOLD MASK RECALIBRATION PROTOCOL (mandatory on every book swap):
+The ignition glow is driven by buildGoldMask() in Intro3D.tsx, whose
+color thresholds are TUNED TO THE CURRENT TEXTURES. A new book.glb
+means new tones and the mask WILL silently miss (red-leather book =
+yellow-gold rule; plum book = copper/warmth rule keyed on r-b). Any
+time public/book.glb changes:
+ 1. Extract textures: npx @gltf-transform/cli copy book.glb out.gltf
+ 2. Replicate the mask pipeline in Python (PIL) against the real
+    baseColor atlas and RENDER A PREVIEW IMAGE — look at it. Target:
+    title/emblem/border/logo coverage ~8-10% of atlas, leather field
+    completely clean, stars scattered evenly.
+ 3. Only then port the tuned constants into buildGoldMask() (both the
+    gilding rule and the star-glint floors) and ship.
+Never assume the old thresholds transfer. Never ship without seeing
+the mask preview.
 ================================================================

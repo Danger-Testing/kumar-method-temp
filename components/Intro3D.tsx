@@ -430,7 +430,8 @@ function IntroScene({
     // the timeline starts on the first *rendered* frame, so slow texture
     // loads on mobile don't swallow the opening beats of the spin
     if (startRef.current === null) startRef.current = clock.getElapsedTime();
-    const t = clock.getElapsedTime() - startRef.current;
+    // 1.15 = overall tempo: the whole sequence plays ~15% faster
+    const t = (clock.getElapsedTime() - startRef.current) * 1.15;
     const g = group.current;
     if (!g) return;
 
@@ -507,7 +508,7 @@ function IntroScene({
         {useGlb ? <GlbBook igniteRef={igniteRef} /> : <BuiltBook igniteRef={igniteRef} />}
       </group>
 
-      <EffectComposer multisampling={isCoarse() ? 0 : 4}>
+      <EffectComposer multisampling={isCoarse() ? 0 : 2}>
         <Bloom
           ref={bloomRef as never}
           intensity={0.12}
@@ -573,7 +574,7 @@ export default function Intro3D({
         <Canvas
           camera={{ position: [0, 0, 4.15], fov: 40 }}
           gl={{ antialias: !isCoarse() }}
-          dpr={isCoarse() ? [1, 1.5] : [1, 2]}
+          dpr={isCoarse() ? [1, 1.5] : [1, 1.75]}
         >
           <IntroScene
             useGlb={glb}

@@ -56,6 +56,11 @@ export default function Experience() {
             const el = tombHostRef.current;
             if (!el) return;
             el.style.opacity = String(1 - fade);
+            // shed video decode cost as soon as it stops being visible:
+            // the fullscreen smoke goes first, everything once hidden
+            if (fade > 0.5) {
+              el.querySelector<HTMLVideoElement>(".km-landing-general-smoke")?.pause();
+            }
             if (fade >= 1 && el.style.visibility !== "hidden") {
               el.style.visibility = "hidden";
               el.querySelectorAll("video").forEach((v) => v.pause());
