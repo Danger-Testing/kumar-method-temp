@@ -534,12 +534,20 @@ function IntroScene({
     // motion entirely (the "book just appears" complaint) — quadratic
     // growth is visible from the first frame while still accelerating
     const scaleEase = E > 0 ? rise * rise : 1;
-    // BOOM on arrival: it overshoots past full size and springs back —
-    // one strong pop (~+15%), a small rebound, settled within ~a second
+    // BOOM on arrival: momentum carries it HUGE — ~1.65x resting size,
+    // nearly the height of the screen — then a damped spring drops it
+    // back to its true size with a small natural squash before settling
     let boom = 0;
     if (E > 0) {
       const tau = t - E;
-      if (tau > 0) boom = 0.17 * Math.exp(-tau * 4.5) * Math.sin(tau * 12);
+      if (tau > 0) {
+        const peak = 0.65;
+        if (tau < 0.28) {
+          boom = peak * (1 - Math.pow(1 - tau / 0.28, 3));
+        } else {
+          boom = peak * Math.exp(-(tau - 0.28) * 5) * Math.cos((tau - 0.28) * 9);
+        }
+      }
     }
     // no transparency: it emerges shaded, as if in the cave's shadow, and
     // brightens as it comes out
