@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useTexture, useGLTF } from "@react-three/drei";
+import { useTexture, useGLTF, Sparkles } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 
 /* Book proportions measured from the cover scans:
@@ -317,7 +317,7 @@ function GlbBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) {
     // the GLB's clean art can take the full-power ignition without the
     // speckling that forced the scan-based book down to 10%
     for (const m of mats) {
-      if (m.emissiveMap) m.emissiveIntensity = igniteRef.current * 2.2;
+      if (m.emissiveMap) m.emissiveIntensity = igniteRef.current * 2.8;
     }
   });
 
@@ -360,6 +360,8 @@ function IntroScene({
   onDone: (finished: boolean) => void;
 }) {
   const group = useRef<THREE.Group>(null);
+  const embersEarly = useRef<THREE.Group>(null);
+  const embersMain = useRef<THREE.Group>(null);
   const igniteRef = useRef(0);
   const bloomRef = useRef<{ intensity: number } | null>(null);
   const doneRef = useRef(false);
@@ -379,17 +381,26 @@ function IntroScene({
     g.rotation.y = (1 - spin) * Math.PI * 2.7;
     g.rotation.x = -0.06 + Math.sin(t * 1.1) * 0.012;
     g.position.y = Math.sin(t * 1.3) * 0.03;
-    const s = 0.84 + easeOutQuart(Math.min(1, t / 3)) * 0.16;
+    // the book never stops growing in the frame — presence keeps building
+    // from the first frame until the dive takes over
+    const s = 0.78 + (1 - Math.pow(1 - Math.min(1, t / 5), 3)) * 0.34;
     g.scale.setScalar(s);
 
     // the dolly: no let-up — it accelerates until the cover kisses the lens
     const d = easeInExpo(smooth(3.85, 5.05, t));
 
-    // the gilding ignites, then overbrightens as we close in
-    const ig = smooth(2.5, 3.5, t);
-    igniteRef.current = ig * (0.85 + Math.sin(t * 5.2) * 0.15) * (1 + d * 0.8);
-    // bloom back at full presence — the GLB's clean gilding earns it
-    if (bloomRef.current) bloomRef.current.intensity = 0.12 + ig * 0.55 + d * 0.9;
+    // the awakening: the gold stirs early, builds in waves, and is still
+    // climbing when the dive begins — no dead air, no single hit
+    const ig =
+      (0.14 * smooth(1.6, 2.4, t) + 0.36 * smooth(2.4, 3.4, t) + 0.6 * smooth(3.4, 4.5, t)) *
+      (0.82 + 0.18 * Math.sin(t * 6.3) * Math.sin(t * 2.7)) *
+      (1 + d * 0.9);
+    igniteRef.current = ig;
+    if (bloomRef.current) bloomRef.current.intensity = 0.1 + ig * 0.85 + d * 1.1;
+
+    // embers seed the awakening before the glow arrives, then thicken
+    if (embersEarly.current) embersEarly.current.visible = t > 1.2;
+    if (embersMain.current) embersMain.current.visible = t > 2.8;
 
     // stop the magnification before the scan runs out of pixels — the
     // rack-focus blur and grain carry the final stretch instead
@@ -425,6 +436,15 @@ function IntroScene({
       <pointLight position={[-1.6, -1.4, 2.6]} intensity={6} color="#ffc890" />
       <group ref={group}>
         {useGlb ? <GlbBook igniteRef={igniteRef} /> : <BuiltBook igniteRef={igniteRef} />}
+      </group>
+
+      {/* a few faint embers stir before the gold does — first signs of life */}
+      <group ref={embersEarly} visible={false}>
+        <Sparkles count={38} scale={[4.5, 3, 3.5]} size={2.4} speed={0.32} opacity={0.42} color="#ffcf8f" noise={1} />
+      </group>
+      {/* the awakening thickens as the ignition builds */}
+      <group ref={embersMain} visible={false}>
+        <Sparkles count={70} scale={[5.5, 3.6, 4.5]} size={3.8} speed={0.65} opacity={0.55} color="#ffc069" noise={1.5} />
       </group>
 
       <EffectComposer multisampling={isCoarse() ? 0 : 4}>
