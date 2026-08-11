@@ -1057,6 +1057,28 @@ body {
   pointer-events: none;
 }
 
+/* TEMPORARY tuning tool: glow brightness slider in the closed view.
+   The owner dials the level, reports the number, it bakes into
+   TheBook's IGNITE_FULL, and this retires. */
+.glowTuner {
+  position: fixed;
+  top: 2.2vh;
+  left: max(2.5vw, 18px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 95;
+  font-family: var(--font-garamond), Georgia, serif;
+  font-style: italic;
+  font-size: 14px;
+  color: rgba(233, 214, 178, 0.8);
+}
+
+.glowTuner input {
+  width: 140px;
+  accent-color: #c9a15e;
+}
+
 /* inspection toggle: strips the warm rig, bump relief, and gilding glow.
    Sits above the tomb (90) and the intro (100) so it works mid-flight. */
 .plainToggle {

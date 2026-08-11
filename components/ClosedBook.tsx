@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
@@ -18,9 +18,12 @@ function isCoarse(): boolean {
 function SpinnableBook({
   spinRef,
   plain,
+  multRef,
 }: {
   spinRef: React.MutableRefObject<{ vx: number; vy: number; rx: number; ry: number }>;
   plain: boolean;
+  /** TEMPORARY owner tuning: glow brightness multiplier from the slider */
+  multRef: React.MutableRefObject<number>;
 }) {
   const group = useRef<THREE.Group>(null);
   const igniteRef = useRef(0);
@@ -47,8 +50,9 @@ function SpinnableBook({
     g.position.y = Math.sin(t * 1.3) * 0.03;
 
     // ONE glow: the canonical drive from TheBook, same as the demo and
-    // the intro's peak. Plain mode kills it entirely.
-    igniteRef.current = plain ? 0 : igniteDrive(t);
+    // the intro's peak. Plain mode kills it entirely. The slider multiplier
+    // is a TEMPORARY tuning aid — the chosen value bakes into IGNITE_FULL.
+    igniteRef.current = plain ? 0 : igniteDrive(t) * multRef.current;
     if (bloomRef.current) bloomRef.current.intensity = plain ? 0 : BLOOM.intensity;
   });
 
@@ -85,6 +89,12 @@ export default function ClosedBook({
 }) {
   const spinRef = useRef({ vx: 0, vy: 0, rx: 0, ry: 0 });
   const drag = useRef<{ x: number; y: number; moved: number } | null>(null);
+  // TEMPORARY owner tuning: glow brightness (report the number, we bake it)
+  const [glowMult, setGlowMult] = useState(1);
+  const multRef = useRef(1);
+  useEffect(() => {
+    multRef.current = glowMult;
+  }, [glowMult]);
 
   return (
     <div
@@ -118,9 +128,30 @@ export default function ClosedBook({
         gl={{ antialias: true }}
         dpr={isCoarse() ? [1, 1.5] : [1, 1.75]}
       >
-        <SpinnableBook spinRef={spinRef} plain={plain} />
+        <SpinnableBook spinRef={spinRef} plain={plain} multRef={multRef} />
       </Canvas>
       <div className="closedHint">drag to turn it over · tap to open</div>
+      {/* TEMPORARY: glow tuning slider — owner dials, reports the number,
+          it bakes into TheBook's IGNITE_FULL, slider retires */}
+      {!plain && (
+        <div
+          className="glowTuner"
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerMove={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+        >
+          <input
+            type="range"
+            min={0}
+            max={1.5}
+            step={0.05}
+            value={glowMult}
+            onChange={(e) => setGlowMult(parseFloat(e.target.value))}
+            aria-label="Glow brightness"
+          />
+          <span>glow ×{glowMult.toFixed(2)}</span>
+        </div>
+      )}
     </div>
   );
 }
