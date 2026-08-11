@@ -385,15 +385,16 @@ export function GlbBook({
   }, [scene]);
 
   useEffect(() => {
-    // The glow stencil is NOT guessed at runtime. /masks/ramp-glow.png was
-    // authored offline against the extracted Book_Outer atlas (gltf-transform
-    // copy → PIL, ROI-restricted threshold, open+dilate+feather) and verified
-    // pixel-by-pixel in preview renders: ONLY the ramp swoosh + wordmark on
-    // the back cover carries glow. Regenerate it if book.glb ever changes.
-    const mask = new THREE.TextureLoader().load("/masks/ramp-glow.png");
-    mask.flipY = false; // glTF UV convention — must match the atlas
-    mask.colorSpace = THREE.SRGBColorSpace;
-    mask.anisotropy = 16;
+    // NO glow, no emissive at all — the ramp mark is simply PAINTED blue:
+    // the covers atlas is swapped for an offline-authored copy where only
+    // the stencil-verified ramp pixels are tinted (luminance preserved, so
+    // the embossing shading survives); every other pixel is untouched.
+    // Authored per the recalibration protocol — regenerate offline if
+    // book.glb ever changes.
+    const recolored = new THREE.TextureLoader().load("/masks/book-outer-rampblue.jpg");
+    recolored.flipY = false; // glTF UV convention — must match the atlas
+    recolored.colorSpace = THREE.SRGBColorSpace;
+    recolored.anisotropy = 16;
     mats.forEach((m) => {
       // sharper sampling at glancing angles on the asset's own maps —
       // these are already on the GPU, so the sampler must be re-uploaded
@@ -403,14 +404,12 @@ export function GlbBook({
           tex.needsUpdate = true;
         }
       });
-      if (m.name !== "Book_Outer") return; // only the covers atlas glows
+      if (m.name !== "Book_Outer") return; // only the covers atlas is recolored
       if (m.map) {
-        mask.wrapS = m.map.wrapS;
-        mask.wrapT = m.map.wrapT;
+        recolored.wrapS = m.map.wrapS;
+        recolored.wrapT = m.map.wrapT;
       }
-      m.emissive = new THREE.Color("#ffb763");
-      m.emissiveMap = mask;
-      m.emissiveIntensity = 0;
+      m.map = recolored;
       m.needsUpdate = true;
     });
   }, [mats]);
