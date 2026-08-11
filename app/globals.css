@@ -638,6 +638,16 @@ body {
   display: block;
 }
 
+/* TEMPORARY (owner, 2026-08-11 night): CTA hidden on mobile — it
+   overlaps the scrubber counter in the bottom zone. Proper mobile
+   placement to be figured out in the morning. Placed after the base
+   rules so the cascade actually applies it. */
+@media (max-width: 720px) {
+  .bizLink {
+    display: none;
+  }
+}
+
 .bizLink:hover {
   color: rgba(233, 214, 178, 0.95);
 }
