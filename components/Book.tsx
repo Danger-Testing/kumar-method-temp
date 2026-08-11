@@ -262,7 +262,7 @@ function rasterizeMask(svg: string, cssVar: string) {
   img.src = svg;
 }
 
-export default function Book() {
+export default function Book({ onBusiness }: { onBusiness?: () => void }) {
   const [current, setCurrent] = useState(0);
   const [hasTurned, setHasTurned] = useState(false);
   const [spread, setSpread] = useState(false);
@@ -318,6 +318,18 @@ export default function Book() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // never fight a form: typing in an input (the access modal) must
+      // not turn pages or eat the spacebar
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.tagName === "SELECT" ||
+          t.isContentEditable)
+      ) {
+        return;
+      }
       if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
         e.preventDefault();
         go(base + step);
@@ -424,12 +436,13 @@ export default function Book() {
         tap the page · or use ← → to turn
       </div>
 
-      <a
+      <button
+        type="button"
         className="bizLink"
-        href="https://ramp.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          onBusiness?.();
+        }}
       >
         <span className="bizLine1">try kumar method for business</span>
         <span className="bizLine2">
@@ -445,7 +458,7 @@ export default function Book() {
             />
           </svg>
         </span>
-      </a>
+      </button>
 
       <div
         className={`scrubber ${scrubbing ? "scrubbing" : ""} ${hasTurned ? "" : "scrubHidden"}`}

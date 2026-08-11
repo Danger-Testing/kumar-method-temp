@@ -126,8 +126,10 @@ export default function Experience() {
 
       {phase === "book" && (
         <>
-          <Book />
-          <button className="enterpriseAccessButton" type="button" onClick={() => setEnterpriseOpen(true)}>Get access</button>
+          {/* the business CTA (bottom-right, in Book) opens the access
+              modal — Marc's separate top-right button was retired in
+              favor of the one CTA (owner call) */}
+          <Book onBusiness={() => setEnterpriseOpen(true)} />
           {/* closing the book: back to the tomb, with the closed tome
               hanging in the room — not all the way back to square one.
               Waits out the handoff flash. */}
