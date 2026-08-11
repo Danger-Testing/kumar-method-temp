@@ -63,6 +63,10 @@ get the work rejected:
 - EVERY risky/aesthetic change goes in ITS OWN COMMIT with a clear
   message, so the owner can say "revert that" and it's one
   git revert + redeploy. This is a standing contract. Honor it.
+- PLAIN (lights-off) MODE IS THE DEFAULT as of 2026-08-11, owner-
+  temporary ("just for now") while judging the moiré. Ask before
+  reverting to the lit default. The flag: `plain` state in
+  Experience.tsx; the corner toggle flips it.
 - The owner dictates by voice; messages arrive mid-work and may
   contain transcription noise ("she" for "you", etc.). Read intent.
 - User's other conventions (from their global memory): ⌥Space is
