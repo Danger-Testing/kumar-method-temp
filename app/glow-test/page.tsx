@@ -138,8 +138,8 @@ export default function GlowTest() {
       >
         the same art, the same glow — only the texture resolution differs
       </div>
-      <div style={{ ...caption, left: 0 }}>current book&rsquo;s texture density (1024 atlas)</div>
-      <div style={{ ...caption, right: 0 }}>hi-res export (what we&rsquo;d ask for)</div>
+      <div style={{ ...caption, left: 0 }}>1024 atlas</div>
+      <div style={{ ...caption, right: 0 }}>hi-res texture</div>
     </main>
   );
 }
