@@ -1190,9 +1190,10 @@ body {
   cursor: pointer;
   pointer-events: auto;
   text-decoration: underline;
-  text-underline-offset: 0.18em;
-  text-decoration-thickness: 1px;
-  text-decoration-color: rgba(233, 214, 178, 0.45);
+  text-underline-offset: 0.22em;
+  /* evident, not shy — this line is the door to the lead form */
+  text-decoration-thickness: 2px;
+  text-decoration-color: rgba(240, 224, 192, 0.9);
   transition: color 0.25s, text-decoration-color 0.25s;
 }
 
