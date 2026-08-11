@@ -591,8 +591,9 @@ body {
   opacity: 0;
 }
 
-/* page scrubber: a short, quiet ornament — flourish line, "n / 110"
-   counter, and a small progress track. Drag to fast-travel. */
+/* page scrubber: a short, quiet ornament — one flourish line that IS
+   the scrub track (diamond thumb rides it), "n / 110" centered below.
+   Drag to fast-travel. */
 .scrubber {
   position: fixed;
   left: 50%;
@@ -613,21 +614,21 @@ body {
   opacity: 0.95;
 }
 
+.scrubLine {
+  position: relative;
+}
+
 .scrubFlourish {
   display: block;
   width: 100%;
   height: 12px;
-  margin-bottom: 6px;
   opacity: 0.8;
 }
 
-.scrubRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .scrubCount {
+  display: block;
+  margin-top: 5px;
+  text-align: center;
   font-family: var(--font-garamond), Georgia, serif;
   font-feature-settings: "onum";
   font-size: 14px;
@@ -635,33 +636,10 @@ body {
   white-space: nowrap;
 }
 
-.scrubTrack {
-  position: relative;
-  flex: 1;
-  height: 16px;
-}
-
-.scrubTrack::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 1px;
-  background: rgba(233, 214, 178, 0.25);
-}
-
-.scrubFill {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  height: 1px;
-  background: rgba(233, 214, 178, 0.85);
-}
-
 .scrubThumb {
   position: absolute;
-  top: 50%;
+  /* the flourish stroke wanders around y≈5px of the 12px line box */
+  top: 5px;
   width: 6px;
   height: 6px;
   transform: translate(-50%, -50%) rotate(45deg);

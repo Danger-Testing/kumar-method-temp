@@ -447,36 +447,30 @@ export default function Book() {
         onPointerCancel={() => setScrubbing(false)}
       >
         {scrubbing && <div className="scrubLabel">{chapters[pages[base].chapter].shortName}</div>}
-        <svg className="scrubFlourish" viewBox="0 0 300 12" aria-hidden="true">
-          <path
-            d="M14 6 C 6 11, 2 4, 9 3 C 13 2, 15 4, 14 6"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.1"
-          />
-          <path
-            d="M14 5.5 C 90 3, 210 7, 296 4.8"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.1"
-            strokeLinecap="round"
-          />
-        </svg>
-        <div className="scrubRow">
-          <span className="scrubCount">
-            {base + 1} / {pages.length}
-          </span>
-          <div className="scrubTrack" ref={scrubRef}>
-            <div
-              className="scrubFill"
-              style={{ width: `${((base / (pages.length - 1)) * 100).toFixed(2)}%` }}
+        <div className="scrubLine" ref={scrubRef}>
+          <svg className="scrubFlourish" viewBox="0 0 300 12" aria-hidden="true">
+            <path
+              d="M14 6 C 6 11, 2 4, 9 3 C 13 2, 15 4, 14 6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.1"
             />
-            <div
-              className="scrubThumb"
-              aria-hidden="true"
-              style={{ left: `${((base / (pages.length - 1)) * 100).toFixed(2)}%` }}
+            <path
+              d="M14 5.5 C 90 3, 210 7, 296 4.8"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.1"
+              strokeLinecap="round"
             />
-          </div>
+          </svg>
+          <div
+            className="scrubThumb"
+            aria-hidden="true"
+            style={{ left: `${((base / (pages.length - 1)) * 100).toFixed(2)}%` }}
+          />
+        </div>
+        <div className="scrubCount">
+          {base + 1} / {pages.length}
         </div>
       </div>
 
