@@ -392,13 +392,7 @@ export function GlbBook({
     // occlusion boundary, not a light effect — brightness cannot blur it.
     // Both atlas back-panels carry the mark, so outer and inner cover
     // faces open into a true through-hole.
-    // EXPERIMENT #3 (owner): the FULL gilding is cut out — pierced-
-    // metalwork luminary. Mask authored offline per the recalibration
-    // protocol (strict-copper floors so worn edge-smears don't become
-    // ragged holes; no star pinholes — holes in blank leather read as
-    // damage, the piercing lives in the ornament). Swap back to
-    // ramp-cutout-alpha.png for the mark-only cut.
-    const cut = new THREE.TextureLoader().load("/masks/gilding-cutout-alpha.png");
+    const cut = new THREE.TextureLoader().load("/masks/ramp-cutout-alpha.png");
     cut.flipY = false; // glTF UV convention — must match the atlas
     cut.anisotropy = 16; // alpha data stays linear — no SRGB here
     mats.forEach((m) => {
