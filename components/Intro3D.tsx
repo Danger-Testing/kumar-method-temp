@@ -618,22 +618,11 @@ export default function Intro3D({
               // rise, then dissolves into the dark room as the spin takes
               // over
               onTombFade?.(smooth(1.1, 3, t));
-              // the canvas stays clipped to the doorway while the book is
-              // inside it, releasing as the book crosses the threshold —
-              // so the rise never draws over the stone frame
-              const el = canvasWrapRef.current;
-              const hole = holeRect?.current;
-              if (!el || !hole) return;
-              const open = 1 - smooth(0.55, 0.95, rise);
-              if (open <= 0) {
-                if (el.style.clipPath) el.style.clipPath = "";
-                return;
-              }
-              const top = (hole.cy - hole.h / 2) * 100 * open;
-              const bottom = (1 - hole.cy - hole.h / 2) * 100 * open;
-              const left = (hole.cx - hole.w / 2) * 100 * open;
-              const right = (1 - hole.cx - hole.w / 2) * 100 * open;
-              el.style.clipPath = `inset(${top.toFixed(2)}% ${right.toFixed(2)}% ${bottom.toFixed(2)}% ${left.toFixed(2)}%)`;
+              // no canvas clip: the hard-edged doorway window read as the
+              // book "clipping off". The measured start pose already puts
+              // it small and deep inside the dark opening, so rising
+              // forward past the stone reads naturally on its own.
+              void rise;
             }}
             onFade={(v) => {
               if (fadeRef.current) fadeRef.current.style.opacity = String(v);
