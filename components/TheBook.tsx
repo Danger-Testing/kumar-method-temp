@@ -52,18 +52,25 @@ export function BookLights({ plain, sweep = false }: { plain: boolean; sweep?: b
     if (!light) return;
     if (start.current === null) start.current = clock.getElapsedTime();
     const tm = clock.getElapsedTime() - start.current;
-    // the flashlight pans up and down FOREVER — a slow lighthouse pass
-    // over the book, floor to cover and back, ~4.5s per cycle
-    // (sweep=false — e.g. the closed-book view — holds full aim)
-    const aim = sweep
-      ? tm < 1.5
-        ? 0
-        : (1 - Math.cos(((tm - 1.5) * Math.PI * 2) / 4.5)) / 2
-      : 1;
-    target.position.set(0, -4.2 * (1 - aim), 0);
     light.target = target;
-    // softer at full aim — the center hotspot was too harsh
-    light.intensity = 0.25 + 1.0 * aim;
+    if (!sweep) {
+      // e.g. the closed-book view: steady full aim
+      target.position.set(0, 0, 0);
+      light.intensity = 1.25;
+      return;
+    }
+    // scanning passes: the beam starts ABOVE the book and pans all the
+    // way down to the floor, then starts over from the top — one
+    // direction, repeating (~4.5s per pass), like a search light.
+    // The book lights up each time the beam crosses it.
+    if (tm < 1.5) {
+      target.position.set(0, 2.6, 0);
+      light.intensity = 1.15;
+      return;
+    }
+    const phase = ((tm - 1.5) % 4.5) / 4.5;
+    target.position.set(0, 2.6 - 6.8 * phase, 0);
+    light.intensity = 1.15;
   });
 
   return plain ? (
