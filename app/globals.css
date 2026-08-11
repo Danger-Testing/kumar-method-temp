@@ -81,11 +81,11 @@ body {
 .bookArea {
   position: relative;
   /* leaves breathing room beneath the pages for the scrubber */
-  height: min(88svh, 140vw);
+  height: min(84svh, 140vw);
   aspect-ratio: 0.66;
   cursor: pointer;
   z-index: 2;
-  margin-bottom: 3vh;
+  margin-bottom: 6vh;
 }
 
 /* an open book on wide screens: two facing leaves and a center spine */
