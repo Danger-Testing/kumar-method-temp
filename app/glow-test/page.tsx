@@ -17,14 +17,26 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 
 type PanelAssets = { color: THREE.CanvasTexture; mask: THREE.CanvasTexture };
 
-function buildAssets(img: HTMLImageElement, height: number): PanelAssets {
+function toTexture(c: HTMLCanvasElement): THREE.CanvasTexture {
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 16;
+  return t;
+}
+
+function buildColor(img: HTMLImageElement, height: number): HTMLCanvasElement {
   const w = Math.round((img.width / img.height) * height);
   const c = document.createElement("canvas");
   c.width = w;
   c.height = height;
-  const ctx = c.getContext("2d")!;
-  ctx.drawImage(img, 0, 0, w, height);
-  const src = ctx.getImageData(0, 0, w, height);
+  c.getContext("2d")!.drawImage(img, 0, 0, w, height);
+  return c;
+}
+
+function buildMask(img: HTMLImageElement, height: number): HTMLCanvasElement {
+  const colorCanvas = buildColor(img, height);
+  const w = colorCanvas.width;
+  const src = colorCanvas.getContext("2d")!.getImageData(0, 0, w, height);
   const m = document.createElement("canvas");
   m.width = w;
   m.height = height;
@@ -43,13 +55,7 @@ function buildAssets(img: HTMLImageElement, height: number): PanelAssets {
   mctx.putImageData(out, 0, 0);
   mctx.filter = "blur(1.2px)"; // same feather as the real pipeline
   mctx.drawImage(m, 0, 0);
-  const color = new THREE.CanvasTexture(c);
-  color.colorSpace = THREE.SRGBColorSpace;
-  color.anisotropy = 16;
-  const mask = new THREE.CanvasTexture(m);
-  mask.colorSpace = THREE.SRGBColorSpace;
-  mask.anisotropy = 16;
-  return { color, mask };
+  return m;
 }
 
 function GlowPanel({ assets, x }: { assets: PanelAssets; x: number }) {
@@ -61,7 +67,7 @@ function GlowPanel({ assets, x }: { assets: PanelAssets; x: number }) {
     if (mat.current) mat.current.emissiveIntensity = ig * 2.6;
   });
   const aspect = 700 / 1088;
-  const h = 2.4;
+  const h = 2.1;
   return (
     <mesh position={[x, 0, 0]}>
       <planeGeometry args={[h * aspect, h]} />
@@ -90,15 +96,25 @@ const caption: React.CSSProperties = {
 };
 
 export default function GlowTest() {
-  const [assets, setAssets] = useState<{ lo: PanelAssets; hi: PanelAssets } | null>(null);
+  const [assets, setAssets] = useState<{
+    lo: PanelAssets;
+    hybrid: PanelAssets;
+    hi: PanelAssets;
+  } | null>(null);
 
   useEffect(() => {
     const img = new Image();
     img.src = "/covers/front.jpeg";
     img.onload = () => {
+      const loColor = toTexture(buildColor(img, 505)); // GLB atlas density
+      const hiColor = toTexture(buildColor(img, 1088)); // full scan
+      const loMask = toTexture(buildMask(img, 505));
+      const hiMask = toTexture(buildMask(img, 1088));
       setAssets({
-        lo: buildAssets(img, 505), // the GLB atlas's effective cover height
-        hi: buildAssets(img, 1088), // the full scan — a hi-res export
+        lo: { color: loColor, mask: loMask },
+        // the no-artist-needed path: low-res art, hi-res glow stencil
+        hybrid: { color: loColor, mask: hiMask },
+        hi: { color: hiColor, mask: hiMask },
       });
     };
   }, []);
@@ -106,11 +122,12 @@ export default function GlowTest() {
   return (
     <main style={{ position: "fixed", inset: 0, background: "#0a0705" }}>
       {assets && (
-        <Canvas camera={{ position: [0, 0, 4], fov: 40 }} dpr={[1, 2]}>
+        <Canvas camera={{ position: [0, 0, 4.4], fov: 40 }} dpr={[1, 2]}>
           <ambientLight intensity={0.4} color="#ffdcb0" />
           <pointLight position={[-1.6, -1.4, 2.6]} intensity={14} color="#ffc890" />
-          <GlowPanel assets={assets.lo} x={-0.88} />
-          <GlowPanel assets={assets.hi} x={0.88} />
+          <GlowPanel assets={assets.lo} x={-1.48} />
+          <GlowPanel assets={assets.hybrid} x={0} />
+          <GlowPanel assets={assets.hi} x={1.48} />
           <EffectComposer multisampling={2}>
             <Bloom
               intensity={0.8}
@@ -136,10 +153,11 @@ export default function GlowTest() {
           letterSpacing: "0.06em",
         }}
       >
-        the same art, the same glow — only the texture resolution differs
+        the same art, the same glow — only the resolutions differ
       </div>
-      <div style={{ ...caption, left: 0 }}>1024 atlas</div>
-      <div style={{ ...caption, right: 0 }}>hi-res texture</div>
+      <div style={{ ...caption, left: 0, width: "33.3%" }}>1024 art + 1024 stencil</div>
+      <div style={{ ...caption, left: "33.3%", width: "33.3%" }}>1024 art + 4K stencil</div>
+      <div style={{ ...caption, right: 0, width: "33.3%" }}>hi-res everything</div>
     </main>
   );
 }
