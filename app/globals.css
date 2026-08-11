@@ -1077,20 +1077,21 @@ body {
   }
 }
 
-/* the access modal (opened by the business CTA) — restyled from Marc's
-   red draft into the site's parchment-and-gold language (owner call) */
+/* the access modal (opened by the business CTA) — parchment-and-gold
+   palette, set in ramp's own face (Switzer, all lowercase) to match the
+   CTA's wordmark language (owner call) */
 .enterpriseModalBackdrop { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 24px; background: rgba(0, 0, 0, 0.78); }
-.enterpriseModal { position: relative; width: min(420px, 100%); padding: 34px; border: 1px solid rgba(233, 214, 178, 0.4); background: #0b0805; color: #e9d6b2; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55); }
-.enterpriseModal h2 { margin: 0 0 24px; font: 400 30px var(--font-fell), Georgia, serif; text-transform: uppercase; letter-spacing: 0.04em; color: #e9d6b2; }
-.enterpriseModalClose { position: absolute; top: 10px; right: 13px; border: 0; background: none; color: rgba(233, 214, 178, 0.55); cursor: pointer; font: 32px/1 Georgia, serif; transition: color 0.2s; }
+.enterpriseModal { position: relative; width: min(420px, 100%); padding: 34px; border: 1px solid rgba(233, 214, 178, 0.4); background: #0b0805; color: #e9d6b2; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55); font-family: "Switzer", -apple-system, "Helvetica Neue", sans-serif; }
+.enterpriseModal h2 { margin: 0 0 24px; font: 500 26px/1.1 "Switzer", -apple-system, "Helvetica Neue", sans-serif; text-transform: lowercase; letter-spacing: 0.01em; color: #e9d6b2; }
+.enterpriseModalClose { position: absolute; top: 10px; right: 13px; border: 0; background: none; color: rgba(233, 214, 178, 0.55); cursor: pointer; font: 28px/1 "Switzer", -apple-system, "Helvetica Neue", sans-serif; transition: color 0.2s; }
 .enterpriseModalClose:hover, .enterpriseModalClose:focus-visible { color: #e9d6b2; }
 .enterpriseModal form { display: grid; gap: 14px; }
-.enterpriseModal label { display: grid; gap: 6px; font: 400 15px var(--font-fell), Georgia, serif; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(233, 214, 178, 0.75); }
-.enterpriseModal input { box-sizing: border-box; width: 100%; border: 1px solid rgba(233, 214, 178, 0.35); padding: 11px; background: rgba(0, 0, 0, 0.55); color: #f3ecd9; font: 17px var(--font-garamond), Georgia, serif; }
+.enterpriseModal label { display: grid; gap: 6px; font: 500 13px "Switzer", -apple-system, "Helvetica Neue", sans-serif; text-transform: lowercase; letter-spacing: 0.02em; color: rgba(233, 214, 178, 0.72); }
+.enterpriseModal input { box-sizing: border-box; width: 100%; border: 1px solid rgba(233, 214, 178, 0.35); padding: 11px; background: rgba(0, 0, 0, 0.55); color: #f3ecd9; font: 16px "Switzer", -apple-system, "Helvetica Neue", sans-serif; }
 .enterpriseModal input:focus { outline: 1px solid #c9a15e; border-color: #c9a15e; }
-.enterpriseModal form > button { border: 1px solid rgba(233, 214, 178, 0.5); padding: 12px; background: rgba(48, 32, 14, 0.85); color: #e9d6b2; cursor: pointer; font: 16px var(--font-garamond), Georgia, serif; text-transform: uppercase; letter-spacing: 0.08em; transition: border-color 0.2s, background 0.2s; }
+.enterpriseModal form > button { border: 1px solid rgba(233, 214, 178, 0.5); padding: 12px; background: rgba(48, 32, 14, 0.85); color: #e9d6b2; cursor: pointer; font: 500 15px "Switzer", -apple-system, "Helvetica Neue", sans-serif; text-transform: lowercase; letter-spacing: 0.02em; transition: border-color 0.2s, background 0.2s; }
 .enterpriseModal form > button:hover, .enterpriseModal form > button:focus-visible { border-color: #e9d6b2; background: rgba(72, 48, 20, 0.9); }
 .enterpriseModal form > button:disabled { opacity: 0.6; cursor: wait; }
-.enterpriseFormSuccess, .enterpriseFormError { margin: 0; font: 16px var(--font-garamond), Georgia, serif; }
+.enterpriseFormSuccess, .enterpriseFormError { margin: 0; font: 14px "Switzer", -apple-system, "Helvetica Neue", sans-serif; text-transform: lowercase; }
 .enterpriseFormSuccess { color: #c9a15e; }
 .enterpriseFormError { color: #c96a4e; }
