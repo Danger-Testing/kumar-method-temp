@@ -385,27 +385,16 @@ export function GlbBook({
   }, [scene]);
 
   useEffect(() => {
+    // The glow stencil is NOT guessed at runtime. /masks/ramp-glow.png was
+    // authored offline against the extracted Book_Outer atlas (gltf-transform
+    // copy → PIL, ROI-restricted threshold, open+dilate+feather) and verified
+    // pixel-by-pixel in preview renders: ONLY the ramp swoosh + wordmark on
+    // the back cover carries glow. Regenerate it if book.glb ever changes.
+    const mask = new THREE.TextureLoader().load("/masks/ramp-glow.png");
+    mask.flipY = false; // glTF UV convention — must match the atlas
+    mask.colorSpace = THREE.SRGBColorSpace;
+    mask.anisotropy = 16;
     mats.forEach((m) => {
-      const src = m.map;
-      const img = src?.image as (CanvasImageSource & { width: number; height: number }) | undefined;
-      if (!src || !img || !img.width) return;
-      const canvas = buildGoldMask(img);
-      if (!canvas) return;
-      const t = new THREE.CanvasTexture(canvas);
-      // glTF textures use flipY=false — the mask must match or it lands upside down
-      t.flipY = src.flipY;
-      t.wrapS = src.wrapS;
-      t.wrapT = src.wrapT;
-      t.colorSpace = THREE.SRGBColorSpace;
-      // mipmapped + anisotropic, or the glowing emblems alias into moiré
-      // whenever the book is small on screen
-      t.generateMipmaps = true;
-      t.minFilter = THREE.LinearMipmapLinearFilter;
-      t.anisotropy = 16;
-      m.emissive = new THREE.Color("#ffb763");
-      m.emissiveMap = t;
-      m.emissiveIntensity = 0;
-      m.needsUpdate = true;
       // sharper sampling at glancing angles on the asset's own maps —
       // these are already on the GPU, so the sampler must be re-uploaded
       [m.map, m.normalMap, m.roughnessMap, m.metalnessMap].forEach((tex) => {
@@ -414,6 +403,15 @@ export function GlbBook({
           tex.needsUpdate = true;
         }
       });
+      if (m.name !== "Book_Outer") return; // only the covers atlas glows
+      if (m.map) {
+        mask.wrapS = m.map.wrapS;
+        mask.wrapT = m.map.wrapT;
+      }
+      m.emissive = new THREE.Color("#ffb763");
+      m.emissiveMap = mask;
+      m.emissiveIntensity = 0;
+      m.needsUpdate = true;
     });
   }, [mats]);
 
