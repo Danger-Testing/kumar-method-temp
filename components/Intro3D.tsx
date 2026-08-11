@@ -717,7 +717,14 @@ export default function Intro3D({
   plain = false,
   onTombFade,
   holeRect,
+  onBusiness,
+  uiBlocked = false,
 }: {
+  /** opens the access modal (the tagline is a button) */
+  onBusiness?: () => void;
+  /** true while the access modal is open: ALL skip keys must bail
+      (Esc closes forms; it must not simultaneously skip the intro) */
+  uiBlocked?: boolean;
   onDone: (finished: boolean) => void;
   emerge?: boolean;
   /** inspection mode: flat white rig, no ignition/bloom/glow */
@@ -742,11 +749,25 @@ export default function Intro3D({
 
   useEffect(() => {
     const skip = (e: KeyboardEvent) => {
+      // the access modal owns the keyboard while open — Esc must close
+      // the form, not skip the intro underneath it
+      if (uiBlocked) return;
+      // typing in any form must never skip the intro
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.tagName === "SELECT" ||
+          t.isContentEditable)
+      ) {
+        return;
+      }
       if (e.key === "Enter" || e.key === "Escape" || e.key === " ") onDone(false);
     };
     window.addEventListener("keydown", skip);
     return () => window.removeEventListener("keydown", skip);
-  }, [onDone]);
+  }, [onDone, uiBlocked]);
 
   return (
     <div
@@ -814,16 +835,26 @@ export default function Intro3D({
         <div className="rampLogo" aria-label="ramp" />
       </div>
       <div className="skipHint">{holding ? "" : "tap to skip"}</div>
-      {/* the held-book hero copy (owner mock) — same treatment as the
-          closed view, adapted to this state's affordance */}
-      {holding && (
+      {/* the held-book hero copy (owner mock): fades in at the hold,
+          fades away as the click sends the book into the pages. The
+          tagline speaks ramp's voice and opens the access modal. */}
+      {emerge && (
         <>
-          <div className="closedTitle">Tap to open the book.</div>
-          <div className="closedTagline">
+          <div className={`closedTitle heroWait ${holding ? "heroShow" : ""}`}>
+            Tap to open the book.
+          </div>
+          <button
+            type="button"
+            className={`closedTagline heroWait ${holding ? "heroShow" : ""}`}
+            onClick={(e) => {
+              e.stopPropagation(); // must not release the hold
+              onBusiness?.();
+            }}
+          >
             Use The Kumar Method to run your life.
             <br />
             Use Ramp to run your business.
-          </div>
+          </button>
         </>
       )}
     </div>

@@ -89,6 +89,8 @@ export default function Experience() {
           emerge
           plain={plain}
           holeRect={holeRef}
+          onBusiness={() => setEnterpriseOpen(true)}
+          uiBlocked={enterpriseOpen}
           onTombFade={(fade, glow, doorGlow = 0) => {
             // the scene stays alive behind the book instead of dying to
             // black: the room settles at 70% dark, the tomb at 40% — and
@@ -125,7 +127,13 @@ export default function Experience() {
         />
       )}
 
-      {phase === "closed" && <ClosedBook onOpen={() => setPhase("book")} plain={plain} />}
+      {phase === "closed" && (
+        <ClosedBook
+          onOpen={() => setPhase("book")}
+          onBusiness={() => setEnterpriseOpen(true)}
+          plain={plain}
+        />
+      )}
 
       {phase === "book" && (
         <>

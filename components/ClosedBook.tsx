@@ -62,9 +62,12 @@ function SpinnableBook({
 
 export default function ClosedBook({
   onOpen,
+  onBusiness,
   plain = false,
 }: {
   onOpen: () => void;
+  /** opens the access modal (the tagline is a button) */
+  onBusiness?: () => void;
   /** inspection mode, owned by Experience: no warm rig, no relief, no glow */
   plain?: boolean;
 }) {
@@ -106,13 +109,23 @@ export default function ClosedBook({
         <SpinnableBook spinRef={spinRef} plain={plain} />
       </Canvas>
       {/* the held-book hero copy (owner mock, 2026-08-11): instruction
-          above, the Kumar×Ramp line below — the book's own face, quiet */}
+          above (book voice), the tagline below (ramp voice) — and the
+          tagline is a button that opens the access modal */}
       <div className="closedTitle">Drag to turn it over. Tap to open.</div>
-      <div className="closedTagline">
+      <button
+        type="button"
+        className="closedTagline"
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation(); // must not read as a tap-to-open-the-reader
+          onBusiness?.();
+        }}
+      >
         Use The Kumar Method to run your life.
         <br />
         Use Ramp to run your business.
-      </div>
+      </button>
     </div>
   );
 }
