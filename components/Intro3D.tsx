@@ -520,7 +520,7 @@ function IntroScene({
     // emergence prefix: the book rises out of the tomb's doorway before
     // the familiar timeline begins
     // (turtle-hold experiment removed at the owner's call)
-    const E = emerge ? 1.0 : 0;
+    const E = emerge ? 0.85 : 0;
     const tt = Math.max(0, t - E);
     let riseEase = 1;
     let rise = 1;
@@ -534,6 +534,13 @@ function IntroScene({
     // motion entirely (the "book just appears" complaint) — quadratic
     // growth is visible from the first frame while still accelerating
     const scaleEase = E > 0 ? rise * rise : 1;
+    // BOOM on arrival: it overshoots past full size and springs back —
+    // one strong pop (~+15%), a small rebound, settled within ~a second
+    let boom = 0;
+    if (E > 0) {
+      const tau = t - E;
+      if (tau > 0) boom = 0.17 * Math.exp(-tau * 4.5) * Math.sin(tau * 12);
+    }
     // no transparency: it emerges shaded, as if in the cave's shadow, and
     // brightens as it comes out
     emergeShade.current = E > 0 ? 0.5 + 0.5 * smooth(0.15, 0.85, rise) : 1;
@@ -584,7 +591,8 @@ function IntroScene({
     // from the first frame until the dive takes over
     const s =
       (0.78 + (1 - Math.pow(1 - Math.min(1, tSpin / 5), 3)) * 0.34) *
-      (startK + (1 - startK) * scaleEase);
+      (startK + (1 - startK) * scaleEase) *
+      (1 + boom);
     g.scale.setScalar(s);
 
     // the dolly: no let-up — it accelerates until the cover kisses the lens
