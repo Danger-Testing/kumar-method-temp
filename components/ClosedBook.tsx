@@ -46,10 +46,9 @@ function SpinnableBook({
     g.rotation.x = s.rx + Math.sin(t * 1.1) * 0.012;
     g.position.y = Math.sin(t * 1.3) * 0.03;
 
-    // NO glow in the dismissed view — owner call 2026-08-11 ("turn off
-    // sparkle altogether in the part after"): the book sits in the room
-    // light only. The ignition lives in the intro.
-    igniteRef.current = 0;
+    // ONE glow: the canonical drive from TheBook — restored after the
+    // sparkle artifact turned out to be bump-map glints, not the glow
+    igniteRef.current = plain ? 0 : igniteDrive(t);
     if (bloomRef.current) bloomRef.current.intensity = plain ? 0 : BLOOM.intensity;
   });
 

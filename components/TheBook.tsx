@@ -66,9 +66,9 @@ useTexture.preload("/masks/plum-spine.jpg");
 useTexture.preload("/masks/plum-ignite-front.png");
 useTexture.preload("/masks/plum-ignite-back.png");
 useTexture.preload("/masks/plum-ignite-spine.png");
-useTexture.preload("/covers/front.jpeg");
-useTexture.preload("/covers/back.jpeg");
-useTexture.preload("/covers/spine.jpeg");
+useTexture.preload("/masks/bump-front.jpg");
+useTexture.preload("/masks/bump-back.jpg");
+useTexture.preload("/masks/bump-spine.jpg");
 useTexture.preload("/masks/plum-pages.jpg");
 useTexture.preload("/masks/plum-pages-rot.jpg");
 
@@ -91,9 +91,13 @@ export function TheBook({
     "/masks/plum-ignite-front.png",
     "/masks/plum-ignite-back.png",
     "/masks/plum-ignite-spine.png",
-    "/covers/front.jpeg",
-    "/covers/back.jpeg",
-    "/covers/spine.jpeg",
+    // bump sources are BLURRED copies of the scans: the embossing keeps
+    // its relief, but the leather micro-grain is smoothed out — raw-scan
+    // bumps threw pinpoint glints at grazing angles that bloom inflated
+    // into a sparkle cloud while rotating (the closed-view artifact)
+    "/masks/bump-front.jpg",
+    "/masks/bump-back.jpg",
+    "/masks/bump-spine.jpg",
     "/masks/plum-pages.jpg",
     "/masks/plum-pages-rot.jpg",
   ]);
