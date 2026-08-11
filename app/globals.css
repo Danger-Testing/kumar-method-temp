@@ -1097,11 +1097,14 @@ video.smokeHidden {
   pointer-events: none;
 }
 
-/* CRITICAL: the tagline button re-enables its own pointer events, so it
-   must be explicitly silenced in standby — otherwise an invisible
-   full-width button floats over the reader and eats page-turn taps */
-.closedBook.closedStandby .tagBiz {
-  pointer-events: none;
+/* CRITICAL: children re-enable their own pointer events (the tagline
+   button explicitly; the WebGL canvas via the 3D library's INLINE
+   styles, which beat normal CSS). In standby, EVERYTHING must be inert
+   — verified via elementFromPoint: the canvas was silently eating every
+   tap on the reader. !important is required to beat inline styles. */
+.closedBook.closedStandby,
+.closedBook.closedStandby * {
+  pointer-events: none !important;
 }
 
 .closedBook:active {
