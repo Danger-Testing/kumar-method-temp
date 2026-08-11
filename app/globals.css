@@ -1302,11 +1302,12 @@ video.smokeHidden {
 }
 
 .prMark {
-  width: 3.2cqw;
-  height: 2.5cqw;
+  /* the full lockup: swoosh + wordmark together (aspect ~5.3) */
+  width: 11cqw;
+  height: 2.1cqw;
   background: rgba(74, 56, 36, 0.55);
-  mask: url("/masks/ramp-mark.png") center / contain no-repeat;
-  -webkit-mask: url("/masks/ramp-mark.png") center / contain no-repeat;
+  mask: url("/masks/ramp-lockup.png") center / contain no-repeat;
+  -webkit-mask: url("/masks/ramp-lockup.png") center / contain no-repeat;
   transition: background 0.2s;
 }
 
@@ -1325,18 +1326,18 @@ video.smokeHidden {
 
 .prBottomCenter {
   left: 50%;
-  bottom: 2.2cqw;
+  bottom: 3.4cqw; /* the folio's row */
   transform: translateX(-50%);
 }
 
 .prBottomOuter {
-  right: 4cqw;
-  bottom: 2cqw;
+  right: 9cqw; /* the text column's right margin — the folio's mirror */
+  bottom: 3.4cqw;
 }
 
 .prTopOuter {
-  top: 2.2cqw;
-  right: 4cqw;
+  top: 6.2cqw; /* the text column's top edge */
+  right: 9cqw;
 }
 
 /* ----------------------------------------------------------------
