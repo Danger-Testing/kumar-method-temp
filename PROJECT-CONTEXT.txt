@@ -286,3 +286,69 @@ time public/book.glb changes:
 Never assume the old thresholds transfer. Never ship without seeing
 the mask preview.
 ================================================================
+
+================================================================
+SESSION HANDOFF — STATE AS OF 2026-08-11 (late afternoon)
+(The owner's thread hit context limits; a fresh session starts here.
+Read this section as the CURRENT truth where it conflicts with
+older sections above.)
+================================================================
+
+THE BOOK: Henry's (the 3D artist's) GLB — bookNew2, pixels UNTOUCHED
+(owner+artist call after the code recreation was rejected as "not my
+model"). components/TheBook.tsx is the single source of truth; the
+recreation-era code paths are dead code. ALL surface effects are OFF
+(no emissive/ignition/bloom on the book). Artist may deliver a
+re-export fixing texture density; the recalibration protocol applies
+if any glow returns.
+
+LIGHTING: BookLights in TheBook.tsx — dim candle-GOLD rig: ambient
+0.52 #f6e3bd + ONE on-axis directional #ffd98f. The directional runs
+SCANNING PASSES in the intro (sweep prop): starts below the book at
+zero intensity, pans up past it, fades out at the top, restarts —
+sine intensity envelope makes the loop seamless. On-axis final angle
+is sacred (raking angles = moiré/sparkle, banned). ClosedBook holds
+steady full aim.
+
+INTRO FLOW (Experience.tsx): auto-launches on page load (no click
+gate). Emergence: dot-scale (~2-6%) from the doorway center, straight
+z-zoom (easeInExpo creep→rocket), scale on its own quadratic curve
+(visible from frame one), flat-to-upright single pitch, cave-shadow
+darkening (shadeRef), arrival BOOM to ~1.65x then clean exponential
+settle (0.18s up / ~0.4s down). Then HOLDS indefinitely (tt frozen,
+bob alive) over the simmering chamber with hero copy shown — tap to
+release the dive into the reader. No skip hint (retired; clicking
+pre-hold still skips). Doorway blazes bright GOLDEN (255,196,64
+family) with bouncing left/right wall rakes.
+
+LEAD CAPTURE: the corner CTA is REMOVED EVERYWHERE — the clickable
+tagline ("Use Ramp to run your business", 2px underline) owns modal
+entry on hold view, closed view, AND a reader-corner variant. Modal:
+Switzer lowercase, placeholders, dark autofill, success state hides
+fields (thanks + dismiss). Supabase live BUT free tier auto-pauses:
+first submission after idle takes ~15-20s (verified: warm requests
+are 0.4-0.6s). PENDING OWNER DECISION: keep-alive cron vs plan
+upgrade. Keyboard guards: form typing can't flip pages or skip.
+
+MOBILE: swipe = leaf curl, tap = instant (taste rule). Text selection
+off on touch only. iOS Low-Power play-glyph fix: native controls
+hidden, play() retried on first touch, smoke hides if refused.
+
+ICONS: app/icon.png + apple-icon + favicon.ico = brightened square
+cut from the cover art (no letterbox). og.png is Marc's.
+
+HERO COPY: Switzer experiment ("might revert" per owner) top+bottom
+on hold/closed views, near-full alpha + back-shadow for legibility.
+
+OPS (CURRENT): repo git-connected to Vercel — PUSH TO main = PROD
+DEPLOY automatically; manual `vercel --prod` is redundant. Ship =
+merge/push + one verification. Preview protection is OFF (public
+links). Repo is PUBLIC. Ports: 3777 dev (this project), 3778 Marc's
+reference clone. Two Claude sessions share the checkout with
+claim-ping conventions (files + tree ops); races have occurred and
+resolved benignly — always check git status/log before assuming
+tree state.
+
+ETERNALLY PENDING: the Chartered Accountant year in Chapter II
+(lib/content.ts, "in ——"). Credits/attribution screen was being
+discussed at handoff time. Supabase keep-alive decision.
