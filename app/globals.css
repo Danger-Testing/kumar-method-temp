@@ -863,7 +863,7 @@ body {
   mix-blend-mode: screen;
   /* dim base: floor bounce low, darkness up top — the smoke video
      underneath catches this and adds volume */
-  background: linear-gradient(to top, rgba(255, 221, 45, 0.42), rgba(255, 221, 45, 0.1) 55%, transparent 85%);
+  background: linear-gradient(to top, rgba(255, 196, 64, 0.42), rgba(255, 196, 64, 0.1) 55%, transparent 85%);
   will-change: opacity;
 }
 
@@ -872,7 +872,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(104deg, rgba(255, 221, 45, 0.85), rgba(255, 221, 45, 0.25) 34%, transparent 62%);
+  background: linear-gradient(104deg, rgba(255, 196, 64, 0.85), rgba(255, 196, 64, 0.25) 34%, transparent 62%);
   animation: doorBounceL 2.3s ease-in-out infinite;
 }
 
@@ -882,7 +882,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(-104deg, rgba(255, 221, 45, 0.85), rgba(255, 221, 45, 0.25) 34%, transparent 62%);
+  background: linear-gradient(-104deg, rgba(255, 196, 64, 0.85), rgba(255, 196, 64, 0.25) 34%, transparent 62%);
   animation: doorBounceR 1.7s ease-in-out infinite;
 }
 
