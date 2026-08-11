@@ -8,12 +8,15 @@ export default function EnterpriseAccessModal({ onClose }: { onClose: () => void
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    // React nulls event.currentTarget once the handler's synchronous
+    // phase ends — capture the form before any await or .reset() throws
+    const form = event.currentTarget;
     setStatus("submitting");
     setError("");
     const response = await fetch("/api/enterprise-leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget).entries())),
+      body: JSON.stringify(Object.fromEntries(new FormData(form).entries())),
     });
     if (!response.ok) {
       const result = await response.json().catch(() => null);
@@ -21,7 +24,7 @@ export default function EnterpriseAccessModal({ onClose }: { onClose: () => void
       setStatus("error");
       return;
     }
-    event.currentTarget.reset();
+    form.reset();
     setStatus("success");
   }
 
@@ -31,9 +34,9 @@ export default function EnterpriseAccessModal({ onClose }: { onClose: () => void
         <button type="button" className="enterpriseModalClose" onClick={onClose} aria-label="Close">×</button>
         <h2 id="enterprise-title">Get access</h2>
         <form onSubmit={submit}>
-          <label>Name<input name="name" autoComplete="name" required /></label>
-          <label>Company<input name="company" autoComplete="organization" required /></label>
-          <label>Email<input name="email" type="email" autoComplete="email" required /></label>
+          <label>Name<input name="name" autoComplete="name" placeholder="your name" required /></label>
+          <label>Company<input name="company" autoComplete="organization" placeholder="your company" required /></label>
+          <label>Email<input name="email" type="email" autoComplete="email" placeholder="you@company.com" required /></label>
           {status === "success" && <p className="enterpriseFormSuccess">Thanks — we’ll be in touch shortly.</p>}
           {status === "error" && <p className="enterpriseFormError">{error}</p>}
           <button type="submit" disabled={status === "submitting"}>{status === "submitting" ? "Sending…" : "Get access"}</button>
