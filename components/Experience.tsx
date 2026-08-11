@@ -12,7 +12,10 @@ const ClosedBook = dynamic(() => import("@/components/ClosedBook"), { ssr: false
 import type { HoleRect } from "@/components/Intro3D";
 
 export default function Experience() {
-  const [phase, setPhase] = useState<"tomb" | "intro" | "book" | "closed">("tomb");
+  // launches straight into the emergence (owner call 2026-08-11) — the
+  // click-to-wake tomb gate is retired but the phase remains for the
+  // closed-book flow and any future re-gating
+  const [phase, setPhase] = useState<"tomb" | "intro" | "book" | "closed">("intro");
   const [flash, setFlash] = useState(false);
   const [enterpriseOpen, setEnterpriseOpen] = useState(false);
   // Lights are ON, period (owner call, 2026-08-11 after the glow was
