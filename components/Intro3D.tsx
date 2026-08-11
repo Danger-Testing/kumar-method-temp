@@ -71,6 +71,45 @@ function useGoldMask(src: string): THREE.CanvasTexture | null {
   return tex;
 }
 
+/* deep-wine recolor of a cover scan: every non-gold pixel shifts toward
+   dark burgundy; the gilding is detected and left warm */
+function useWineTint(src: string): THREE.CanvasTexture | null {
+  const [tex, setTex] = useState<THREE.CanvasTexture | null>(null);
+  useEffect(() => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => {
+      const w = 1024;
+      const h = Math.round((img.height / img.width) * w);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0, w, h);
+      const data = ctx.getImageData(0, 0, w, h);
+      const px = data.data;
+      for (let i = 0; i < px.length; i += 4) {
+        const r = px[i];
+        const g = px[i + 1];
+        const b = px[i + 2];
+        const gold = r > 128 && g > 84 && g > r * 0.5 && b < g * 0.92 && r + g > 236;
+        if (!gold) {
+          px[i] = Math.min(255, r * 0.66);
+          px[i + 1] = Math.min(255, g * 0.52);
+          px[i + 2] = Math.min(255, b * 1.45 + 12);
+        }
+      }
+      ctx.putImageData(data, 0, 0);
+      const t = new THREE.CanvasTexture(canvas);
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = 8;
+      setTex(t);
+    };
+  }, [src]);
+  return tex;
+}
+
 /* gilded page-block edges */
 function makePageEdgeTexture(): THREE.CanvasTexture {
   const c = document.createElement("canvas");
@@ -102,6 +141,9 @@ function BuiltBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> })
   ]);
   const goldMask = useGoldMask("/covers/front.jpeg");
   const spineMask = useGoldMask("/covers/spine.jpeg");
+  const wineFront = useWineTint("/covers/front.jpeg");
+  const wineBack = useWineTint("/covers/back.jpeg");
+  const wineSpine = useWineTint("/covers/spine.jpeg");
   const pageEdge = useMemo(makePageEdgeTexture, []);
 
   [front, back, spine].forEach((t) => {
@@ -111,7 +153,7 @@ function BuiltBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> })
 
   const frontMat = useMemo(() => {
     const m = new THREE.MeshStandardMaterial({
-      map: front,
+      map: wineFront ?? front,
       bumpMap: front,
       bumpScale: 1.6,
       roughnessMap: front,
@@ -122,23 +164,23 @@ function BuiltBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> })
     });
     if (goldMask) m.emissiveMap = goldMask;
     return m;
-  }, [front, goldMask]);
+  }, [front, goldMask, wineFront]);
 
   const backMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        map: back,
+        map: wineBack ?? back,
         bumpMap: back,
         bumpScale: 1.2,
         roughness: 0.75,
         metalness: 0.15,
       }),
-    [back]
+    [back, wineBack]
   );
 
   const spineMat = useMemo(() => {
     const m = new THREE.MeshStandardMaterial({
-      map: spine,
+      map: wineSpine ?? spine,
       bumpMap: spine,
       bumpScale: 1.4,
       roughness: 0.8,
@@ -148,11 +190,11 @@ function BuiltBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> })
     });
     if (spineMask) m.emissiveMap = spineMask;
     return m;
-  }, [spine, spineMask]);
+  }, [spine, spineMask, wineSpine]);
 
   const leather = useMemo(
     () =>
-      new THREE.MeshStandardMaterial({ color: "#671410", roughness: 0.62, metalness: 0.06 }),
+      new THREE.MeshStandardMaterial({ color: "#43101d", roughness: 0.62, metalness: 0.06 }),
     []
   );
 
