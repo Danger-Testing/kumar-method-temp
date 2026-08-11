@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useTexture, useGLTF } from "@react-three/drei";
+import { useTexture, useGLTF, Sparkles } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 
 /* Book proportions measured from the cover scans:
@@ -13,7 +13,7 @@ const W = H * (700 / 1088);
 const D = H * (230 / 852) * 0.9;
 const CT = 0.05; // cover board thickness
 
-const TOTAL = 5.35; // seconds
+const TOTAL = 5.3; // seconds
 const easeOutQuart = (x: number) => 1 - Math.pow(1 - x, 4);
 const easeInExpo = (x: number) => (x <= 0 ? 0 : Math.pow(2, 10 * x - 10));
 const smooth = (a: number, b: number, t: number) => {
@@ -228,9 +228,10 @@ function IntroScene({
 }: {
   useGlb: boolean;
   onFade: (v: number) => void;
-  onDone: () => void;
+  onDone: (finished: boolean) => void;
 }) {
   const group = useRef<THREE.Group>(null);
+  const embers = useRef<THREE.Group>(null);
   const igniteRef = useRef(0);
   const bloomRef = useRef<{ intensity: number } | null>(null);
   const doneRef = useRef(false);
@@ -249,22 +250,32 @@ function IntroScene({
     const s = 0.84 + easeOutQuart(Math.min(1, t / 3)) * 0.16;
     g.scale.setScalar(s);
 
-    // the gilding ignites
-    igniteRef.current = smooth(2.5, 3.5, t) * (0.85 + Math.sin(t * 5.2) * 0.15);
-    if (bloomRef.current) bloomRef.current.intensity = 0.12 + smooth(2.5, 3.6, t) * 1.25;
+    // the dolly: no let-up — it accelerates until the cover kisses the lens
+    const d = easeInExpo(smooth(3.85, 5.05, t));
 
-    // fast dolly into the cover
-    const d = easeInExpo(smooth(3.85, 4.95, t));
-    camera.position.z = 4.15 - d * 3.72;
+    // the gilding ignites, then overbrightens as we close in
+    const ig = smooth(2.5, 3.5, t);
+    igniteRef.current = ig * (0.85 + Math.sin(t * 5.2) * 0.15) * (1 + d * 1.7);
+    // bloom stays tight around the gold — no wide halo behind the book
+    if (bloomRef.current) bloomRef.current.intensity = 0.12 + ig * 0.68 + d * 1.5;
+
+    // embers wake with the ignition; the camera flies through the field
+    if (embers.current) embers.current.visible = t > 2.35;
+
+    camera.position.z = 4.15 - d * 3.91;
     camera.position.y = 0.06 * d;
+    const cam = camera as THREE.PerspectiveCamera;
+    cam.fov = 40 + d * 15;
+    cam.updateProjectionMatrix();
     camera.lookAt(0, 0.06 * d, 0);
+    camera.rotation.z += d * 0.05;
 
-    // fade out the last beats
-    onFade(smooth(4.6, 5.1, t));
+    // the last beats dissolve into golden light, not black
+    onFade(smooth(4.82, 5.18, t));
 
     if (t >= TOTAL && !doneRef.current) {
       doneRef.current = true;
-      onDone();
+      onDone(true);
     }
   });
 
@@ -275,12 +286,22 @@ function IntroScene({
       <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
       <pointLight position={[-1.6, -1.4, 2.6]} intensity={6} color="#ffc890" />
       <group ref={group}>{useGlb ? <GlbBook /> : <BuiltBook igniteRef={igniteRef} />}</group>
+
+      {/* faint dust always adrift in the room */}
+      <Sparkles count={80} scale={[7, 4.5, 5.5]} size={2} speed={0.22} opacity={0.3} color="#ffd9a0" />
+      {/* embers that wake when the gilding ignites — the dolly flies through them */}
+      <group ref={embers} visible={false}>
+        <Sparkles count={170} scale={[5.5, 3.6, 4.8]} size={4.6} speed={0.85} opacity={0.75} color="#ffc069" noise={1.4} />
+        <Sparkles count={50} scale={[3, 2.4, 3.5]} size={7} speed={1.2} opacity={0.55} color="#ffe2a8" noise={2} />
+      </group>
+
       <EffectComposer>
         <Bloom
           ref={bloomRef as never}
           intensity={0.12}
-          luminanceThreshold={0.52}
-          luminanceSmoothing={0.25}
+          luminanceThreshold={0.55}
+          luminanceSmoothing={0.22}
+          radius={0.42}
           mipmapBlur
         />
       </EffectComposer>
@@ -290,7 +311,7 @@ function IntroScene({
 
 /* ------------------------------------------------------------------ */
 
-export default function Intro3D({ onDone }: { onDone: () => void }) {
+export default function Intro3D({ onDone }: { onDone: (finished: boolean) => void }) {
   const [glb, setGlb] = useState(false);
   const [ready, setReady] = useState(false);
   const fadeRef = useRef<HTMLDivElement>(null);
@@ -304,14 +325,14 @@ export default function Intro3D({ onDone }: { onDone: () => void }) {
 
   useEffect(() => {
     const skip = (e: KeyboardEvent) => {
-      if (e.key === "Enter" || e.key === "Escape" || e.key === " ") onDone();
+      if (e.key === "Enter" || e.key === "Escape" || e.key === " ") onDone(false);
     };
     window.addEventListener("keydown", skip);
     return () => window.removeEventListener("keydown", skip);
   }, [onDone]);
 
   return (
-    <div className="introRoot" onClick={onDone}>
+    <div className="introRoot" onClick={() => onDone(false)}>
       {ready && (
         <Canvas
           camera={{ position: [0, 0, 4.15], fov: 40 }}
