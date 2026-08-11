@@ -110,8 +110,41 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
   );
 }
 
+/* EXPERIMENT: candidate placements for a small ramp mark on the page,
+   linking to ramp.com. Colored dots identify each option — the owner
+   picks by color; losers + dots get deleted. */
+function RampCandidates() {
+  const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
+  const spots = [
+    { id: "red", cls: "prBottomCenter", dot: "#c0392b" },
+    { id: "blue", cls: "prBottomOuter", dot: "#2e6fdb" },
+    { id: "green", cls: "prTopOuter", dot: "#2f9e44" },
+  ];
+  return (
+    <>
+      {spots.map((sp) => (
+        <a
+          key={sp.id}
+          className={`pageRamp ${sp.cls}`}
+          href="https://ramp.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Ramp"
+          onClick={stop}
+          onPointerDown={stop}
+          onPointerUp={stop}
+        >
+          <span className="prMark" aria-hidden="true" />
+          <i className="prDot" style={{ background: sp.dot }} aria-hidden="true" />
+        </a>
+      ))}
+    </>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  A physical leaf of paper                                           */
+
 /* ------------------------------------------------------------------ */
 
 function PageLeaf({
@@ -191,6 +224,7 @@ function PageLeaf({
         <div className="grain" aria-hidden="true" />
         <div className="blotch" aria-hidden="true" />
         <div className="edgeShade" aria-hidden="true" />
+        <RampCandidates />
       </div>
     </div>
   );
