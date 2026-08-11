@@ -216,10 +216,11 @@ function makePageEdgeTexture(): THREE.CanvasTexture {
 
 export function BuiltBook({
   igniteRef,
-  opacityRef,
+  shadeRef,
 }: {
   igniteRef: React.MutableRefObject<number>;
-  opacityRef?: React.MutableRefObject<number>;
+  /** 0..1 darkness multiplier — the book in the cave's shadow */
+  shadeRef?: React.MutableRefObject<number>;
 }) {
   const [front, back, spine] = useTexture([
     "/covers/front.jpeg",
@@ -299,10 +300,10 @@ export function BuiltBook({
   useFrame(() => {
     frontMat.emissiveIntensity = igniteRef.current * 0.3;
     spineMat.emissiveIntensity = igniteRef.current * 0.26;
-    const o = opacityRef?.current ?? 1;
+    const shade = shadeRef?.current ?? 1;
     for (const m of [frontMat, backMat, spineMat, leather, pageMat]) {
-      m.opacity = o;
-      m.transparent = o < 0.999;
+      if (!m.userData.baseColor) m.userData.baseColor = m.color.clone();
+      m.color.copy(m.userData.baseColor as THREE.Color).multiplyScalar(shade);
     }
   });
 
@@ -345,10 +346,11 @@ export function BuiltBook({
    automatically */
 export function GlbBook({
   igniteRef,
-  opacityRef,
+  shadeRef,
 }: {
   igniteRef: React.MutableRefObject<number>;
-  opacityRef?: React.MutableRefObject<number>;
+  /** 0..1 darkness multiplier — the book in the cave's shadow */
+  shadeRef?: React.MutableRefObject<number>;
 }) {
   const { scene } = useGLTF("/book.glb");
 
@@ -393,13 +395,23 @@ export function GlbBook({
   useFrame(() => {
     // the GLB's clean art can take the full-power ignition without the
     // speckling that forced the scan-based book down to 10%
-    const o = opacityRef?.current ?? 1;
+    const shade = shadeRef?.current ?? 1;
     for (const m of mats) {
       if (m.emissiveMap) m.emissiveIntensity = igniteRef.current * 2.8;
-      m.opacity = o;
-      m.transparent = o < 0.999;
+      if (!m.userData.baseColor) m.userData.baseColor = m.color.clone();
+      m.color.copy(m.userData.baseColor as THREE.Color).multiplyScalar(shade);
     }
   });
+
+  // the GLTF scene is cache-shared (ClosedBook renders the same materials
+  // later) — never leave them darkened if we unmount mid-rise
+  useEffect(() => {
+    return () => {
+      mats.forEach((m) => {
+        if (m.userData.baseColor) m.color.copy(m.userData.baseColor as THREE.Color);
+      });
+    };
+  }, [mats]);
 
   const normalized = useMemo(() => {
     const root = new THREE.Group();
@@ -447,7 +459,7 @@ function IntroScene({
 }) {
   const group = useRef<THREE.Group>(null);
   const igniteRef = useRef(0);
-  const emergeOpacity = useRef(1);
+  const emergeShade = useRef(1);
   const bloomRef = useRef<{ intensity: number } | null>(null);
   const doneRef = useRef(false);
   const startRef = useRef<number | null>(null);
@@ -473,8 +485,9 @@ function IntroScene({
       // quintic: the book SHOOTS out of the doorway, then settles
       riseEase = 1 - Math.pow(1 - rise, 5);
     }
-    // it materializes from nothing: transparent → solid across the rise
-    emergeOpacity.current = E > 0 ? Math.min(1, rise * 1.6) : 1;
+    // no transparency: it emerges DARK, as if in the cave's shadow, and
+    // brightens as it comes out into the room
+    emergeShade.current = E > 0 ? 0.28 + 0.72 * smooth(0.15, 0.85, rise) : 1;
 
     // grand spin settling to face us — starts mid-rise so the book is
     // already turning as it clears the doorway
@@ -483,10 +496,11 @@ function IntroScene({
     // 3π: the rise shows the book face-on (back cover), never the thin
     // edge-on slab that read as a confusing black shape
     g.rotation.y = (1 - spin) * Math.PI * 3;
-    // it comes out FLAT (lying as if in the sarcophagus) and pitches
-    // upright as it rises
+    // it comes out FLAT and STAYS flat through most of the rise — the
+    // pitch to upright happens only in the final stretch
     const pitchBase = -0.06 + Math.sin(t * 1.1) * 0.012;
-    g.rotation.x = E > 0 ? -Math.PI / 2 + (pitchBase + Math.PI / 2) * riseEase : pitchBase;
+    const pitchEase = smooth(0.62, 1, rise);
+    g.rotation.x = E > 0 ? -Math.PI / 2 + (pitchBase + Math.PI / 2) * pitchEase : pitchBase;
     // the book starts small and DEEP INSIDE the doorway and comes forward
     // as it rises. The doorway's measured screen rect is unprojected to
     // world space at the start depth, so the rise begins in the actual
@@ -498,7 +512,7 @@ function IntroScene({
     let startK = 0.1;
     if (hole) {
       // the camera is static until the dive: (0, 0, 4.15), fov 40
-      const dist = 4.15 + 1.6;
+      const dist = 4.15 + 2.4;
       const worldH = 2 * dist * Math.tan((40 * Math.PI) / 360);
       const worldW = worldH * (size.width / size.height);
       startX = (hole.cx * 2 - 1) * (worldW / 2);
@@ -510,7 +524,8 @@ function IntroScene({
     }
     g.position.x = startX * (1 - riseEase);
     g.position.y = startY * (1 - riseEase) + Math.sin(t * 1.3) * 0.03;
-    g.position.z = -1.6 * (1 - riseEase);
+    // deeper start = the exit reads as a ZOOM straight at the camera
+    g.position.z = -2.4 * (1 - riseEase);
     // the book never stops growing in the frame — presence keeps building
     // from the first frame until the dive takes over
     const s =
@@ -567,9 +582,9 @@ function IntroScene({
       <pointLight position={[-1.6, -1.4, 2.6]} intensity={10} color="#ffc890" />
       <group ref={group}>
         {useGlb ? (
-          <GlbBook igniteRef={igniteRef} opacityRef={emergeOpacity} />
+          <GlbBook igniteRef={igniteRef} shadeRef={emergeShade} />
         ) : (
-          <BuiltBook igniteRef={igniteRef} opacityRef={emergeOpacity} />
+          <BuiltBook igniteRef={igniteRef} shadeRef={emergeShade} />
         )}
       </group>
 
