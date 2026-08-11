@@ -654,6 +654,8 @@ body {
    the scrub track (diamond thumb rides it), "n / 110" centered below.
    Drag to fast-travel. */
 .scrubber {
+  user-select: none;
+  -webkit-user-select: none;
   position: fixed;
   left: 50%;
   bottom: 2vh;

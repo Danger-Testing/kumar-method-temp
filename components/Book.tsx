@@ -459,6 +459,10 @@ export default function Book() {
         onTouchEnd={(e) => e.stopPropagation()}
         onPointerDown={(e) => {
           e.stopPropagation();
+          // stop the browser starting a text selection on the page while
+          // the pointer drags across it mid-scrub
+          e.preventDefault();
+          document.body.style.userSelect = "none";
           e.currentTarget.setPointerCapture(e.pointerId);
           setScrubbing(true);
           scrubTo(e.clientX);
@@ -466,8 +470,14 @@ export default function Book() {
         onPointerMove={(e) => {
           if (scrubbing) scrubTo(e.clientX);
         }}
-        onPointerUp={() => setScrubbing(false)}
-        onPointerCancel={() => setScrubbing(false)}
+        onPointerUp={() => {
+          document.body.style.userSelect = "";
+          setScrubbing(false);
+        }}
+        onPointerCancel={() => {
+          document.body.style.userSelect = "";
+          setScrubbing(false);
+        }}
       >
         {scrubbing && <div className="scrubLabel">{chapters[pages[base].chapter].shortName}</div>}
         <div className="scrubLine" ref={scrubRef}>
