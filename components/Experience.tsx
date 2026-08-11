@@ -30,7 +30,11 @@ export default function Experience() {
     <>
       <Book />
       {/* the page emerges out of the golden flash the dolly ended on */}
-      {flash && <div className="handoffFlash" onAnimationEnd={() => setFlash(false)} />}
+      {flash && (
+        <div className="handoffFlash" onAnimationEnd={() => setFlash(false)}>
+          <div className="rampLogo" aria-label="ramp" />
+        </div>
+      )}
     </>
   );
 }

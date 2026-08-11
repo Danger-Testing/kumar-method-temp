@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useTexture, useGLTF, Sparkles } from "@react-three/drei";
+import { useTexture, useGLTF } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 
 /* Book proportions measured from the cover scans:
@@ -224,14 +224,15 @@ function GlbBook() {
 function IntroScene({
   useGlb,
   onFade,
+  onDive,
   onDone,
 }: {
   useGlb: boolean;
   onFade: (v: number) => void;
+  onDive: (v: number) => void;
   onDone: (finished: boolean) => void;
 }) {
   const group = useRef<THREE.Group>(null);
-  const embers = useRef<THREE.Group>(null);
   const igniteRef = useRef(0);
   const bloomRef = useRef<{ intensity: number } | null>(null);
   const doneRef = useRef(false);
@@ -259,16 +260,18 @@ function IntroScene({
     // bloom stays tight around the gold — no wide halo behind the book
     if (bloomRef.current) bloomRef.current.intensity = 0.12 + ig * 0.68 + d * 1.5;
 
-    // embers wake with the ignition; the camera flies through the field
-    if (embers.current) embers.current.visible = t > 2.35;
-
-    camera.position.z = 4.15 - d * 3.91;
+    // stop the magnification before the scan runs out of pixels — the
+    // rack-focus blur and grain carry the final stretch instead
+    camera.position.z = 4.15 - d * 3.72;
     camera.position.y = 0.06 * d;
     const cam = camera as THREE.PerspectiveCamera;
     cam.fov = 40 + d * 15;
     cam.updateProjectionMatrix();
     camera.lookAt(0, 0.06 * d, 0);
     camera.rotation.z += d * 0.05;
+
+    // the cover rushes past the focal plane: blur + grain ramp with the dive
+    onDive(d);
 
     // the last beats dissolve into golden light, not black
     onFade(smooth(4.82, 5.18, t));
@@ -286,14 +289,6 @@ function IntroScene({
       <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
       <pointLight position={[-1.6, -1.4, 2.6]} intensity={6} color="#ffc890" />
       <group ref={group}>{useGlb ? <GlbBook /> : <BuiltBook igniteRef={igniteRef} />}</group>
-
-      {/* faint dust always adrift in the room */}
-      <Sparkles count={80} scale={[7, 4.5, 5.5]} size={2} speed={0.22} opacity={0.3} color="#ffd9a0" />
-      {/* embers that wake when the gilding ignites — the dolly flies through them */}
-      <group ref={embers} visible={false}>
-        <Sparkles count={170} scale={[5.5, 3.6, 4.8]} size={4.6} speed={0.85} opacity={0.75} color="#ffc069" noise={1.4} />
-        <Sparkles count={50} scale={[3, 2.4, 3.5]} size={7} speed={1.2} opacity={0.55} color="#ffe2a8" noise={2} />
-      </group>
 
       <EffectComposer>
         <Bloom
@@ -315,6 +310,8 @@ export default function Intro3D({ onDone }: { onDone: (finished: boolean) => voi
   const [glb, setGlb] = useState(false);
   const [ready, setReady] = useState(false);
   const fadeRef = useRef<HTMLDivElement>(null);
+  const canvasWrapRef = useRef<HTMLDivElement>(null);
+  const grainRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/book.glb", { method: "HEAD" })
@@ -334,21 +331,34 @@ export default function Intro3D({ onDone }: { onDone: (finished: boolean) => voi
   return (
     <div className="introRoot" onClick={() => onDone(false)}>
       {ready && (
-        <Canvas
-          camera={{ position: [0, 0, 4.15], fov: 40 }}
-          gl={{ antialias: true }}
-          dpr={[1, 2]}
-        >
-          <IntroScene
-            useGlb={glb}
-            onFade={(v) => {
-              if (fadeRef.current) fadeRef.current.style.opacity = String(v);
-            }}
-            onDone={onDone}
-          />
-        </Canvas>
+        <div className="introCanvas" ref={canvasWrapRef}>
+          <Canvas
+            camera={{ position: [0, 0, 4.15], fov: 40 }}
+            gl={{ antialias: true }}
+            dpr={[1, 2]}
+          >
+            <IntroScene
+              useGlb={glb}
+              onFade={(v) => {
+                if (fadeRef.current) fadeRef.current.style.opacity = String(v);
+              }}
+              onDive={(d) => {
+                // rack focus: the world slides past the focal plane late in the dive
+                const blur = Math.max(0, (d - 0.45) / 0.55) * 16;
+                if (canvasWrapRef.current) {
+                  canvasWrapRef.current.style.filter = blur > 0.1 ? `blur(${blur.toFixed(1)}px)` : "";
+                }
+                if (grainRef.current) grainRef.current.style.opacity = String(d * 0.34);
+              }}
+              onDone={onDone}
+            />
+          </Canvas>
+        </div>
       )}
-      <div className="introFade" ref={fadeRef} aria-hidden="true" />
+      <div className="introGrain" ref={grainRef} aria-hidden="true" />
+      <div className="introFade" ref={fadeRef} aria-hidden="true">
+        <div className="rampLogo" aria-label="ramp" />
+      </div>
       <div className="skipHint">tap to skip</div>
     </div>
   );
