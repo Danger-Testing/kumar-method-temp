@@ -607,29 +607,17 @@ body {
   bottom: 2.2vh;
   right: max(2.5vw, 18px);
   z-index: 45;
-  display: block;
-  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   font-family: "Switzer", -apple-system, "Helvetica Neue", sans-serif;
   font-weight: 500;
+  font-size: 12px;
   letter-spacing: 0.005em;
+  white-space: nowrap;
   color: rgba(233, 214, 178, 0.5);
   text-decoration: none;
   transition: color 0.25s;
-}
-
-.bizLine1 {
-  display: block;
-  font-size: 11px;
-  opacity: 0.78;
-}
-
-.bizLine2 {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 7px;
-  font-size: 12.5px;
-  margin-top: 3px;
 }
 
 .bizArrow {
