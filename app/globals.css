@@ -1140,7 +1140,7 @@ video.smokeHidden {
   font-size: clamp(16px, min(2.45svh, 4.5vw), 23px);
   color: rgba(240, 224, 192, 0.98);
   /* a whisper of back-shadow so the copy holds against bright stone */
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.85), 0 4px 22px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55), 0 5px 34px rgba(0, 0, 0, 0.4);
 }
 
 .closedTagline {
@@ -1150,7 +1150,7 @@ video.smokeHidden {
   font-size: clamp(17px, min(2.7svh, 5vw), 24px);
   line-height: 1.55;
   color: rgba(240, 224, 192, 0.95);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.85), 0 4px 22px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55), 0 5px 34px rgba(0, 0, 0, 0.4);
 }
 
 /* the intro hold shows the book ~22% larger — match its edges */
