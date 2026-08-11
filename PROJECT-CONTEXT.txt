@@ -253,6 +253,11 @@ The book is NOT an AI-generated mesh and NOT a video. It is a real
   the emissive gold mask from the leather's natural glints), NOT
   floating room particles — the owner explicitly rejected drei
   Sparkles fields twice. Don't re-add them.
+  UPDATE 2026-08-11: on the GLB path, stars AND the all-over gilding
+  glow are removed entirely (owner step-by-step call) — the emissive
+  is now the authored stencil public/masks/ramp-glow.png (back-cover
+  ramp mark ONLY, built offline per the recalibration protocol).
+  Don't "helpfully" restore the runtime gold mask on the GLB; ask.
 
 GOLD MASK RECALIBRATION PROTOCOL (mandatory on every book swap):
 The ignition glow is driven by buildGoldMask() in Intro3D.tsx, whose
