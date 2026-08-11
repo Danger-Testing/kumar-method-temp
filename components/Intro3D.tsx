@@ -501,14 +501,15 @@ function IntroScene({
     // visibly in the doorway for HOLD seconds before shooting out.
     // To remove the hold, set HOLD to 0.
     const HOLD = emerge ? 1.5 : 0;
-    const E = emerge ? 0.6 : 0;
+    const E = emerge ? 1.0 : 0;
     const tt = Math.max(0, t - HOLD - E);
     let riseEase = 1;
     let rise = 1;
     if (E > 0) {
       rise = Math.min(1, Math.max(0, (t - HOLD) / E));
-      // true ballistics: exponential snap — near-instant launch, hard stop
-      riseEase = 1 - Math.pow(2, -11 * rise);
+      // slow → fast: it CREEPS out of the dark, accelerating the whole
+      // way, and arrives at maximum velocity
+      riseEase = easeInExpo(rise);
     }
     // no transparency: it emerges shaded, as if in the cave's shadow, and
     // brightens as it comes out — bright enough during the hold to SEE it
