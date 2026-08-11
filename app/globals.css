@@ -232,20 +232,15 @@ body {
     radial-gradient(120% 85% at 50% 38%, rgba(255, 250, 233, 0.55), rgba(255, 250, 233, 0) 70%),
     linear-gradient(104deg, #cdb488 0%, #e5d6b2 10%, #ecdfc0 30%, #f0e5c9 50%, #eaddbb 74%, #ddcba1 92%, #c3a976 100%),
     #e9dcbc;
-  /* edges: long, gentle hand-cut waves. The mask arrives as a runtime-
-     rasterized PNG via CSS var (see Book.tsx) because Chromium can fail
-     to paint filter-heavy SVG masks, which hid the whole page. Until the
-     var is set, the page renders unmasked — always visible. */
-  mask-image: var(--paper-mask-worn, none);
+  /* edges: square corners with long, gentle hand-cut waves. The mask
+     arrives as a runtime-rasterized PNG via CSS var (see Book.tsx)
+     because Chromium can fail to paint filter-heavy SVG masks, which
+     hid the whole page. Until the var is set, the page renders
+     unmasked — always visible. */
+  mask-image: var(--paper-mask, none);
   mask-size: 100% 100%;
-  -webkit-mask-image: var(--paper-mask-worn, none);
+  -webkit-mask-image: var(--paper-mask, none);
   -webkit-mask-size: 100% 100%;
-}
-
-/* alternative: dead-square corners, same faint edge waviness */
-.paper.cornersSquare {
-  mask-image: var(--paper-mask-square, none);
-  -webkit-mask-image: var(--paper-mask-square, none);
 }
 
 /* an actual scan of aged paper (James Puckett, CC BY 2.0, via Wikimedia
@@ -685,26 +680,6 @@ body {
   letter-spacing: 0.06em;
   color: rgba(233, 214, 178, 0.85);
   pointer-events: none;
-}
-
-.cornerToggle {
-  position: fixed;
-  bottom: 2.2vh;
-  right: max(2.5vw, 18px);
-  z-index: 40;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-family: var(--font-fell), serif;
-  font-style: italic;
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  color: rgba(233, 214, 178, 0.4);
-  transition: color 0.25s;
-}
-
-.cornerToggle:hover {
-  color: rgba(233, 214, 178, 0.85);
 }
 
 /* ----------------------------------------------------------------
