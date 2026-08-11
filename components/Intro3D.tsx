@@ -251,8 +251,74 @@ function BuiltBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> })
 
 /* optional: drop a mesh at public/book.glb and it replaces the built one
    automatically */
-function GlbBook() {
+function GlbBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) {
   const { scene } = useGLTF("/book.glb");
+
+  // give the GLB the same gilding ignition as the built book: derive a
+  // gold mask from each material's own texture, so it lands exactly on
+  // the emblems via the mesh's existing UVs
+  const mats = useMemo(() => {
+    const list: THREE.MeshStandardMaterial[] = [];
+    scene.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const m = mesh.material;
+      (Array.isArray(m) ? m : [m]).forEach((mm) => {
+        if ((mm as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+          list.push(mm as THREE.MeshStandardMaterial);
+        }
+      });
+    });
+    return list;
+  }, [scene]);
+
+  useEffect(() => {
+    mats.forEach((m) => {
+      const src = m.map;
+      const img = src?.image as (CanvasImageSource & { width: number; height: number }) | undefined;
+      if (!src || !img || !img.width) return;
+      const w = Math.min(1024, img.width);
+      const h = Math.round((img.height / img.width) * w);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0, w, h);
+      const data = ctx.getImageData(0, 0, w, h);
+      const px = data.data;
+      for (let i = 0; i < px.length; i += 4) {
+        const r = px[i];
+        const g = px[i + 1];
+        const b = px[i + 2];
+        const gold = r > 128 && g > 84 && g > r * 0.5 && b < g * 0.92 && r + g > 236;
+        const v = gold ? 255 : 0;
+        px[i] = v;
+        px[i + 1] = v;
+        px[i + 2] = v;
+      }
+      ctx.putImageData(data, 0, 0);
+      ctx.filter = "blur(1.2px)";
+      ctx.drawImage(canvas, 0, 0);
+      const t = new THREE.CanvasTexture(canvas);
+      // glTF textures use flipY=false — the mask must match or it lands upside down
+      t.flipY = src.flipY;
+      t.wrapS = src.wrapS;
+      t.wrapT = src.wrapT;
+      t.colorSpace = THREE.SRGBColorSpace;
+      m.emissive = new THREE.Color("#ffb763");
+      m.emissiveMap = t;
+      m.emissiveIntensity = 0;
+      m.needsUpdate = true;
+    });
+  }, [mats]);
+
+  useFrame(() => {
+    for (const m of mats) {
+      if (m.emissiveMap) m.emissiveIntensity = igniteRef.current * 0.3;
+    }
+  });
+
   const normalized = useMemo(() => {
     const root = new THREE.Group();
     // the provided asset lies flat (y = thickness, z = height):
@@ -355,7 +421,9 @@ function IntroScene({
       <spotLight position={[2.4, 2.6, 3.4]} intensity={38} angle={0.7} penumbra={0.6} color="#ffd9a2" />
       <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
       <pointLight position={[-1.6, -1.4, 2.6]} intensity={6} color="#ffc890" />
-      <group ref={group}>{useGlb ? <GlbBook /> : <BuiltBook igniteRef={igniteRef} />}</group>
+      <group ref={group}>
+        {useGlb ? <GlbBook igniteRef={igniteRef} /> : <BuiltBook igniteRef={igniteRef} />}
+      </group>
 
       <EffectComposer multisampling={isCoarse() ? 0 : 4}>
         <Bloom
