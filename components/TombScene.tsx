@@ -55,9 +55,10 @@ export default function TombScene({
 
   return (
     <section
-      className="km-landing km-view-active"
+      className={`km-landing km-view-active ${interactive ? "km-wakeable" : ""}`}
       aria-label="Kumar welcome"
       ref={landingRef}
+      onClick={interactive ? onWake : undefined}
       onPointerMove={
         interactive
           ? (event) => {
@@ -85,7 +86,7 @@ export default function TombScene({
             window. The doorway clip-path percentages were calibrated to
             the image frame, so inside this box they stay aligned. */}
         <div className="km-tomb-frame">
-          <div className="km-landing-tomb-interior" onClick={interactive ? onWake : undefined}>
+          <div className="km-landing-tomb-interior">
             <video
               className="km-landing-tomb-smoke"
               src="/intomb-smoke.mp4"

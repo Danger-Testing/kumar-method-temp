@@ -687,11 +687,21 @@ body {
    verbatim). Only the emergence backdrop wrapper lives here.
    ---------------------------------------------------------------- */
 
-.introTomb {
-  position: absolute;
+.tombHost {
+  position: fixed;
   inset: 0;
-  pointer-events: none;
+  z-index: 90;
   will-change: opacity;
+}
+
+.km-wakeable {
+  cursor: pointer;
+}
+
+/* during emergence the intro sits transparently over the persistent
+   tomb layer — its own dark backdrop would flash black over it */
+.introRoot.overTomb {
+  background: transparent;
 }
 
 /* ----------------------------------------------------------------

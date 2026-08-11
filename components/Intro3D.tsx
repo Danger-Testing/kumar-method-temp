@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture, useGLTF } from "@react-three/drei";
-import TombScene from "@/components/TombScene";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 
 /* Book proportions measured from the cover scans:
@@ -526,9 +525,12 @@ function isCoarse(): boolean {
 export default function Intro3D({
   onDone,
   emerge = false,
+  onTombFade,
 }: {
   onDone: (finished: boolean) => void;
   emerge?: boolean;
+  /** drives the persistent tomb layer (owned by Experience) behind us */
+  onTombFade?: (fade: number) => void;
 }) {
   // null = still checking. The scene must not mount until this resolves:
   // flipping the book type mid-flight remounts the scene and restarts the
@@ -538,7 +540,6 @@ export default function Intro3D({
   const canvasWrapRef = useRef<HTMLDivElement>(null);
   const grainRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
-  const tombRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/book.glb", { method: "HEAD" })
@@ -559,12 +560,7 @@ export default function Intro3D({
   }, [onDone]);
 
   return (
-    <div className="introRoot" onClick={() => onDone(false)}>
-      {emerge && (
-        <div className="introTomb" ref={tombRef} aria-hidden="true">
-          <TombScene interactive={false} />
-        </div>
-      )}
+    <div className={`introRoot ${emerge ? "overTomb" : ""}`} onClick={() => onDone(false)}>
       <div className="introGlow" ref={glowRef} aria-hidden="true" />
       <div className="introCanvas" ref={canvasWrapRef}>
         {glb !== null && (
@@ -577,17 +573,10 @@ export default function Intro3D({
             useGlb={glb}
             emerge={emerge}
             onEmerge={(rise, t) => {
-              // the tomb holds through the rise, then dissolves into the
-              // dark room as the spin takes over. Once fully faded, hide
-              // it and pause its videos so they stop costing frames.
-              const el = tombRef.current;
-              if (!el) return;
-              const fade = smooth(1.1, 3, t);
-              el.style.opacity = String(1 - fade);
-              if (fade >= 1 && el.style.visibility !== "hidden") {
-                el.style.visibility = "hidden";
-                el.querySelectorAll("video").forEach((v) => v.pause());
-              }
+              // the tomb (persistent layer behind us) holds through the
+              // rise, then dissolves into the dark room as the spin takes
+              // over
+              onTombFade?.(smooth(1.1, 3, t));
             }}
             onFade={(v) => {
               if (fadeRef.current) fadeRef.current.style.opacity = String(v);
