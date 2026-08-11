@@ -262,7 +262,7 @@ function rasterizeMask(svg: string, cssVar: string) {
   img.src = svg;
 }
 
-export default function Book() {
+export default function Book({ onBusiness }: { onBusiness?: () => void }) {
   const [current, setCurrent] = useState(0);
   const [hasTurned, setHasTurned] = useState(false);
   const [spread, setSpread] = useState(false);
@@ -529,6 +529,23 @@ export default function Book() {
         <div className="scrubCount">
           {base + 1} / {pages.length}
         </div>
+      </div>
+
+      {/* the corner tagline: same copy and behavior as the hero version */}
+      <div className="readerTagline">
+        <span className="tagLife">
+          Use The <strong>Kumar Method</strong> to run your life.
+        </span>
+        <button
+          type="button"
+          className="tagBiz"
+          onClick={(e) => {
+            e.stopPropagation();
+            onBusiness?.();
+          }}
+        >
+          Use <strong>Ramp</strong> to run your business.
+        </button>
       </div>
 
       {/* tap arrows flanking the scrubber — appear with it */}

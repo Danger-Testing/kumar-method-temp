@@ -1173,6 +1173,33 @@ video.smokeHidden {
   }
 }
 
+/* the reader's corner tagline: hero copy at quiet-chrome scale */
+.readerTagline {
+  position: fixed;
+  right: max(2.5vw, 18px);
+  bottom: 2.2vh;
+  z-index: 45;
+  text-align: right;
+  font-family: "Switzer", -apple-system, "Helvetica Neue", sans-serif;
+  font-weight: 500;
+  font-size: 13.5px;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  color: rgba(233, 214, 178, 0.62);
+}
+
+.readerTagline .tagLife {
+  display: block;
+}
+
+/* the scrubber owns the bottom on phones — the hold/closed screens
+   carry the tagline there instead */
+@media (max-width: 720px) {
+  .readerTagline {
+    display: none;
+  }
+}
+
 /* the life line steps back so the business line leads */
 .tagLife {
   font-size: 0.82em;
