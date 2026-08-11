@@ -45,11 +45,14 @@ function PlumBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) 
     t.colorSpace = THREE.SRGBColorSpace;
     t.anisotropy = 16;
   });
-  // the GLB tiles its page stripes denser than a single wrap — match it
+  // the GLB tiles its page stripes denser than a single wrap — match it.
+  // wrap mode is sampler state: it needs a re-upload to take effect.
   pagesRot.wrapS = pagesRot.wrapT = THREE.RepeatWrapping;
   pagesRot.repeat.set(2, 1); // fore-edge: lines vary along u (depth)
+  pagesRot.needsUpdate = true;
   pages.wrapS = pages.wrapT = THREE.RepeatWrapping;
   pages.repeat.set(1, 2); // top/bottom: lines vary along v (depth)
+  pages.needsUpdate = true;
 
   const frontMat = useMemo(() => {
     const m = new THREE.MeshStandardMaterial({
