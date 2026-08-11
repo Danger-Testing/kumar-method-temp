@@ -14,6 +14,11 @@ const D = H * (230 / 852) * 0.9;
 const CT = 0.05; // cover board thickness
 
 const TOTAL = 5.3; // seconds
+
+// start fetching the cover scans the moment this module loads
+useTexture.preload("/covers/front.jpeg");
+useTexture.preload("/covers/back.jpeg");
+useTexture.preload("/covers/spine.jpeg");
 const easeOutQuart = (x: number) => 1 - Math.pow(1 - x, 4);
 const easeInExpo = (x: number) => (x <= 0 ? 0 : Math.pow(2, 10 * x - 10));
 const smooth = (a: number, b: number, t: number) => {
@@ -237,10 +242,14 @@ function IntroScene({
   const igniteRef = useRef(0);
   const bloomRef = useRef<{ intensity: number } | null>(null);
   const doneRef = useRef(false);
+  const startRef = useRef<number | null>(null);
   const { camera } = useThree();
 
   useFrame(({ clock }) => {
-    const t = clock.getElapsedTime();
+    // the timeline starts on the first *rendered* frame, so slow texture
+    // loads on mobile don't swallow the opening beats of the spin
+    if (startRef.current === null) startRef.current = clock.getElapsedTime();
+    const t = clock.getElapsedTime() - startRef.current;
     const g = group.current;
     if (!g) return;
 
@@ -291,7 +300,7 @@ function IntroScene({
       <pointLight position={[-1.6, -1.4, 2.6]} intensity={6} color="#ffc890" />
       <group ref={group}>{useGlb ? <GlbBook /> : <BuiltBook igniteRef={igniteRef} />}</group>
 
-      <EffectComposer>
+      <EffectComposer multisampling={isCoarse() ? 0 : 4}>
         <Bloom
           ref={bloomRef as never}
           intensity={0.12}
@@ -307,9 +316,13 @@ function IntroScene({
 
 /* ------------------------------------------------------------------ */
 
+/** coarse pointer ≈ phone/tablet: render leaner there */
+function isCoarse(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+}
+
 export default function Intro3D({ onDone }: { onDone: (finished: boolean) => void }) {
   const [glb, setGlb] = useState(false);
-  const [ready, setReady] = useState(false);
   const fadeRef = useRef<HTMLDivElement>(null);
   const canvasWrapRef = useRef<HTMLDivElement>(null);
   const grainRef = useRef<HTMLDivElement>(null);
@@ -317,8 +330,7 @@ export default function Intro3D({ onDone }: { onDone: (finished: boolean) => voi
   useEffect(() => {
     fetch("/book.glb", { method: "HEAD" })
       .then((r) => setGlb(r.ok && (r.headers.get("content-type") ?? "").includes("model")))
-      .catch(() => setGlb(false))
-      .finally(() => setReady(true));
+      .catch(() => setGlb(false));
   }, []);
 
   useEffect(() => {
@@ -331,31 +343,29 @@ export default function Intro3D({ onDone }: { onDone: (finished: boolean) => voi
 
   return (
     <div className="introRoot" onClick={() => onDone(false)}>
-      {ready && (
-        <div className="introCanvas" ref={canvasWrapRef}>
-          <Canvas
-            camera={{ position: [0, 0, 4.15], fov: 40 }}
-            gl={{ antialias: true }}
-            dpr={[1, 2]}
-          >
-            <IntroScene
-              useGlb={glb}
-              onFade={(v) => {
-                if (fadeRef.current) fadeRef.current.style.opacity = String(v);
-              }}
-              onDive={(d) => {
-                // rack focus: the world slides past the focal plane late in the dive
-                const blur = Math.max(0, (d - 0.45) / 0.55) * 16;
-                if (canvasWrapRef.current) {
-                  canvasWrapRef.current.style.filter = blur > 0.1 ? `blur(${blur.toFixed(1)}px)` : "";
-                }
-                if (grainRef.current) grainRef.current.style.opacity = String(d * 0.34);
-              }}
-              onDone={onDone}
-            />
-          </Canvas>
-        </div>
-      )}
+      <div className="introCanvas" ref={canvasWrapRef}>
+        <Canvas
+          camera={{ position: [0, 0, 4.15], fov: 40 }}
+          gl={{ antialias: !isCoarse() }}
+          dpr={isCoarse() ? [1, 1.5] : [1, 2]}
+        >
+          <IntroScene
+            useGlb={glb}
+            onFade={(v) => {
+              if (fadeRef.current) fadeRef.current.style.opacity = String(v);
+            }}
+            onDive={(d) => {
+              // rack focus: the world slides past the focal plane late in the dive
+              const blur = Math.max(0, (d - 0.45) / 0.55) * (isCoarse() ? 10 : 16);
+              if (canvasWrapRef.current) {
+                canvasWrapRef.current.style.filter = blur > 0.1 ? `blur(${blur.toFixed(1)}px)` : "";
+              }
+              if (grainRef.current) grainRef.current.style.opacity = String(d * 0.34);
+            }}
+            onDone={onDone}
+          />
+        </Canvas>
+      </div>
       <div className="introGrain" ref={grainRef} aria-hidden="true" />
       <div className="introFade" ref={fadeRef} aria-hidden="true">
         <div className="rampLogo" aria-label="ramp" />
