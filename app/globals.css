@@ -1194,7 +1194,7 @@ body {
 .tagBiz {
   background: none;
   border: 0;
-  padding: 0 2px 3px;
+  padding: 0 2px 2px;
   font: inherit;
   letter-spacing: inherit;
   color: inherit;
@@ -1203,6 +1203,10 @@ body {
   /* a real border, not text-decoration: the native underline draws in
      fragments around the bold span and the seams read as breaks */
   border-bottom: 2px solid rgba(233, 214, 178, 0.55);
+  /* hug the letters: without this the inherited 1.55 line-height pushes
+     the border into looking like a separate divider */
+  display: inline-block;
+  line-height: 1.18;
   transition: color 0.25s, border-color 0.25s;
 }
 
