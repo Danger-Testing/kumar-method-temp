@@ -558,7 +558,7 @@ function IntroScene({
     const hole = E > 0 ? holeRef?.current : null;
     let startX = 0;
     let startY = -1.7;
-    let startK = 0.06;
+    let startK = 0.03;
     if (hole) {
       // the camera is static until the dive: (0, 0, 4.15), fov 40
       const dist = 4.15 + 2.4;
@@ -569,8 +569,8 @@ function IntroScene({
       startY = (1 - hole.cy * 2) * (worldH / 2) + hole.h * worldH * 0.28;
       // MUCH smaller than the doorway at first — it grows to full size
       // as it shoots out
-      // even smaller than before — a speck that grows to full size
-      startK = Math.min(0.13, Math.max(0.04, (hole.w * worldW * 0.62) / (W * 0.78)) * 0.2);
+      // truly from (almost) zero — a dot that blooms to full size
+      startK = Math.min(0.06, Math.max(0.02, (hole.w * worldW * 0.62) / (W * 0.78)) * 0.1);
     }
     // straight out of the doorway: x/y HOLD at the hole's center for the
     // whole rise (the zoom is pure z), then the book floats gently to
@@ -584,7 +584,7 @@ function IntroScene({
     // from the first frame until the dive takes over
     const s =
       (0.78 + (1 - Math.pow(1 - Math.min(1, tSpin / 5), 3)) * 0.34) *
-      (startK + (1 - startK) * riseEase);
+      (startK + (1 - startK) * scaleEase);
     g.scale.setScalar(s);
 
     // the dolly: no let-up — it accelerates until the cover kisses the lens
