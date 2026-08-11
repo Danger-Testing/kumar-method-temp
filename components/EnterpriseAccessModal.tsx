@@ -33,14 +33,22 @@ export default function EnterpriseAccessModal({ onClose }: { onClose: () => void
       <div className="enterpriseModal" role="dialog" aria-modal="true" aria-labelledby="enterprise-title" onClick={(event) => event.stopPropagation()}>
         <button type="button" className="enterpriseModalClose" onClick={onClose} aria-label="Close">×</button>
         <h2 id="enterprise-title">Get access</h2>
-        <form onSubmit={submit}>
-          <label>Name<input name="name" autoComplete="name" placeholder="your name" required /></label>
-          <label>Company<input name="company" autoComplete="organization" placeholder="your company" required /></label>
-          <label>Email<input name="email" type="email" autoComplete="email" placeholder="you@company.com" required /></label>
-          {status === "success" && <p className="enterpriseFormSuccess">Thanks — we’ll be in touch shortly.</p>}
-          {status === "error" && <p className="enterpriseFormError">{error}</p>}
-          <button type="submit" disabled={status === "submitting"}>{status === "submitting" ? "Sending…" : "Get access"}</button>
-        </form>
+        {status === "success" ? (
+          // once submitted, the fields retire — just the thanks and a
+          // dismiss (owner call)
+          <form onSubmit={(e) => { e.preventDefault(); onClose(); }}>
+            <p className="enterpriseFormSuccess">Thanks — we’ll be in touch shortly.</p>
+            <button type="submit">Dismiss</button>
+          </form>
+        ) : (
+          <form onSubmit={submit}>
+            <label>Name<input name="name" autoComplete="name" placeholder="your name" required /></label>
+            <label>Company<input name="company" autoComplete="organization" placeholder="your company" required /></label>
+            <label>Email<input name="email" type="email" autoComplete="email" placeholder="you@company.com" required /></label>
+            {status === "error" && <p className="enterpriseFormError">{error}</p>}
+            <button type="submit" disabled={status === "submitting"}>{status === "submitting" ? "Sending…" : "Get access"}</button>
+          </form>
+        )}
       </div>
     </div>
   );
