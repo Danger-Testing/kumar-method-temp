@@ -239,4 +239,15 @@ The book is NOT an AI-generated mesh and NOT a video. It is a real
 - `vercel logs <url>` follows/streams — it will hang a foreground
   shell; run with a timeout or in background.
 - The repo path contains a space ("app danger") — always quote.
+- NEVER apply a filter-heavy SVG data-URI (feTurbulence/
+  feDisplacementMap) directly as a CSS mask-image on the page:
+  Chromium intermittently fails to rasterize it and the ENTIRE page
+  paints invisible. The edge masks are rasterized to PNG at runtime
+  in Book.tsx (rasterizeMask -> CSS vars --paper-mask-worn/-square)
+  with fallback none, so a mask failure can only mean straight
+  edges, never a missing page.
+- The "stars" in the intro are ON the book (soft points drawn into
+  the emissive gold mask from the leather's natural glints), NOT
+  floating room particles — the owner explicitly rejected drei
+  Sparkles fields twice. Don't re-add them.
 ================================================================
