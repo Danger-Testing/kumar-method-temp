@@ -34,15 +34,21 @@ export const BLOOM = {
   radius: 0.42,
 } as const;
 
-/* ONE LIGHT RIG (and its lights-off counterpart). */
+/* ONE LIGHT RIG (and its lights-off counterpart).
+   The safe rig, per the owner + artist (2026-08-11): a single soft
+   directional key on the camera axis — near-normal incidence excites
+   no grazing highlights, so bump moiré and specular sparkle cannot
+   occur — plus neutral ambient so the spine reads during the spin.
+   Near-white color keeps the artist's palette true. Raking-angle
+   points and warm tints are what caused every artifact; do not
+   reintroduce them. */
 export function BookLights({ plain }: { plain: boolean }) {
   return plain ? (
     <ambientLight intensity={1.35} color="#ffffff" />
   ) : (
     <>
-      <ambientLight intensity={0.42} color="#ffdcb0" />
-      <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
-      <pointLight position={[-1.6, -1.4, 2.6]} intensity={16} color="#ffc890" />
+      <ambientLight intensity={0.55} color="#fffaf2" />
+      <directionalLight position={[0, 0.5, 5]} intensity={2.4} color="#fff6e8" />
     </>
   );
 }
