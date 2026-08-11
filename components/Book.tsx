@@ -141,6 +141,9 @@ function PageLeaf({
   return (
     <div className={`leaf ${animClass}`}>
       <div className={`paper ${squareCorners ? "cornersSquare" : ""}`}>
+        {/* a real scanned sheet of old paper, toned to match */}
+        <div className="photoPaper" aria-hidden="true" />
+
         {/* show-through of the following leaf, mirrored, like thin old stock */}
         {ghost && (
           <div className="ghost" aria-hidden="true">
