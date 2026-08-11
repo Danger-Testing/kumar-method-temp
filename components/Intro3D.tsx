@@ -314,8 +314,10 @@ function GlbBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) {
   }, [mats]);
 
   useFrame(() => {
+    // the GLB's clean art can take the full-power ignition without the
+    // speckling that forced the scan-based book down to 10%
     for (const m of mats) {
-      if (m.emissiveMap) m.emissiveIntensity = igniteRef.current * 0.3;
+      if (m.emissiveMap) m.emissiveIntensity = igniteRef.current * 2.2;
     }
   });
 
@@ -386,8 +388,8 @@ function IntroScene({
     // the gilding ignites, then overbrightens as we close in
     const ig = smooth(2.5, 3.5, t);
     igniteRef.current = ig * (0.85 + Math.sin(t * 5.2) * 0.15) * (1 + d * 0.8);
-    // a candle-glint on the gold, nothing more
-    if (bloomRef.current) bloomRef.current.intensity = 0.12 + ig * 0.08 + d * 0.9;
+    // bloom back at full presence — the GLB's clean gilding earns it
+    if (bloomRef.current) bloomRef.current.intensity = 0.12 + ig * 0.55 + d * 0.9;
 
     // stop the magnification before the scan runs out of pixels — the
     // rack-focus blur and grain carry the final stretch instead
