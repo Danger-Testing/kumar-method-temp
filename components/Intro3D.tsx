@@ -46,8 +46,9 @@ function useGoldMask(src: string): THREE.CanvasTexture | null {
         const r = px[i];
         const g = px[i + 1];
         const b = px[i + 2];
-        // gilding reads warm and bright; leather reads red and dark-green-channel
-        const gold = r > 115 && g > 72 && g > r * 0.5 && b < g * 0.95 && r + g > 210;
+        // gilding reads warm and bright; leather reads red and dark-green-channel.
+        // threshold kept strict so stray bright leather pixels don't speckle.
+        const gold = r > 128 && g > 84 && g > r * 0.5 && b < g * 0.92 && r + g > 236;
         const v = gold ? 255 : 0;
         px[i] = v;
         px[i + 1] = v;
@@ -162,8 +163,8 @@ function BuiltBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> })
   );
 
   useFrame(() => {
-    frontMat.emissiveIntensity = igniteRef.current * 2.6;
-    spineMat.emissiveIntensity = igniteRef.current * 2.2;
+    frontMat.emissiveIntensity = igniteRef.current * 1.95;
+    spineMat.emissiveIntensity = igniteRef.current * 1.65;
   });
 
   // BoxGeometry face order: +x, -x, +y, -y, +z, -z
@@ -256,9 +257,9 @@ function IntroScene({
 
     // the gilding ignites, then overbrightens as we close in
     const ig = smooth(2.5, 3.5, t);
-    igniteRef.current = ig * (0.85 + Math.sin(t * 5.2) * 0.15) * (1 + d * 1.7);
+    igniteRef.current = ig * (0.85 + Math.sin(t * 5.2) * 0.15) * (1 + d * 1.3);
     // bloom stays tight around the gold — no wide halo behind the book
-    if (bloomRef.current) bloomRef.current.intensity = 0.12 + ig * 0.68 + d * 1.5;
+    if (bloomRef.current) bloomRef.current.intensity = 0.12 + ig * 0.5 + d * 1.25;
 
     // stop the magnification before the scan runs out of pixels — the
     // rack-focus blur and grain carry the final stretch instead
