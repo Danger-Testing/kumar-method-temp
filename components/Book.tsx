@@ -237,12 +237,47 @@ function Dust() {
 /*  The book                                                           */
 /* ------------------------------------------------------------------ */
 
+/* The deckled page edges are cut by SVG turbulence masks. Chromium can
+   intermittently fail to rasterize filter-heavy data-URI masks at paint
+   time, which leaves the WHOLE page invisible. So we rasterize each mask
+   once into a plain PNG (always paints) and hand it to CSS as a var;
+   until it's ready the page renders unmasked — visible, just straight-
+   edged for a moment. */
+const MASK_WORN =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='660' height='1000'%3E%3Cfilter id='r' x='-5%25' y='-5%25' width='110%25' height='110%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.006 0.0045' numOctaves='2' seed='11' result='n'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='n' scale='4'/%3E%3C/filter%3E%3Crect x='4' y='4' width='652' height='992' rx='12' ry='12' fill='white' filter='url(%23r)'/%3E%3C/svg%3E";
+const MASK_SQUARE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='660' height='1000'%3E%3Cfilter id='r' x='-5%25' y='-5%25' width='110%25' height='110%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.006 0.0045' numOctaves='2' seed='11' result='n'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='n' scale='3.5'/%3E%3C/filter%3E%3Crect x='3' y='3' width='654' height='994' fill='white' filter='url(%23r)'/%3E%3C/svg%3E";
+
+function rasterizeMask(svg: string, cssVar: string) {
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas");
+    c.width = 660;
+    c.height = 1000;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(img, 0, 0, 660, 1000);
+    try {
+      document.documentElement.style.setProperty(cssVar, `url("${c.toDataURL("image/png")}")`);
+    } catch {
+      /* leave unmasked — page stays visible */
+    }
+  };
+  img.src = svg;
+}
+
 export default function Book() {
   const [current, setCurrent] = useState(0);
   const [hasTurned, setHasTurned] = useState(false);
   const [squareCorners, setSquareCorners] = useState(true);
   const [spread, setSpread] = useState(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
+
+  // pre-rasterize the page-edge masks (see note above Book)
+  useEffect(() => {
+    rasterizeMask(MASK_WORN, "--paper-mask-worn");
+    rasterizeMask(MASK_SQUARE, "--paper-mask-square");
+  }, []);
 
   // wide landscape screens read as an open book, two pages at once
   useEffect(() => {
