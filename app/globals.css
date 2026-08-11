@@ -1202,10 +1202,10 @@ body {
    screens); mobile keeps the tight symmetry */
 @media (min-width: 900px) and (orientation: landscape) {
   .closedTitle {
-    bottom: calc(50% + 33svh);
+    bottom: calc(50% + 30.5svh);
   }
   .closedTitle.heroWait {
-    bottom: calc(50% + 38.5svh);
+    bottom: calc(50% + 35.5svh);
   }
 }
 
