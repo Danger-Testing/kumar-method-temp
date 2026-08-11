@@ -1151,8 +1151,11 @@ body {
   transform: translateX(-50%);
   width: min(92vw, 720px);
   text-align: center;
-  font-family: var(--font-garamond), Georgia, serif;
-  letter-spacing: 0.03em;
+  /* EXPERIMENT (owner, "might revert"): ramp's face for BOTH lines —
+     revert this commit to restore the Garamond version */
+  font-family: "Switzer", -apple-system, "Helvetica Neue", sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   pointer-events: none;
   z-index: 95;
   opacity: 0;
