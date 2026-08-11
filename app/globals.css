@@ -983,6 +983,28 @@ body {
   pointer-events: none;
 }
 
+/* inspection toggle: strips the warm rig, bump relief, and gilding glow */
+.plainToggle {
+  position: fixed;
+  bottom: 2.2vh;
+  right: max(2.5vw, 18px);
+  padding: 8px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-garamond), Georgia, serif;
+  font-style: italic;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  color: rgba(233, 214, 178, 0.45);
+  transition: color 0.25s;
+}
+
+.plainToggle:hover,
+.plainToggle:focus-visible {
+  color: rgba(233, 214, 178, 0.95);
+}
+
 /* ----------------------------------------------------------------
    Accessibility
    ---------------------------------------------------------------- */

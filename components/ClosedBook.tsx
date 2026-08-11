@@ -13,12 +13,42 @@ import { BuiltBook, GlbBook } from "@/components/Intro3D";
 function SpinnableBook({
   useGlb,
   spinRef,
+  plain,
 }: {
   useGlb: boolean;
   spinRef: React.MutableRefObject<{ vx: number; vy: number; rx: number; ry: number }>;
+  plain: boolean;
 }) {
   const group = useRef<THREE.Group>(null);
   const igniteRef = useRef(0);
+
+  // plain mode: strip the relief so the raw art shows — zero every
+  // bump/normal map (originals stashed in userData, restored on untoggle)
+  useEffect(() => {
+    const g = group.current;
+    if (!g) return;
+    g.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      mats.forEach((m) => {
+        const std = m as THREE.MeshStandardMaterial;
+        if (!std.isMeshStandardMaterial) return;
+        if (plain) {
+          if (std.userData.savedBump === undefined) std.userData.savedBump = std.bumpScale;
+          if (std.normalScale && std.userData.savedNormal === undefined) {
+            std.userData.savedNormal = std.normalScale.clone();
+          }
+          std.bumpScale = 0;
+          std.normalScale?.set(0, 0);
+        } else {
+          if (std.userData.savedBump !== undefined) std.bumpScale = std.userData.savedBump;
+          if (std.userData.savedNormal) std.normalScale.copy(std.userData.savedNormal);
+        }
+        // bump/normal scales are uniforms — no needsUpdate, no recompile
+      });
+    });
+  }, [plain]);
 
   useFrame(({ clock }) => {
     const g = group.current;
@@ -41,16 +71,27 @@ function SpinnableBook({
     g.position.y = Math.sin(t * 1.3) * 0.03;
 
     // embers only: the gilding keeps a candle-lit life, well below the
-    // intro's ignition (and with no bloom composer to amplify it)
-    igniteRef.current = 0.32 + 0.05 * Math.sin(t * 2.3) * Math.sin(t * 0.7);
+    // intro's ignition (and with no bloom composer to amplify it).
+    // Plain mode kills the glow entirely.
+    igniteRef.current = plain ? 0 : 0.32 + 0.05 * Math.sin(t * 2.3) * Math.sin(t * 0.7);
   });
 
   return (
     <>
-      <ambientLight intensity={0.22} color="#ffdcb0" />
-      <spotLight position={[2.4, 2.6, 3.4]} intensity={38} angle={0.7} penumbra={0.6} color="#ffd9a2" />
-      <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
-      <pointLight position={[-1.6, -1.4, 2.6]} intensity={10} color="#ffc890" />
+      {plain ? (
+        // showroom light: flat, even, colorless — the raw art, nothing added
+        <>
+          <ambientLight intensity={1.8} color="#ffffff" />
+          <directionalLight position={[0, 0, 5]} intensity={1.5} color="#ffffff" />
+        </>
+      ) : (
+        <>
+          <ambientLight intensity={0.22} color="#ffdcb0" />
+          <spotLight position={[2.4, 2.6, 3.4]} intensity={38} angle={0.7} penumbra={0.6} color="#ffd9a2" />
+          <pointLight position={[-2.4, 0.6, -3]} intensity={26} color="#ff8f3c" />
+          <pointLight position={[-1.6, -1.4, 2.6]} intensity={10} color="#ffc890" />
+        </>
+      )}
       <group ref={group} scale={0.92}>
         {useGlb ? <GlbBook igniteRef={igniteRef} /> : <BuiltBook igniteRef={igniteRef} />}
       </group>
@@ -61,6 +102,8 @@ function SpinnableBook({
 export default function ClosedBook({ onOpen }: { onOpen: () => void }) {
   // same GLB detection as the intro; the HEAD hits the browser cache
   const [glb, setGlb] = useState<boolean | null>(null);
+  // plain mode: no warm lighting, no bump relief, no gilding glow
+  const [plain, setPlain] = useState(false);
   const spinRef = useRef({ vx: 0, vy: 0, rx: 0, ry: 0 });
   const drag = useRef<{ x: number; y: number; moved: number } | null>(null);
 
@@ -111,10 +154,21 @@ export default function ClosedBook({ onOpen }: { onOpen: () => void }) {
               : [1, 1.75]
           }
         >
-          <SpinnableBook useGlb={glb} spinRef={spinRef} />
+          <SpinnableBook useGlb={glb} spinRef={spinRef} plain={plain} />
         </Canvas>
       )}
       <div className="closedHint">drag to turn it over · tap to open</div>
+      <button
+        className="plainToggle"
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          setPlain((p) => !p);
+        }}
+      >
+        {plain ? "lights on" : "lights off"}
+      </button>
     </div>
   );
 }
