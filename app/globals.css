@@ -1366,6 +1366,13 @@ video.smokeHidden {
   left: 46%;
 }
 
+.prUnderTitle {
+  /* centered beneath the chapter title's flourish */
+  position: static;
+  align-self: center;
+  margin: 0.6cqw auto 1.8cqw;
+}
+
 .prInline {
   /* rides the text flow: right where the last rule ends */
   position: static;

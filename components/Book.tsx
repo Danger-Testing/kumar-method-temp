@@ -67,6 +67,22 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
           ))}
         </h1>
         <Flourish />
+        {/* EXPERIMENT candidate: right underneath the chapter title */}
+        <a
+          className="pageRamp prUnderTitle"
+          href="https://ramp.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Ramp"
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+        >
+          <span className="prOval" aria-hidden="true">
+            <span className="prMark" />
+          </span>
+          <i className="prDot" style={{ background: "#111" }} aria-hidden="true" />
+        </a>
         <div className="intro">
           {ch.intro.map((para, i) => (
             <p key={i}>
