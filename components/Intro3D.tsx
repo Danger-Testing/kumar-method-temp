@@ -516,14 +516,18 @@ function IntroScene({
       const worldH = 2 * dist * Math.tan((40 * Math.PI) / 360);
       const worldW = worldH * (size.width / size.height);
       startX = (hole.cx * 2 - 1) * (worldW / 2);
-      // a touch below the hole's center, so the book rises up through it
-      startY = (1 - hole.cy * 2) * (worldH / 2) - hole.h * worldH * 0.18;
+      // dead center of the hole — it comes STRAIGHT out, no climb
+      startY = (1 - hole.cy * 2) * (worldH / 2);
       // MUCH smaller than the doorway at first — it grows to full size
       // as it shoots out
       startK = Math.min(0.22, Math.max(0.06, (hole.w * worldW * 0.62) / (W * 0.78)) * 0.35);
     }
-    g.position.x = startX * (1 - riseEase);
-    g.position.y = startY * (1 - riseEase) + Math.sin(t * 1.3) * 0.03;
+    // straight out of the doorway: x/y HOLD at the hole's center for the
+    // whole rise (the zoom is pure z), then the book floats gently to
+    // frame center after it's fully out
+    const lift = E > 0 ? smooth(E, E + 1.3, t) : 1;
+    g.position.x = startX * (1 - lift);
+    g.position.y = startY * (1 - lift) + Math.sin(t * 1.3) * 0.03;
     // deeper start = the exit reads as a ZOOM straight at the camera
     g.position.z = -2.4 * (1 - riseEase);
     // the book never stops growing in the frame — presence keeps building
