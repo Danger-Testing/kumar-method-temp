@@ -906,7 +906,8 @@ body {
 
 .skipHint {
   position: absolute;
-  bottom: 2.4vh;
+  /* stacked above the lights-off toggle, which owns the corner itself */
+  bottom: calc(2.2vh + 40px);
   right: max(2.5vw, 18px);
   font-family: var(--font-fell), serif;
   font-style: italic;

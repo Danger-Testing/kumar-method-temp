@@ -79,11 +79,9 @@ function SpinnableBook({
   return (
     <>
       {plain ? (
-        // showroom light: flat, even, colorless — the raw art, nothing added
-        <>
-          <ambientLight intensity={1.8} color="#ffffff" />
-          <directionalLight position={[0, 0, 5]} intensity={1.5} color="#ffffff" />
-        </>
+        // pure ambient, no directed light at all: flat albedo, zero
+        // hotspots — the directional here washed out the cover center
+        <ambientLight intensity={1.35} color="#ffffff" />
       ) : (
         <>
           {/* no key spotlight: its raking angle dragged the normal map
