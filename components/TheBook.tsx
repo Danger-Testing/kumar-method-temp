@@ -59,18 +59,18 @@ export function BookLights({ plain, sweep = false }: { plain: boolean; sweep?: b
       light.intensity = 1.25;
       return;
     }
-    // scanning passes: the beam starts ABOVE the book and pans all the
-    // way down to the floor, then starts over from the top — one
-    // direction, repeating (~4.5s per pass), like a search light.
-    // The book lights up each time the beam crosses it.
-    if (tm < 1.5) {
-      target.position.set(0, 2.6, 0);
-      light.intensity = 1.15;
+    // scanning passes, seamless: each pass STARTS FROM ZERO light at the
+    // bottom, fades in as the beam climbs, peaks sliding up across the
+    // book, and fades back out past the top — so the restart at the
+    // bottom is invisible (light is already at zero). No snap, ever.
+    if (tm < 1.0) {
+      light.intensity = 0;
+      target.position.set(0, -4.2, 0);
       return;
     }
-    const phase = ((tm - 1.5) % 4.5) / 4.5;
-    target.position.set(0, 2.6 - 6.8 * phase, 0);
-    light.intensity = 1.15;
+    const phase = ((tm - 1.0) % 5) / 5;
+    target.position.set(0, -4.2 + 7.0 * phase, 0);
+    light.intensity = 1.3 * Math.sin(Math.PI * phase);
   });
 
   return plain ? (
