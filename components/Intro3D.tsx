@@ -398,15 +398,19 @@ function GlbBook({ igniteRef }: { igniteRef: React.MutableRefObject<number> }) {
 
 function IntroScene({
   useGlb,
+  emerge,
   onFade,
   onDive,
   onAtmos,
+  onEmerge,
   onDone,
 }: {
   useGlb: boolean;
+  emerge: boolean;
   onFade: (v: number) => void;
   onDive: (v: number) => void;
   onAtmos: (ignite: number, dive: number, t: number) => void;
+  onEmerge: (rise: number, t: number) => void;
   onDone: (finished: boolean) => void;
 }) {
   const group = useRef<THREE.Group>(null);
@@ -424,23 +428,38 @@ function IntroScene({
     const g = group.current;
     if (!g) return;
 
-    // grand spin settling to face us
-    const spin = easeOutQuart(Math.min(1, t / 3.3));
+    // emergence prefix: the book rises out of the tomb's doorway before
+    // the familiar timeline begins
+    const E = emerge ? 1.8 : 0;
+    const tt = Math.max(0, t - E);
+    let riseEase = 1;
+    if (E > 0) {
+      const rise = Math.min(1, t / E);
+      riseEase = 1 - Math.pow(1 - rise, 3);
+      onEmerge(rise, t);
+    }
+
+    // grand spin settling to face us — starts mid-rise so the book is
+    // already turning as it clears the doorway
+    const tSpin = Math.max(0, t - E * 0.45);
+    const spin = easeOutQuart(Math.min(1, tSpin / 3.3));
     g.rotation.y = (1 - spin) * Math.PI * 2.7;
     g.rotation.x = -0.06 + Math.sin(t * 1.1) * 0.012;
-    g.position.y = Math.sin(t * 1.3) * 0.03;
+    g.position.y = -2.15 * (1 - riseEase) + Math.sin(t * 1.3) * 0.03;
     // the book never stops growing in the frame — presence keeps building
     // from the first frame until the dive takes over
-    const s = 0.78 + (1 - Math.pow(1 - Math.min(1, t / 5), 3)) * 0.34;
+    const s =
+      (0.78 + (1 - Math.pow(1 - Math.min(1, tSpin / 5), 3)) * 0.34) *
+      (0.55 + 0.45 * riseEase);
     g.scale.setScalar(s);
 
     // the dolly: no let-up — it accelerates until the cover kisses the lens
-    const d = easeInExpo(smooth(3.85, 5.05, t));
+    const d = easeInExpo(smooth(3.85, 5.05, tt));
 
     // the awakening: the gold stirs early, builds in waves, and is still
     // climbing when the dive begins — no dead air, no single hit
     const ig =
-      (0.14 * smooth(1.6, 2.4, t) + 0.36 * smooth(2.4, 3.4, t) + 0.6 * smooth(3.4, 4.5, t)) *
+      (0.14 * smooth(1.6, 2.4, tt) + 0.36 * smooth(2.4, 3.4, tt) + 0.6 * smooth(3.4, 4.5, tt)) *
       (0.82 + 0.18 * Math.sin(t * 6.3) * Math.sin(t * 2.7)) *
       (1 + d * 0.9);
     igniteRef.current = ig;
@@ -464,9 +483,9 @@ function IntroScene({
     onAtmos(ig, d, t);
 
     // the last beats dissolve into golden light, not black
-    onFade(smooth(4.82, 5.18, t));
+    onFade(smooth(4.82, 5.18, tt));
 
-    if (t >= TOTAL && !doneRef.current) {
+    if (tt >= TOTAL && !doneRef.current) {
       doneRef.current = true;
       onDone(true);
     }
@@ -503,7 +522,13 @@ function isCoarse(): boolean {
   return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
 }
 
-export default function Intro3D({ onDone }: { onDone: (finished: boolean) => void }) {
+export default function Intro3D({
+  onDone,
+  emerge = false,
+}: {
+  onDone: (finished: boolean) => void;
+  emerge?: boolean;
+}) {
   // null = still checking. The scene must not mount until this resolves:
   // flipping the book type mid-flight remounts the scene and restarts the
   // timeline (the start-stop-start glitch).
@@ -512,6 +537,8 @@ export default function Intro3D({ onDone }: { onDone: (finished: boolean) => voi
   const canvasWrapRef = useRef<HTMLDivElement>(null);
   const grainRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
+  const tombRef = useRef<HTMLDivElement>(null);
+  const emergeSmokeRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     fetch("/book.glb", { method: "HEAD" })
@@ -533,6 +560,22 @@ export default function Intro3D({ onDone }: { onDone: (finished: boolean) => voi
 
   return (
     <div className="introRoot" onClick={() => onDone(false)}>
+      {emerge && (
+        <div className="introTomb" ref={tombRef} aria-hidden="true">
+          <img className="tombBg" src="/tomb/bg.webp" alt="" />
+          <img className="tombWall" src="/tomb/wall.png" alt="" />
+          <img className="tombStructure" src="/tomb/kumar-tomb-final.png" alt="" />
+          <video
+            className="tombSmoke emergeSmoke"
+            ref={emergeSmokeRef}
+            src="/tomb/intomb-smoke.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
+        </div>
+      )}
       <div className="introGlow" ref={glowRef} aria-hidden="true" />
       <div className="introCanvas" ref={canvasWrapRef}>
         {glb !== null && (
@@ -543,6 +586,19 @@ export default function Intro3D({ onDone }: { onDone: (finished: boolean) => voi
         >
           <IntroScene
             useGlb={glb}
+            emerge={emerge}
+            onEmerge={(rise, t) => {
+              // the tomb holds through the rise, then dissolves into the
+              // dark room; its smoke swells as the book climbs out
+              if (tombRef.current) {
+                tombRef.current.style.opacity = String(1 - smooth(1.1, 3, t));
+              }
+              if (emergeSmokeRef.current) {
+                emergeSmokeRef.current.style.opacity = String(
+                  0.85 * smooth(0, 0.6, t) * (1 - smooth(1.8, 3.2, t))
+                );
+              }
+            }}
             onFade={(v) => {
               if (fadeRef.current) fadeRef.current.style.opacity = String(v);
             }}

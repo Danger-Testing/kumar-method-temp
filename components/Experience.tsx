@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Book from "@/components/Book";
+import TombLanding from "@/components/TombLanding";
 
 const Intro3D = dynamic(() => import("@/components/Intro3D"), { ssr: false });
 
 export default function Experience() {
-  const [phase, setPhase] = useState<"intro" | "book">("intro");
+  const [phase, setPhase] = useState<"tomb" | "intro" | "book">("tomb");
   const [flash, setFlash] = useState(false);
 
   useEffect(() => {
@@ -16,9 +17,14 @@ export default function Experience() {
     }
   }, []);
 
+  if (phase === "tomb") {
+    return <TombLanding onWake={() => setPhase("intro")} />;
+  }
+
   if (phase === "intro") {
     return (
       <Intro3D
+        emerge
         onDone={(finished) => {
           setFlash(finished);
           setPhase("book");
@@ -26,6 +32,7 @@ export default function Experience() {
       />
     );
   }
+
   return (
     <>
       <Book />
