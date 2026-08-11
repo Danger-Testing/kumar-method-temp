@@ -262,7 +262,7 @@ function rasterizeMask(svg: string, cssVar: string) {
   img.src = svg;
 }
 
-export default function Book({ onBusiness }: { onBusiness?: () => void }) {
+export default function Book() {
   const [current, setCurrent] = useState(0);
   const [hasTurned, setHasTurned] = useState(false);
   const [spread, setSpread] = useState(false);
@@ -470,29 +470,6 @@ export default function Book({ onBusiness }: { onBusiness?: () => void }) {
         tap the page · or use ← → to turn
       </div>
 
-      <button
-        type="button"
-        className="bizLink"
-        onClick={(e) => {
-          e.stopPropagation();
-          onBusiness?.();
-        }}
-      >
-        <span className="bizLine1">try kumar method for business</span>
-        <span className="bizLine2">
-          <span className="bizRamp" aria-hidden="true" />
-          <svg className="bizArrow" viewBox="0 0 12 12" aria-hidden="true">
-            <path
-              d="M3.2 8.8 L8.8 3.2 M4.4 3.2 H8.8 V7.6"
-              stroke="currentColor"
-              strokeWidth="1.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-          </svg>
-        </span>
-      </button>
 
       <div
         className={`scrubber ${scrubbing ? "scrubbing" : ""} ${hasTurned ? "" : "scrubHidden"}`}

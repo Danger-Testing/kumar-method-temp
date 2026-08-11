@@ -656,67 +656,12 @@ body {
   font-display: swap;
 }
 
-.bizLink {
-  position: fixed;
-  bottom: 2.2vh;
-  right: max(2.5vw, 18px);
-  z-index: 45;
-  display: block;
-  text-align: right;
-  /* it's a <button> now (opens the access modal) — strip chrome */
-  background: none;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  font-family: "Switzer", -apple-system, "Helvetica Neue", sans-serif;
-  font-weight: 500;
-  font-size: 12px;
-  letter-spacing: 0.005em;
-  white-space: nowrap;
-  color: rgba(233, 214, 178, 0.5);
-  text-decoration: none;
-  transition: color 0.25s;
-}
-
-.bizLine1 {
-  display: block;
-}
-
-.bizLine2 {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 7px;
-  margin-top: 4px;
-}
-
-.bizArrow {
-  width: 10px;
-  height: 10px;
-  display: block;
-}
-
 /* TEMPORARY (owner, 2026-08-11 night): CTA hidden on mobile — it
    overlaps the scrubber counter in the bottom zone. Proper mobile
    placement to be figured out in the morning. Placed after the base
    rules so the cascade actually applies it. */
 @media (max-width: 720px) {
-  .bizLink {
-    display: none;
   }
-}
-
-.bizLink:hover {
-  color: rgba(233, 214, 178, 0.95);
-}
-
-.bizRamp {
-  width: 46px;
-  height: 13px;
-  background: currentColor;
-  -webkit-mask: url("/covers/ramp.webp") center / contain no-repeat;
-  mask: url("/covers/ramp.webp") center / contain no-repeat;
-}
 
 /* page scrubber: a short, quiet ornament — one flourish line that IS
    the scrub track (diamond thumb rides it), "n / 110" centered below.
