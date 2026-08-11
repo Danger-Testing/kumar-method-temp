@@ -1336,8 +1336,41 @@ video.smokeHidden {
 }
 
 .prTopOuter {
-  top: 6.2cqw; /* the text column's top edge */
-  right: 9cqw;
+  top: 7.6cqw; /* nudged down + right per the owner */
+  right: 7.4cqw;
+}
+
+.prTopLeft {
+  top: 3cqw; /* the very corner */
+  left: 4cqw;
+}
+
+/* the oval-badge variant (Ramp's stamp look) */
+.prOval {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.1cqw 2cqw;
+  border: 0.22cqw solid rgba(74, 56, 36, 0.5);
+  border-radius: 50%;
+}
+
+.pageRamp:hover .prOval,
+.pageRamp:focus-visible .prOval {
+  border-color: rgba(74, 56, 36, 0.9);
+}
+
+.prGapSpace {
+  /* floating in the open paper below the scripture */
+  top: 62%;
+  left: 46%;
+}
+
+.prInline {
+  /* rides the text flow: right where the last rule ends */
+  position: static;
+  margin-top: 2.4cqw;
+  align-self: flex-start;
 }
 
 /* ----------------------------------------------------------------

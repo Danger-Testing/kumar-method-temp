@@ -104,6 +104,22 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
             <p className="ruleText">{ch.rules[ri]}</p>
           </div>
         ))}
+        {/* EXPERIMENT candidate: inline, right where the scripture ends */}
+        <a
+          className="pageRamp prInline"
+          href="https://ramp.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Ramp"
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+        >
+          <span className="prOval" aria-hidden="true">
+            <span className="prMark" />
+          </span>
+          <i className="prDot" style={{ background: "#8e44ad" }} aria-hidden="true" />
+        </a>
       </div>
       <div className="folio">P. {pageNumber}</div>
     </div>
@@ -116,9 +132,11 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
 function RampCandidates() {
   const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
   const spots = [
-    { id: "red", cls: "prBottomCenter", dot: "#c0392b" },
-    { id: "blue", cls: "prBottomOuter", dot: "#2e6fdb" },
-    { id: "green", cls: "prTopOuter", dot: "#2f9e44" },
+    { id: "red", cls: "prBottomCenter", dot: "#c0392b", oval: false },
+    { id: "blue", cls: "prBottomOuter", dot: "#2e6fdb", oval: false },
+    { id: "green", cls: "prTopOuter", dot: "#2f9e44", oval: false },
+    { id: "orange", cls: "prTopLeft", dot: "#e67e22", oval: false },
+    { id: "teal", cls: "prGapSpace", dot: "#129d8f", oval: true },
   ];
   return (
     <>
@@ -134,7 +152,13 @@ function RampCandidates() {
           onPointerDown={stop}
           onPointerUp={stop}
         >
-          <span className="prMark" aria-hidden="true" />
+          {sp.oval ? (
+            <span className="prOval" aria-hidden="true">
+              <span className="prMark" />
+            </span>
+          ) : (
+            <span className="prMark" aria-hidden="true" />
+          )}
           <i className="prDot" style={{ background: sp.dot }} aria-hidden="true" />
         </a>
       ))}
