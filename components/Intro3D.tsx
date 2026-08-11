@@ -422,7 +422,7 @@ function IntroScene({
   onFade: (v: number) => void;
   onDive: (v: number) => void;
   onAtmos: (ignite: number, dive: number, t: number) => void;
-  onEmerge: (rise: number, t: number) => void;
+  onEmerge: (rise: number, t: number, ignite: number) => void;
   onDone: (finished: boolean) => void;
 }) {
   const group = useRef<THREE.Group>(null);
@@ -446,10 +446,10 @@ function IntroScene({
     const E = emerge ? 1.8 : 0;
     const tt = Math.max(0, t - E);
     let riseEase = 1;
+    let rise = 1;
     if (E > 0) {
-      const rise = Math.min(1, t / E);
+      rise = Math.min(1, t / E);
       riseEase = 1 - Math.pow(1 - rise, 3);
-      onEmerge(rise, t);
     }
 
     // grand spin settling to face us — starts mid-rise so the book is
@@ -500,6 +500,9 @@ function IntroScene({
       (0.82 + 0.18 * Math.sin(t * 6.3) * Math.sin(t * 2.7)) *
       (1 + d * 0.9);
     igniteRef.current = ig;
+    // the tomb layers hear about both the rise and the ignition, so the
+    // awakening glow can light the whole chamber
+    if (E > 0) onEmerge(rise, t, ig);
     if (bloomRef.current) bloomRef.current.intensity = 0.1 + ig * 0.85 + d * 1.1;
 
     // stop the magnification before the scan runs out of pixels — the
@@ -567,8 +570,10 @@ export default function Intro3D({
 }: {
   onDone: (finished: boolean) => void;
   emerge?: boolean;
-  /** drives the persistent tomb layer (owned by Experience) behind us */
-  onTombFade?: (fade: number) => void;
+  /** drives the persistent tomb layer (owned by Experience) behind us:
+      fade = settle into the dark grade, glow = the ignition lighting
+      the chamber back up (flickers with the gilding) */
+  onTombFade?: (fade: number, glow: number) => void;
   /** the tomb doorway, measured by Experience — anchors the emergence */
   holeRect?: MutableRefObject<HoleRect | null>;
 }) {
@@ -613,15 +618,11 @@ export default function Intro3D({
             useGlb={glb}
             emerge={emerge}
             holeRef={holeRect}
-            onEmerge={(rise, t) => {
-              // the tomb (persistent layer behind us) holds through the
-              // rise, then dissolves into the dark room as the spin takes
-              // over
-              onTombFade?.(smooth(1.1, 3, t));
-              // no canvas clip: the hard-edged doorway window read as the
-              // book "clipping off". The measured start pose already puts
-              // it small and deep inside the dark opening, so rising
-              // forward past the stone reads naturally on its own.
+            onEmerge={(rise, t, ignite) => {
+              // the tomb (persistent layer behind us) settles into its
+              // 70/40 grade through the rise, then the ignition's own
+              // flicker lights the chamber back up
+              onTombFade?.(smooth(1.1, 3, t), Math.min(1.2, ignite));
               void rise;
             }}
             onFade={(v) => {

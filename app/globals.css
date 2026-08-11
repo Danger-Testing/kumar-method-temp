@@ -726,6 +726,19 @@ body {
   will-change: opacity;
 }
 
+/* the ignition's light thrown onto the chamber: a warm wash emanating
+   from the book's position, screen-blended over the dimmed room */
+.tombGlowWash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+  background: radial-gradient(ellipse 55% 60% at 50% 55%, rgba(255, 178, 92, 0.55), rgba(255, 140, 50, 0.18) 55%, transparent 78%);
+  will-change: opacity;
+  z-index: 5;
+}
+
 .km-wakeable {
   cursor: pointer;
 }
