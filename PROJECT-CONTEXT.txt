@@ -41,11 +41,12 @@ get the work rejected:
   called cheesy. The fade+drift page turn was rejected. Heavy
   deckled page edges were rejected ("in between vintage and UI").
   Fake-feeling background circles were rejected.
-- Single-page turns are INSTANT. No animation. (Exception: the
-  two-page spread mode uses a fast 3D leaf flip around the spine —
-  740ms, cubic-bezier(0.32, 0.04, 0.14, 1) — because it mimics a
-  real book leaf. That was requested: "really fast and really
-  majestic.")
+- Single-page turns: INSTANT on tap/click/keys; a quick leaf CURL on
+  SWIPE (520ms, hinged at the spine edge — owner request 2026-08-11
+  for the mobile feel). The two-page spread keeps its 740ms leaf
+  flip ("really fast and really majestic"). Mobile also gets tap
+  arrows flanking the scrubber, and text selection is suppressed on
+  coarse pointers only (desktop copy still works — deliberate).
 - ALL GLOW/LIGHT EFFECTS ARE OFF (owner call, 2026-08-11 afternoon,
   after the 3D artist reviewed): TheBook renders the artist's
   bookNew2.glb untouched — no emissive, BLOOM.intensity 0, room rig +

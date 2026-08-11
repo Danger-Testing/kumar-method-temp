@@ -86,6 +86,18 @@ body {
   cursor: pointer;
   z-index: 2;
   margin-bottom: 6vh;
+  /* the swipe curl needs depth in single-page mode too */
+  perspective: 2600px;
+}
+
+/* mobile (touch): the pages are an object, not copy — no text selection,
+   no long-press callout. Desktop keeps selection for copying a rule. */
+@media (pointer: coarse) {
+  .scene {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
 }
 
 /* an open book on wide screens: two facing leaves and a center spine */
@@ -153,6 +165,47 @@ body {
   to {
     transform: rotateY(180deg);
   }
+}
+
+/* --- the swipe curl: one full-width leaf, hinged at the spine edge.
+   Backface-hidden makes it vanish past 90°, reading as a quick curl.
+   Fires on SWIPE only; taps stay instant (taste rule). --- */
+
+.flipper.one {
+  left: 0;
+  right: 0;
+  transform-origin: left center;
+}
+
+.flipFwdOne {
+  animation: flipFwdOne 0.52s cubic-bezier(0.3, 0.05, 0.2, 1) both;
+}
+
+.flipRevOne {
+  animation: flipRevOne 0.52s cubic-bezier(0.3, 0.05, 0.2, 1) both;
+}
+
+@keyframes flipFwdOne {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(-112deg);
+  }
+}
+
+@keyframes flipRevOne {
+  from {
+    transform: rotateY(-112deg);
+  }
+  to {
+    transform: rotateY(0deg);
+  }
+}
+
+.flipFwdOne .faceFront::after,
+.flipRevOne .faceFront::after {
+  background: linear-gradient(to left, rgba(20, 12, 5, 0.28), rgba(20, 12, 5, 0) 26%);
 }
 
 .flipFace {
@@ -727,6 +780,47 @@ body {
   height: 6px;
   transform: translate(-50%, -50%) rotate(45deg);
   background: rgba(233, 214, 178, 0.9);
+}
+
+/* tap arrows flanking the scrubber (mobile-friendly page turns) */
+.pageArrow {
+  position: fixed;
+  bottom: calc(2vh + 4px);
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  padding: 0;
+  z-index: 45;
+  cursor: pointer;
+  color: rgba(233, 214, 178, 0.5);
+  transition: color 0.25s, opacity 0.3s;
+}
+
+.arrowLeft {
+  left: calc(50% - min(140px, 31vw) - 52px);
+}
+
+.arrowRight {
+  right: calc(50% - min(140px, 31vw) - 52px);
+}
+
+.pageArrow:hover,
+.pageArrow:focus-visible {
+  color: rgba(233, 214, 178, 0.95);
+}
+
+.pageArrow.scrubHidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pageArrow svg {
+  width: 11px;
+  height: 18px;
+  display: block;
 }
 
 .scrubLabel {

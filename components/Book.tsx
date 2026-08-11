@@ -302,13 +302,20 @@ export default function Book({ onBusiness }: { onBusiness?: () => void }) {
   };
 
   const go = useCallback(
-    (to: number) => {
+    (to: number, curl = false) => {
       if (to < 0) to = 0;
       if (to >= pages.length || to === current) return;
-      if (spread && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (spread && !reduced) {
         setFlip({ from: base, dir: to > current ? 1 : -1 });
         window.clearTimeout(flipTimer.current);
         flipTimer.current = window.setTimeout(() => setFlip(null), 760);
+      } else if (curl && !reduced) {
+        // swipe on a single page (the mobile reader): a quick leaf curl
+        // hinged at the spine edge. Taps stay INSTANT per the taste rule.
+        setFlip({ from: base, dir: to > current ? 1 : -1 });
+        window.clearTimeout(flipTimer.current);
+        flipTimer.current = window.setTimeout(() => setFlip(null), 540);
       }
       setCurrent(to);
       setHasTurned(true);
@@ -359,7 +366,7 @@ export default function Book({ onBusiness }: { onBusiness?: () => void }) {
     const dy = e.changedTouches[0].clientY - touchStart.current.y;
     touchStart.current = null;
     if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-      go(dx < 0 ? base + step : base - step);
+      go(dx < 0 ? base + step : base - step, true);
     }
   };
 
@@ -377,7 +384,15 @@ export default function Book({ onBusiness }: { onBusiness?: () => void }) {
         {(() => {
           // while a leaf is mid-flip, the layers underneath already show the
           // pages that will be revealed when it lands
-          const underLeft = flip ? (flip.dir === 1 ? flip.from : flip.from - 2) : base;
+          const underLeft = flip
+            ? spread
+              ? flip.dir === 1
+                ? flip.from
+                : flip.from - 2
+              : flip.dir === 1
+                ? flip.from + 1
+                : flip.from
+            : base;
           const underRight = flip ? (flip.dir === 1 ? flip.from + 3 : flip.from + 1) : base + 1;
           const ok = (i: number) => i >= 0 && i < pages.length;
           return (
@@ -398,6 +413,25 @@ export default function Book({ onBusiness }: { onBusiness?: () => void }) {
                     animClass={hasTurned ? "" : "enterFirst"}
                     side="right"
                   />
+                </div>
+              )}
+              {!spread && flip && (
+                // the swipe curl: one full-width leaf hinged at the spine
+                // edge. Keyed per turn — a reused node never restarts its
+                // CSS animation (the old spread-flipper bug).
+                <div
+                  className={`flipper one ${flip.dir === 1 ? "flipFwdOne" : "flipRevOne"}`}
+                  key={`flip1-${flip.from}-${flip.dir}`}
+                >
+                  <div className="flipFace faceFront">
+                    {ok(flip.dir === 1 ? flip.from : flip.from - 1) && (
+                      <PageLeaf
+                        index={flip.dir === 1 ? flip.from : flip.from - 1}
+                        animClass=""
+                        side="single"
+                      />
+                    )}
+                  </div>
                 </div>
               )}
               {spread && flip && (
@@ -519,6 +553,46 @@ export default function Book({ onBusiness }: { onBusiness?: () => void }) {
           {base + 1} / {pages.length}
         </div>
       </div>
+
+      {/* tap arrows flanking the scrubber — appear with it */}
+      <button
+        className={`pageArrow arrowLeft ${hasTurned ? "" : "scrubHidden"}`}
+        aria-label="Previous page"
+        onClick={(e) => {
+          e.stopPropagation();
+          go(base - step);
+        }}
+      >
+        <svg viewBox="0 0 12 20" aria-hidden="true">
+          <path
+            d="M9.5 2.5 L3.5 10 L9.5 17.5"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </svg>
+      </button>
+      <button
+        className={`pageArrow arrowRight ${hasTurned ? "" : "scrubHidden"}`}
+        aria-label="Next page"
+        onClick={(e) => {
+          e.stopPropagation();
+          go(base + step);
+        }}
+      >
+        <svg viewBox="0 0 12 20" aria-hidden="true">
+          <path
+            d="M2.5 2.5 L8.5 10 L2.5 17.5"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </svg>
+      </button>
 
     </main>
   );
