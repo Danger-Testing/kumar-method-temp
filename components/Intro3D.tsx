@@ -542,12 +542,12 @@ function IntroScene({
       const tau = t - E;
       if (tau > 0) {
         const peak = 0.65;
-        if (tau < 0.28) {
-          boom = peak * (1 - Math.pow(1 - tau / 0.28, 3));
+        if (tau < 0.18) {
+          boom = peak * (1 - Math.pow(1 - tau / 0.18, 3));
         } else {
           // single clean return — no oscillation, no squash (the ringing
-          // spring read as too dramatic)
-          boom = peak * Math.exp(-(tau - 0.28) * 4);
+          // spring read as too dramatic); quick: settled in ~0.4s
+          boom = peak * Math.exp(-(tau - 0.18) * 7);
         }
       }
     }
