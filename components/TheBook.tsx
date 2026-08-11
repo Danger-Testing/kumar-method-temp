@@ -52,14 +52,18 @@ export function BookLights({ plain, sweep = false }: { plain: boolean; sweep?: b
     if (!light) return;
     if (start.current === null) start.current = clock.getElapsedTime();
     const tm = clock.getElapsedTime() - start.current;
-    // the flashlight tilt: aimed at the floor while the book emerges,
-    // then swept up to find the cover as it settles (sweep=false —
-    // e.g. the closed-book view — holds full aim from the first frame)
-    const x = sweep ? Math.min(1, Math.max(0, (tm - 1.5) / 1.2)) : 1;
-    const aim = x * x * (3 - 2 * x);
+    // the flashlight pans up and down FOREVER — a slow lighthouse pass
+    // over the book, floor to cover and back, ~4.5s per cycle
+    // (sweep=false — e.g. the closed-book view — holds full aim)
+    const aim = sweep
+      ? tm < 1.5
+        ? 0
+        : (1 - Math.cos(((tm - 1.5) * Math.PI * 2) / 4.5)) / 2
+      : 1;
     target.position.set(0, -4.2 * (1 - aim), 0);
     light.target = target;
-    light.intensity = 0.25 + 1.45 * aim;
+    // softer at full aim — the center hotspot was too harsh
+    light.intensity = 0.25 + 1.0 * aim;
   });
 
   return plain ? (
@@ -68,7 +72,7 @@ export function BookLights({ plain, sweep = false }: { plain: boolean; sweep?: b
     <>
       {/* dim gold candlelight; the key's on-axis END angle stays sacred —
           only its aim animates, floor → cover */}
-      <ambientLight intensity={0.45} color="#f6e3bd" />
+      <ambientLight intensity={0.52} color="#f6e3bd" />
       <directionalLight ref={key} position={[0, 0.5, 5]} intensity={1.7} color="#ffd98f" />
       <primitive object={target} />
     </>
