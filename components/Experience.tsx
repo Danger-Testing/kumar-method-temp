@@ -77,6 +77,10 @@ export default function Experience() {
               />
             </div>
           </main>
+          {/* first-visit affordance: mobile testers reported "no book"
+              because the landing gave no reason to tap. Fades in after a
+              beat; gone the moment the tomb wakes. */}
+          {phase === "tomb" && <div className="enterHint">tap to enter</div>}
         </div>
       )}
 
