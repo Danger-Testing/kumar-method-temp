@@ -385,23 +385,13 @@ export function GlbBook({
   }, [scene]);
 
   useEffect(() => {
-    // NO glow, no emissive at all — the ramp mark is simply PAINTED blue:
-    // the covers atlas is swapped for an offline-authored copy where only
-    // the stencil-verified ramp pixels are tinted (luminance preserved, so
-    // the embossing shading survives); every other pixel is untouched.
-    // Authored per the recalibration protocol — regenerate offline if
-    // book.glb ever changes.
-    const recolored = new THREE.TextureLoader().load("/masks/book-outer-rampblue.jpg");
-    recolored.flipY = false; // glTF UV convention — must match the atlas
-    recolored.colorSpace = THREE.SRGBColorSpace;
-    recolored.anisotropy = 16;
-    // shine, not glow: the same stencil applied to the metallicRoughness
-    // map turns the ramp pixels foil-like (roughness 0.14, metalness 0.75)
-    // so they catch and slide the room's light as the book turns. Leather
-    // channels are byte-identical. MR maps are non-color data — no SRGB.
-    const shine = new THREE.TextureLoader().load("/masks/book-outer-mr-shine.png");
-    shine.flipY = false;
-    shine.anisotropy = 16;
+    // The GLB renders its UNTOUCHED original materials: no emissive, no
+    // recolor, no shine (owner call, night of 2026-08-11 — the glow read
+    // blurry, the recolor was loved but pulled with it, the foil shine
+    // brought the muffled look back). The authored stencils survive in
+    // public/masks/ (ramp-glow.png, book-outer-rampblue.jpg,
+    // book-outer-mr-shine.png) for the morning's iteration. Only texture
+    // sampling hygiene is applied here.
     mats.forEach((m) => {
       // sharper sampling at glancing angles on the asset's own maps —
       // these are already on the GPU, so the sampler must be re-uploaded
@@ -411,15 +401,6 @@ export function GlbBook({
           tex.needsUpdate = true;
         }
       });
-      if (m.name !== "Book_Outer") return; // only the covers atlas is recolored
-      if (m.map) {
-        recolored.wrapS = shine.wrapS = m.map.wrapS;
-        recolored.wrapT = shine.wrapT = m.map.wrapT;
-      }
-      m.map = recolored;
-      m.roughnessMap = shine;
-      m.metalnessMap = shine;
-      m.needsUpdate = true;
     });
   }, [mats]);
 
