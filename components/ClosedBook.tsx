@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import { TheBook, BookLights, igniteDrive, ribbonPin } from "@/components/TheBook";
-import BookBanner from "@/components/BookBanner";
+import BookBanner, { bannerTapGuard } from "@/components/BookBanner";
 
 const PIN = new THREE.Vector3();
 
@@ -113,6 +113,9 @@ export default function ClosedBook({
       ref={rootRef}
       className={`closedBook ${active ? "" : "closedStandby"}`}
       onPointerDown={(e) => {
+        // touches on the ribbon are the ribbon's (WebKit can route
+        // them here despite the banner's own stopPropagation)
+        if (bannerTapGuard(e.currentTarget, e.clientX, e.clientY)) return;
         e.currentTarget.setPointerCapture(e.pointerId);
         drag.current = { x: e.clientX, y: e.clientY, moved: 0 };
       }}
@@ -127,9 +130,11 @@ export default function ClosedBook({
         spinRef.current.vy = dx * 0.004;
         spinRef.current.vx = dy * 0.003;
       }}
-      onPointerUp={() => {
-        // a tap, not a drag, opens the book
-        if (drag.current && drag.current.moved < 8) onOpen();
+      onPointerUp={(e) => {
+        // a tap, not a drag, opens the book — never from the ribbon
+        if (drag.current && drag.current.moved < 8 && !bannerTapGuard(e.currentTarget, e.clientX, e.clientY, true)) {
+          onOpen();
+        }
         drag.current = null;
       }}
       onPointerCancel={() => {

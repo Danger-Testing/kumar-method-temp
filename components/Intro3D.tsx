@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture, useGLTF, Html } from "@react-three/drei";
 import { TheBook, BookLights, IGNITE_FULL, ribbonPin } from "@/components/TheBook";
-import BookBanner from "@/components/BookBanner";
+import BookBanner, { bannerTapGuard } from "@/components/BookBanner";
 
 const PIN = new THREE.Vector3();
 
@@ -804,9 +804,12 @@ export default function Intro3D({
     <div
       ref={rootRef}
       className={`introRoot ${emerge ? "overTomb" : ""}`}
-      onClick={() => {
+      onClick={(e) => {
         const g = holdGate.current;
         if (g.holding && !g.released) {
+          // taps on the ribbon belong to the ribbon (WebKit can route
+          // them here despite the banner's own stopPropagation)
+          if (bannerTapGuard(e.currentTarget, e.clientX, e.clientY, true)) return;
           // the held book: this click opens it (releases the dive)
           g.released = true;
           setHolding(false);

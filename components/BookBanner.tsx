@@ -12,6 +12,39 @@ import { useLayoutEffect, useRef, useState } from "react";
    perspective with the book. The canvas paints the book OVER it
    (z-order), so it emerges from behind the back cover. */
 
+/** Scene-container guard (defense in depth): the ribbon's own
+    stopPropagation lives inside drei's separate React root, and WebKit
+    is known to mis-hit-test 3D-transformed DOM — either can leak a tap
+    on the email field into "open the book". The containers call this
+    with the tap point: inside the paper's screen rect → swallow the
+    tap, and hand focus/submit to the controls if the engine didn't. */
+export function bannerTapGuard(root: HTMLElement, x: number, y: number, act = false): boolean {
+  const paper = root.querySelector(".bannerPaper");
+  if (!paper) return false;
+  const r = paper.getBoundingClientRect();
+  if (x < r.left || x > r.right || y < r.top || y > r.bottom) return false;
+  // act: route the tap to the control by hand (once per tap — the UP
+  // phase), in case the engine never delivered it
+  if (act) {
+    const input = root.querySelector<HTMLInputElement>(".bannerForm input");
+    if (input) {
+      const ir = input.getBoundingClientRect();
+      if (x >= ir.left - 6 && x <= ir.right + 6 && y >= ir.top - 10 && y <= ir.bottom + 10) {
+        if (document.activeElement !== input) input.focus();
+        return true;
+      }
+    }
+    const button = root.querySelector<HTMLButtonElement>(".bannerForm button");
+    if (button) {
+      const br = button.getBoundingClientRect();
+      if (x >= br.left - 6 && x <= br.right + 6 && y >= br.top - 10 && y <= br.bottom + 10) {
+        button.click();
+      }
+    }
+  }
+  return true;
+}
+
 /** the engraved gold hairline that follows the swallowtail outline —
     drawn from the paper's measured box so it tracks the notch */
 function GoldFrame({ paper }: { paper: React.RefObject<HTMLDivElement | null> }) {
