@@ -3,11 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
-import { TheBook, BookLights, igniteDrive, ribbonPin, bookRect } from "@/components/TheBook";
-import BookBanner, { bannerTapGuard } from "@/components/BookBanner";
+import { TheBook, BookLights, igniteDrive, bookRect } from "@/components/TheBook";
 
-const PIN = new THREE.Vector3();
 const RECT = { l: 0, t: 0, r: 0, b: 0 };
 
 /** coarse pointer ≈ phone/tablet: render leaner there (mirrors Intro3D) */
@@ -22,20 +19,14 @@ function isCoarse(): boolean {
 function SpinnableBook({
   spinRef,
   plain,
-  portalEl,
   hotspotEl,
 }: {
   spinRef: React.MutableRefObject<{ vx: number; vy: number; rx: number; ry: number }>;
   plain: boolean;
-  /** where the ribbon's DOM portals to (the scene root — NOT the
-      canvas wrapper, whose pointer-events are nuked) */
-  portalEl: React.MutableRefObject<HTMLDivElement>;
   /** the cursor hotspot over the book — repositioned every frame */
   hotspotEl: React.MutableRefObject<HTMLDivElement>;
 }) {
   const group = useRef<THREE.Group>(null);
-  const ribbon = useRef<THREE.Group>(null);
-  const swing = useRef({ x: 0, y: 0 });
   const igniteRef = useRef(0);
 
   useFrame(({ clock, camera, size }) => {
@@ -62,21 +53,8 @@ function SpinnableBook({
     // sparkle artifact turned out to be bump-map glints, not the glow
     igniteRef.current = plain ? 0 : igniteDrive(t);
 
-    // the ribbon: PINNED to the back cover's bottom edge, so it orbits
-    // and dips with every turn of the book. Its plane swings with the
-    // drag velocity and gravity untwists it back toward the room —
-    // cloth, not a weld (a welded plane spends most of the idle spin
-    // edge-on and the email line becomes unreadable).
-    const r = ribbon.current;
-    if (r) {
-      ribbonPin(g, camera, PIN);
-      r.position.copy(PIN);
-      const sw = swing.current;
-      sw.y += (THREE.MathUtils.clamp(s.vy * 26, -0.6, 0.6) - sw.y) * 0.07;
-      sw.x += (THREE.MathUtils.clamp(-s.vx * 16, -0.3, 0.3) - sw.x) * 0.07;
-      r.rotation.set(sw.x, sw.y, sw.y * -0.12);
-      r.scale.setScalar(0.92);
-    }
+    // (the ribbon lives on the intro hold only — removed here at the
+    // owner's call, 2026-08-12: the dismissed room doesn't need it)
 
     // the cursor hotspot hugs the book: pointer over the tome only
     if (hotspotEl.current) {
@@ -94,13 +72,6 @@ function SpinnableBook({
       <BookLights plain={plain} />
       <group ref={group} scale={0.92}>
         <TheBook igniteRef={igniteRef} plain={plain} />
-      </group>
-      <group ref={ribbon}>
-        <Html transform distanceFactor={1} zIndexRange={[1, 1]} portal={portalEl} wrapperClass="bannerWrap3d">
-          <div className="bannerHang">
-            <BookBanner />
-          </div>
-        </Html>
       </group>
     </>
   );
@@ -120,17 +91,12 @@ export default function ClosedBook({
 }) {
   const spinRef = useRef({ vx: 0, vy: 0, rx: 0, ry: 0 });
   const drag = useRef<{ x: number; y: number; moved: number } | null>(null);
-  const rootRef = useRef<HTMLDivElement>(null!);
   const hotspotRef = useRef<HTMLDivElement>(null!);
 
   return (
     <div
-      ref={rootRef}
       className={`closedBook ${active ? "" : "closedStandby"}`}
       onPointerDown={(e) => {
-        // touches on the ribbon are the ribbon's (WebKit can route
-        // them here despite the banner's own stopPropagation)
-        if (bannerTapGuard(e.currentTarget, e.clientX, e.clientY)) return;
         e.currentTarget.setPointerCapture(e.pointerId);
         drag.current = { x: e.clientX, y: e.clientY, moved: 0 };
       }}
@@ -147,9 +113,8 @@ export default function ClosedBook({
       }}
       onPointerUp={(e) => {
         // a tap, not a drag, opens the book — and only a tap ON the
-        // book (owner, 2026-08-12); the ribbon and the room around it
-        // do nothing
-        if (drag.current && drag.current.moved < 8 && !bannerTapGuard(e.currentTarget, e.clientX, e.clientY, true)) {
+        // book (owner, 2026-08-12); the room around it does nothing
+        if (drag.current && drag.current.moved < 8) {
           const r = hotspotRef.current?.getBoundingClientRect();
           if (r && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
             onOpen();
@@ -168,12 +133,10 @@ export default function ClosedBook({
         dpr={isCoarse() ? [1, 1.5] : [1, 1.75]}
         frameloop={active ? "always" : "demand"}
       >
-        <SpinnableBook spinRef={spinRef} plain={plain} portalEl={rootRef} hotspotEl={hotspotRef} />
+        <SpinnableBook spinRef={spinRef} plain={plain} hotspotEl={hotspotRef} />
       </Canvas>
-      {/* the held-book hero copy: instruction above (book voice), and
-          below, the parchment ribbon hanging from the book — tagline +
-          email capture in one (Kendall's mock, 2026-08-12; replaced the
-          clickable tagline + modal) */}
+      {/* the held-book hero copy: just the instruction — the ribbon
+          lives on the intro hold only (owner call, 2026-08-12) */}
       <div className="closedTitle">Drag to turn it over. Tap to open.</div>
       {/* cursor hotspot: pointer over the tome, arrow elsewhere */}
       <div className="bookHotspot" ref={hotspotRef} aria-hidden="true" />
