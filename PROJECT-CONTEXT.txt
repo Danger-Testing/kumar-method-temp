@@ -384,3 +384,19 @@ the old clickable tagline):
 - Test rows to delete in Supabase leads: two "latency test - delete
   me" + banner-smoke-test-delete-me@example.com +
   banner-ui-test-delete-me@example.com.
+
+ADDENDUM 2026-08-12 (later): ribbon interaction hardening
+- ROOT CAUSE of "tapping the email field opens the book": the
+  .introCanvas wrapper (z2) was hit-testing over the ribbon (z1) and
+  bubbling taps to the intro root's release-click. Fixed with
+  pointer-events: none on .introCanvas. bannerTapGuard
+  (BookBanner.tsx) stays as the engine-agnostic backstop, called by
+  both scene containers before any open/release/drag.
+- Only the BOOK is clickable now (owner): .bookHotspot divs track the
+  book's projected rect every frame (bookRect in TheBook.tsx) — they
+  carry cursor:pointer and the containers rect-check taps against
+  them. Room = arrow cursor (grab in the closed room), paper =
+  default, field = text caret, seal = pointer.
+- The held stack settles ~6% smaller and 0.09 world higher after the
+  boom (IntroScene "settle") so the swallowtail clears the fold while
+  the book bobs.

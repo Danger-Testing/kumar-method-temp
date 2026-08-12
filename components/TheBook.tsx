@@ -38,6 +38,42 @@ export function ribbonPin(book: THREE.Object3D, camera: THREE.Camera, out: THREE
   out.copy(ay <= by ? HEM_A : HEM_B);
 }
 
+/* The book's screen-space bounding rect — drives the cursor hotspot
+   (pointer over the book ONLY; the rest of the page keeps the arrow)
+   and the tap-to-open hit test. */
+const CORNER = new THREE.Vector3();
+export function bookRect(
+  book: THREE.Object3D,
+  camera: THREE.Camera,
+  w: number,
+  h: number,
+  out: { l: number; t: number; r: number; b: number },
+): void {
+  book.updateWorldMatrix(true, false);
+  let l = Infinity;
+  let t = Infinity;
+  let r = -Infinity;
+  let b = -Infinity;
+  for (let i = 0; i < 8; i++) {
+    CORNER.set(
+      i & 1 ? BOOK_W / 2 : -BOOK_W / 2,
+      i & 2 ? BOOK_H / 2 : -BOOK_H / 2,
+      i & 4 ? BOOK_D / 2 : -BOOK_D / 2,
+    );
+    book.localToWorld(CORNER).project(camera);
+    const x = ((CORNER.x + 1) / 2) * w;
+    const y = ((1 - CORNER.y) / 2) * h;
+    if (x < l) l = x;
+    if (x > r) r = x;
+    if (y < t) t = y;
+    if (y > b) b = y;
+  }
+  out.l = l;
+  out.t = t;
+  out.r = r;
+  out.b = b;
+}
+
 /* Glow is OFF (owner call). The drive/constants remain so callers keep
    compiling — they feed a value the materials no longer consume. */
 export const IGNITE_FULL = 1.65;

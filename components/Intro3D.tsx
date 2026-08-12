@@ -4,10 +4,11 @@ import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "rea
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture, useGLTF, Html } from "@react-three/drei";
-import { TheBook, BookLights, IGNITE_FULL, ribbonPin } from "@/components/TheBook";
+import { TheBook, BookLights, IGNITE_FULL, ribbonPin, bookRect } from "@/components/TheBook";
 import BookBanner, { bannerTapGuard } from "@/components/BookBanner";
 
 const PIN = new THREE.Vector3();
+const RECT = { l: 0, t: 0, r: 0, b: 0 };
 
 /* Book proportions measured from the cover scans:
    front 700×1088, spine 230×852 → a thick, squat tome. */
@@ -507,6 +508,7 @@ function IntroScene({
   onDone,
   portalEl,
   holding = false,
+  hotspotEl,
 }: {
   emerge: boolean;
   /** inspection mode: flat white rig, no ignition, no bloom, no glow */
@@ -517,6 +519,8 @@ function IntroScene({
   portalEl?: MutableRefObject<HTMLDivElement>;
   /** drives the ribbon's heroWait fade */
   holding?: boolean;
+  /** the cursor hotspot over the book — repositioned every frame */
+  hotspotEl?: MutableRefObject<HTMLDivElement>;
   /** EXPERIMENT (owner, 2026-08-11): the book holds after arrival until
       a click releases the dive. Shared gate with the root's click. */
   holdGate?: MutableRefObject<{ holding: boolean; released: boolean }>;
@@ -652,6 +656,14 @@ function IntroScene({
       (startK + (1 - startK) * scaleEase) *
       (1 + boom);
     g.scale.setScalar(s);
+    // the held stack settles a touch smaller and higher (owner,
+    // 2026-08-12): the tail's swallowtail never dips below the fold as
+    // the book bobs. Eases in after the boom; stays through the dive.
+    if (E > 0) {
+      const settle = smooth(E + 0.9, E + 1.6, t);
+      g.position.y += 0.09 * settle;
+      g.scale.multiplyScalar(1 - 0.06 * settle);
+    }
 
     // the dolly: no let-up — it accelerates until the cover kisses the lens
     const d = easeInExpo(smooth(3.85, 5.05, tt));
@@ -710,6 +722,16 @@ function IntroScene({
       r.rotation.y = g.rotation.y * 0.3;
       // 0.9: the swallowtail's tips clear the fold on every viewport
       r.scale.setScalar(Math.max(0.001, g.scale.x) * 0.9);
+    }
+
+    // the cursor hotspot hugs the book: pointer over the tome only
+    if (hotspotEl?.current) {
+      bookRect(g, camera, size.width, size.height, RECT);
+      const el = hotspotEl.current;
+      el.style.left = `${RECT.l.toFixed(1)}px`;
+      el.style.top = `${RECT.t.toFixed(1)}px`;
+      el.style.width = `${(RECT.r - RECT.l).toFixed(1)}px`;
+      el.style.height = `${(RECT.b - RECT.t).toFixed(1)}px`;
     }
 
     if (tt >= TOTAL && !doneRef.current) {
@@ -777,6 +799,7 @@ export default function Intro3D({
   const holdGate = useRef({ holding: false, released: false });
   const [holding, setHolding] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null!);
+  const hotspotRef = useRef<HTMLDivElement>(null!);
 
   useEffect(() => {
     const skip = (e: KeyboardEvent) => {
@@ -810,6 +833,15 @@ export default function Intro3D({
           // taps on the ribbon belong to the ribbon (WebKit can route
           // them here despite the banner's own stopPropagation)
           if (bannerTapGuard(e.currentTarget, e.clientX, e.clientY, true)) return;
+          // only the BOOK opens it (owner, 2026-08-12) — clicks on the
+          // room around it do nothing during the hold
+          const hs = hotspotRef.current;
+          if (hs) {
+            const r = hs.getBoundingClientRect();
+            if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) {
+              return;
+            }
+          }
           // the held book: this click opens it (releases the dive)
           g.released = true;
           setHolding(false);
@@ -834,6 +866,7 @@ export default function Intro3D({
             onHold={() => setHolding(true)}
             portalEl={rootRef}
             holding={holding}
+            hotspotEl={hotspotRef}
             onEmerge={(rise, t, ignite, doorGlow) => {
               // the tomb (persistent layer behind us) settles into its
               // 70/40 grade through the rise, then the ignition's own
@@ -880,9 +913,13 @@ export default function Intro3D({
       {/* the ribbon itself lives INSIDE the canvas (drei Html, pinned
           to the book) — only the instruction line stays out here */}
       {emerge && (
-        <div className={`closedTitle heroWait ${holding ? "heroShow" : ""}`}>
-          Tap to open the book.
-        </div>
+        <>
+          <div className={`closedTitle heroWait ${holding ? "heroShow" : ""}`}>
+            Tap to open the book.
+          </div>
+          {/* cursor hotspot: pointer over the tome, arrow elsewhere */}
+          <div className="bookHotspot" ref={hotspotRef} aria-hidden="true" />
+        </>
       )}
     </div>
   );

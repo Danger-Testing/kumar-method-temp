@@ -914,6 +914,18 @@ video.smokeHidden {
   /* kept nearly flat: a bright center here flashes before the first
      canvas frame paints over it */
   background: radial-gradient(ellipse 70% 60% at 50% 46%, #0d0906 0%, #080504 45%, #050302 100%);
+  /* the pointer lives on .bookHotspot (the tome) — the room is not a
+     button (owner, 2026-08-12) */
+  cursor: default;
+}
+
+/* the cursor hotspot: an invisible div the scene glues to the book's
+   screen rect every frame. Pointer over the tome; it carries no
+   handlers — clicks bubble to the scene container, which does its own
+   rect check (pointer capture would eat child targets anyway). */
+.bookHotspot {
+  position: absolute;
+  z-index: 5;
   cursor: pointer;
 }
 
@@ -929,6 +941,10 @@ video.smokeHidden {
   /* explicit stack now that the ribbon (z 1) sits UNDER the book:
      canvas 2 < grain 3 < fade 4 (these used to ride DOM order) */
   z-index: 2;
+  /* hit-transparent, like .glCanvas inside it: at z2 this wrapper was
+     swallowing every tap on the ribbon beneath it — THE "tapping the
+     email field opens the book" bug */
+  pointer-events: none;
 }
 
 /* the room's answer to the ignition: builds, breathes, then detonates */
@@ -1373,6 +1389,9 @@ video.smokeHidden {
 .bannerPaper {
   position: relative;
   pointer-events: auto;
+  /* not a button: the arrow (or grab in the closed room) must not
+     read as clickable over the paper — the field and seal set their own */
+  cursor: default;
   /* top clears the 12px tuck behind the cover; bottom clears the notch */
   padding: 30px 28px 42px;
   text-align: center;
