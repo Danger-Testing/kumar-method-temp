@@ -352,3 +352,35 @@ tree state.
 ETERNALLY PENDING: the Chartered Accountant year in Chapter II
 (lib/content.ts, "in ——"). Credits/attribution screen was being
 discussed at handoff time. Supabase keep-alive decision.
+
+----------------------------------------------------------------
+ADDENDUM 2026-08-12: THE RIBBON (BookBanner)
+----------------------------------------------------------------
+Kendall asked for the tagline "fancier / in line with the site" and
+email capture on every mobile page; the owner supplied a mock of a
+parchment banner hanging from the book's bottom edge. Shipped as
+components/BookBanner.tsx (commit a657f99, revert alone to restore
+the old clickable tagline):
+
+- A swallowtail (clip-path) parchment ribbon TUCKED under the book's
+  bottom edge on the HOLD and CLOSED screens: tagline (Garamond, ink
+  #3d2c17, ramp swoosh in ink like the reader pages), ornamental
+  rule, inline "Enter your work email" + dark-red arrow submit.
+  Paper = .paper gradients + vintage.jpg multiply (same as reader).
+- Positioning: fixed, top min(calc(50% + 22svh), calc(100svh -
+  260px)) closed / 27.5svh hold — the min() floor stops the tails
+  clipping below the fold on phones (they DID clip before it).
+- The clickable tagline + modal are GONE from hold/closed; the
+  reader's corner tagline still opens EnterpriseAccessModal. The
+  leads route now requires ONLY email (banner rows get "—" for
+  name/company — tell Marc before he wonders about the dashes).
+- All banner pointer events stopPropagation: clicks must not release
+  the intro hold or read as tap-to-open on the closed book. The
+  texture ::before would eat input clicks — the form is z:1 relative
+  above it. Verified via headless Chromium (playwright-core +
+  ~/Library/Caches/ms-playwright chromium): hold/closed, phone/
+  desktop, focus, typing, submit success ("Thanks — we'll be in
+  touch shortly.").
+- Test rows to delete in Supabase leads: two "latency test - delete
+  me" + banner-smoke-test-delete-me@example.com +
+  banner-ui-test-delete-me@example.com.
