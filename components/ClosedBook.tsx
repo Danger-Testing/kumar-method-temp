@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { TheBook, BookLights, igniteDrive } from "@/components/TheBook";
-import BookBanner from "@/components/BookBanner";
+import BookBanner, { driveBanner } from "@/components/BookBanner";
 
 /** coarse pointer ≈ phone/tablet: render leaner there (mirrors Intro3D) */
 function isCoarse(): boolean {
@@ -18,14 +18,18 @@ function isCoarse(): boolean {
 function SpinnableBook({
   spinRef,
   plain,
+  bannerEl,
 }: {
   spinRef: React.MutableRefObject<{ vx: number; vy: number; rx: number; ry: number }>;
   plain: boolean;
+  /** the DOM ribbon hanging off the book — repositioned every frame */
+  bannerEl: React.RefObject<HTMLDivElement | null>;
 }) {
   const group = useRef<THREE.Group>(null);
   const igniteRef = useRef(0);
+  const bannerSm = useRef({ x: 0, y: 0, w: 0 });
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock, camera, size }) => {
     const g = group.current;
     if (!g) return;
     const t = clock.getElapsedTime();
@@ -48,6 +52,9 @@ function SpinnableBook({
     // ONE glow: the canonical drive from TheBook — restored after the
     // sparkle artifact turned out to be bump-map glints, not the glow
     igniteRef.current = plain ? 0 : igniteDrive(t);
+
+    // the ribbon rides the book: bob, drag-spin, everything
+    if (bannerEl.current) driveBanner(bannerEl.current, g, camera, size, bannerSm.current);
   });
 
   return (
@@ -75,6 +82,7 @@ export default function ClosedBook({
 }) {
   const spinRef = useRef({ vx: 0, vy: 0, rx: 0, ry: 0 });
   const drag = useRef<{ x: number; y: number; moved: number } | null>(null);
+  const bannerRef = useRef<HTMLDivElement>(null);
 
   return (
     <div
@@ -104,19 +112,20 @@ export default function ClosedBook({
       }}
     >
       <Canvas
+        className="glCanvas"
         camera={{ position: [0, 0, 4.15], fov: 40 }}
         gl={{ antialias: true }}
         dpr={isCoarse() ? [1, 1.5] : [1, 1.75]}
         frameloop={active ? "always" : "demand"}
       >
-        <SpinnableBook spinRef={spinRef} plain={plain} />
+        <SpinnableBook spinRef={spinRef} plain={plain} bannerEl={bannerRef} />
       </Canvas>
       {/* the held-book hero copy: instruction above (book voice), and
           below, the parchment ribbon hanging from the book — tagline +
           email capture in one (Kendall's mock, 2026-08-12; replaced the
           clickable tagline + modal) */}
       <div className="closedTitle">Drag to turn it over. Tap to open.</div>
-      <BookBanner />
+      <BookBanner outerRef={bannerRef} />
     </div>
   );
 }

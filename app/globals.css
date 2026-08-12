@@ -933,6 +933,9 @@ video.smokeHidden {
   position: absolute;
   inset: 0;
   will-change: filter;
+  /* explicit stack now that the ribbon (z 1) sits UNDER the book:
+     canvas 2 < grain 3 < fade 4 (these used to ride DOM order) */
+  z-index: 2;
 }
 
 /* the room's answer to the ignition: builds, breathes, then detonates */
@@ -955,6 +958,7 @@ video.smokeHidden {
 .introGrain {
   position: absolute;
   inset: 0;
+  z-index: 3;
   pointer-events: none;
   opacity: 0;
   mix-blend-mode: overlay;
@@ -984,6 +988,7 @@ video.smokeHidden {
 .introFade {
   position: absolute;
   inset: 0;
+  z-index: 4;
   background: radial-gradient(circle at 50% 50%, #ffedc4 0%, #eccb85 38%, #331b0a 100%);
   opacity: 0;
   pointer-events: none;
@@ -1295,27 +1300,42 @@ video.smokeHidden {
    screens (that block stays above for easy revert).
    ---------------------------------------------------------------- */
 
+/* the canvas paints the book OVER the ribbon (it emerges from BEHIND,
+   the owner's z-order note) and never intercepts input — every scene
+   already handles pointers on its container, and r3f writes INLINE
+   pointer-events on the canvas, hence the !important */
+.glCanvas {
+  z-index: 2;
+}
+
+.glCanvas,
+.glCanvas * {
+  pointer-events: none !important;
+}
+
 .bookBanner {
   position: fixed;
+  /* placement + width are written EVERY FRAME by driveBanner
+     (BookBanner.tsx) from the 3D book's projected bottom edge — the
+     ribbon rides the bob, the drag-spin, and the dive. These are the
+     first-frame fallbacks only. */
   left: 50%;
   transform: translateX(-50%);
-  /* tucks ~3svh under the book's bottom edge (closed half ≈ 25svh);
-     the cast-shadow gradient at the paper's top sells the emergence.
-     The second term is a floor: on short screens the ribbon rides up
-     the book instead of clipping its tails below the fold. */
   top: min(calc(50% + 22svh), calc(100svh - 260px));
   width: min(40svh, 500px, 94vw);
-  z-index: 94; /* under the instruction line's 95, over the canvas */
+  /* the type inside scales with the ribbon (cqi), which scales with
+     the book */
+  container-type: inline-size;
+  z-index: 1; /* UNDER the canvas (2): the book overlaps the ribbon */
   pointer-events: none; /* the paper re-enables */
   filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.55)) drop-shadow(0 3px 8px rgba(0, 0, 0, 0.45));
   opacity: 0;
   animation: heroCopyIn 1.3s ease 0.35s forwards;
 }
 
-/* the intro hold shows the book ~22% larger — hang from ITS edge, and
-   fade with the hold (heroWait transition) instead of the mount anim */
+/* the intro hold: fade with the hold (heroWait transition) instead of
+   the mount anim */
 .bookBanner.heroWait {
-  top: min(calc(50% + 27.5svh), calc(100svh - 260px));
   animation: none;
 }
 
@@ -1333,7 +1353,9 @@ video.smokeHidden {
 .bannerPaper {
   position: relative;
   pointer-events: auto;
-  padding: 30px 26px 46px; /* bottom clears the tail notch */
+  /* top 38px = 16px resting tuck + up to 18px short-screen bury (see
+     driveBanner) + a 4px cushion; bottom clears the tail notch */
+  padding: 38px 5cqi 36px;
   text-align: center;
   color: #3d2c17;
   background:
@@ -1341,7 +1363,7 @@ video.smokeHidden {
     radial-gradient(120% 85% at 50% 30%, rgba(255, 250, 233, 0.5), rgba(255, 250, 233, 0) 70%),
     linear-gradient(104deg, #cdb488 0%, #e5d6b2 10%, #ecdfc0 30%, #f0e5c9 50%, #eaddbb 74%, #ddcba1 92%, #c3a976 100%),
     #e9dcbc;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 24px), 0 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 22px), 0 100%);
 }
 
 /* the aged-paper scan, multiplied over everything static — same
@@ -1359,8 +1381,10 @@ video.smokeHidden {
 
 .bannerLines {
   font-family: var(--font-garamond), Georgia, serif;
-  font-size: clamp(15px, 2.05svh, 19px);
-  line-height: 1.55;
+  /* 5.4cqi: the life line ("Use The Kumar Method...") just fits on one
+     line at every ribbon width */
+  font-size: clamp(13px, 5.4cqi, 19px);
+  line-height: 1.45;
 }
 
 .bannerLines .bLife {
@@ -1377,7 +1401,7 @@ video.smokeHidden {
   align-items: center;
   gap: 10px;
   width: 74%;
-  margin: 10px auto 14px;
+  margin: 8px auto 11px;
   color: rgba(94, 66, 32, 0.8);
 }
 
@@ -1423,7 +1447,7 @@ video.smokeHidden {
   border: 1px solid rgba(94, 66, 32, 0.55);
   border-right: 0;
   border-radius: 2px 0 0 2px;
-  padding: 9px 12px;
+  padding: 8px 12px;
   outline: none;
 }
 
@@ -1485,16 +1509,9 @@ video.smokeHidden {
   color: #7a1d10;
 }
 
-/* short screens: the ribbon compresses instead of clipping its tails */
-@media (max-height: 700px) {
-  .bannerPaper {
-    padding: 24px 22px 40px;
-  }
-
-  .bannerRule {
-    margin: 8px auto 10px;
-  }
-}
+/* (short screens need no special case: driveBanner floors the ribbon's
+   position so the tails stay above the fold, tucking the top deeper
+   behind the book instead) */
 
 /* (the lights toggle and glow slider lived here — retired 2026-08-11
    once the owner dialed the final glow level; lights are on, period) */
