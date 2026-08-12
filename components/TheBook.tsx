@@ -19,6 +19,25 @@ export const BOOK_H = 1.65;
 export const BOOK_W = BOOK_H * (700 / 1088);
 export const BOOK_D = BOOK_H * (230 / 852) * 0.9;
 
+/* The ribbon's pin. The banner hangs from the book's bottom HEM — the
+   bottom edge (front or back cover) that currently reads LOWEST on
+   screen, so the paper always begins at the silhouette instead of
+   being swallowed when the book pitches (a fixed back-cover pin hid
+   the tagline: the pitched front cover projects ~20px lower). */
+const HEM_A = new THREE.Vector3();
+const HEM_B = new THREE.Vector3();
+const HEM_PRJ = new THREE.Vector3();
+export function ribbonPin(book: THREE.Object3D, camera: THREE.Camera, out: THREE.Vector3): void {
+  book.updateWorldMatrix(true, false);
+  HEM_A.set(0, -BOOK_H / 2, BOOK_D / 2);
+  book.localToWorld(HEM_A);
+  HEM_B.set(0, -BOOK_H / 2, -BOOK_D / 2);
+  book.localToWorld(HEM_B);
+  const ay = HEM_PRJ.copy(HEM_A).project(camera).y;
+  const by = HEM_PRJ.copy(HEM_B).project(camera).y;
+  out.copy(ay <= by ? HEM_A : HEM_B);
+}
+
 /* Glow is OFF (owner call). The drive/constants remain so callers keep
    compiling — they feed a value the materials no longer consume. */
 export const IGNITE_FULL = 1.65;

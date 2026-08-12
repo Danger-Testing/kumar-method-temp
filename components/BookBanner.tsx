@@ -1,87 +1,52 @@
 "use client";
 
-import { useState } from "react";
-import * as THREE from "three";
-import { BOOK_H, BOOK_W, BOOK_D } from "@/components/TheBook";
-
-/* scratch vectors for driveBanner — never allocate in a frame loop */
-const ANCHOR = new THREE.Vector3();
-const WORLD_SCALE = new THREE.Vector3();
-
-export type BannerSmooth = { x: number; y: number; w: number };
-
-/** Called from a scene's useFrame: glues the DOM ribbon to the 3D
-    book's bottom edge (back cover), so every movement of the book —
-    bob, drag-spin, the dive — carries the ribbon with it. The lerp
-    gives it a slight cloth lag instead of a rigid weld. */
-export function driveBanner(
-  el: HTMLDivElement,
-  book: THREE.Group,
-  camera: THREE.Camera,
-  size: { width: number; height: number },
-  sm: BannerSmooth,
-) {
-  book.updateWorldMatrix(true, false);
-  // the attachment point: bottom-center of the BACK cover
-  ANCHOR.set(0, -BOOK_H / 2, -BOOK_D / 2);
-  book.localToWorld(ANCHOR);
-  // px-per-world-unit at the anchor's depth — the ribbon keeps the
-  // BOOK's width (not the projected edge, which thins when it yaws)
-  const cam = camera as THREE.PerspectiveCamera;
-  const dist = ANCHOR.distanceTo(camera.position);
-  const pxPerWorld = size.height / (2 * dist * Math.tan((cam.fov * Math.PI) / 360));
-  const w = Math.min(
-    size.width * 0.94,
-    Math.max(240, BOOK_W * book.getWorldScale(WORLD_SCALE).x * pxPerWorld * 0.94),
-  );
-  ANCHOR.project(camera);
-  const ax = ((ANCHOR.x + 1) / 2) * size.width;
-  const ay = ((1 - ANCHOR.y) / 2) * size.height;
-  const h = el.offsetHeight || 220;
-  // tucked 16px behind the cover (the canvas paints the book OVER the
-  // ribbon's top). On short viewports the ribbon buries up to 18px
-  // MORE of its blank top parchment (the paper's 38px top padding is
-  // the budget — the tagline itself must never go under the book);
-  // any remainder just clips the tail tips at the fold.
-  const attachY = ay - 16;
-  const overflow = attachY + h - (size.height - 4);
-  const ty = overflow > 0 ? attachY - Math.min(overflow, 18) : attachY;
-  if (sm.w === 0) {
-    sm.x = ax;
-    sm.y = ty;
-    sm.w = w;
-  }
-  sm.x += (ax - sm.x) * 0.16;
-  sm.y += (ty - sm.y) * 0.16;
-  sm.w += (w - sm.w) * 0.16;
-  el.style.left = "0";
-  el.style.top = "0";
-  el.style.width = `${sm.w.toFixed(1)}px`;
-  el.style.transform = `translate3d(${(sm.x - sm.w / 2).toFixed(1)}px, ${sm.y.toFixed(1)}px, 0)`;
-}
+import { useLayoutEffect, useRef, useState } from "react";
 
 /* The ribbon (Kendall's mock, 2026-08-12): a parchment banner hanging
    from the bottom edge of the held book — the tagline in the book's
-   own paper, an ornamental rule, and the email capture inline. It
-   replaces the clickable-tagline + modal path on the hold and closed
-   screens, so every screen with the book carries lead capture,
-   phones included. */
+   own paper, an ornamental rule, and the email capture inline.
+
+   It renders INSIDE the 3D scene via drei's <Html transform>, parented
+   to the book's bottom-center anchor (see the ribbon groups in
+   Intro3D/ClosedBook) — so it turns, sways and dives in real
+   perspective with the book. The canvas paints the book OVER it
+   (z-order), so it emerges from behind the back cover. */
+
+/** the engraved gold hairline that follows the swallowtail outline —
+    drawn from the paper's measured box so it tracks the notch */
+function GoldFrame({ paper }: { paper: React.RefObject<HTMLDivElement | null> }) {
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  useLayoutEffect(() => {
+    const el = paper.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setBox({ w: el.offsetWidth, h: el.offsetHeight }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [paper]);
+  if (!box.w) return null;
+  const { w, h } = box;
+  const i = 10; // frame inset; the paper's notch is 22px deep
+  const d = `M ${i} ${i} L ${w - i} ${i} L ${w - i} ${h - i - 8} L ${w / 2} ${h - 30} L ${i} ${h - i - 8} Z`;
+  return (
+    <svg className="bannerFrame" width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
+      <path d={d} />
+    </svg>
+  );
+}
+
 export default function BookBanner({
   hold = false,
   show = true,
-  outerRef,
 }: {
   /** intro-hold variant: fades in/out with the hold instead of the
       mount animation */
   hold?: boolean;
   /** hold only: visible while the hold lasts */
   show?: boolean;
-  /** the scene writes this element's position/width every frame via
-      driveBanner — the ribbon rides the book */
-  outerRef?: React.RefObject<HTMLDivElement | null>;
 }) {
   const [status, setStatus] = useState<"idle" | "pending" | "ok" | "error">("idle");
   const [error, setError] = useState("");
+  const paperRef = useRef<HTMLDivElement>(null);
 
   // the paper must never read as a tap on the book behind it: taps on
   // the closed book open the reader, clicks on the intro root release
@@ -120,8 +85,12 @@ export default function BookBanner({
   }
 
   return (
-    <div ref={outerRef} className={`bookBanner ${hold ? `heroWait ${show ? "heroShow" : ""}` : ""}`}>
-      <div className="bannerPaper" onPointerDown={stop} onPointerUp={stop} onClick={stop}>
+    <div className={`bookBanner ${hold ? `heroWait ${show ? "heroShow" : ""}` : ""}`}>
+      <div className="bannerPaper" ref={paperRef} onPointerDown={stop} onPointerUp={stop} onClick={stop}>
+        {/* baked handmade-paper relief (PIL, from the reader's aged
+            scan) — the mock's stucco-like tooth */}
+        <span className="bannerRelief" aria-hidden="true" />
+        <GoldFrame paper={paperRef} />
         <div className="bannerLines">
           <span className="bLife">Use The Kumar Method to run your life.</span>
           <span className="bBiz">
@@ -130,7 +99,9 @@ export default function BookBanner({
           </span>
         </div>
         <div className="bannerRule" aria-hidden="true">
+          <b />
           <i />
+          <b />
         </div>
         {status === "ok" ? (
           <p className="bannerNote">Thanks — we&rsquo;ll be in touch shortly.</p>

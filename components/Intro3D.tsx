@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useTexture, useGLTF } from "@react-three/drei";
-import { TheBook, BookLights, IGNITE_FULL } from "@/components/TheBook";
-import BookBanner, { driveBanner } from "@/components/BookBanner";
+import { useTexture, useGLTF, Html } from "@react-three/drei";
+import { TheBook, BookLights, IGNITE_FULL, ribbonPin } from "@/components/TheBook";
+import BookBanner from "@/components/BookBanner";
+
+const PIN = new THREE.Vector3();
 
 /* Book proportions measured from the cover scans:
    front 700×1088, spine 230×852 → a thick, squat tome. */
@@ -503,14 +505,18 @@ function IntroScene({
   onAtmos,
   onEmerge,
   onDone,
-  bannerEl,
+  portalEl,
+  holding = false,
 }: {
   emerge: boolean;
   /** inspection mode: flat white rig, no ignition, no bloom, no glow */
   plain?: boolean;
   holeRef?: MutableRefObject<HoleRect | null>;
-  /** the DOM ribbon hanging off the book — repositioned every frame */
-  bannerEl?: MutableRefObject<HTMLDivElement | null>;
+  /** where the ribbon's DOM portals to (the intro root — NOT the
+      canvas wrapper, whose pointer-events are nuked) */
+  portalEl?: MutableRefObject<HTMLDivElement>;
+  /** drives the ribbon's heroWait fade */
+  holding?: boolean;
   /** EXPERIMENT (owner, 2026-08-11): the book holds after arrival until
       a click releases the dive. Shared gate with the root's click. */
   holdGate?: MutableRefObject<{ holding: boolean; released: boolean }>;
@@ -522,13 +528,13 @@ function IntroScene({
   onDone: (finished: boolean) => void;
 }) {
   const group = useRef<THREE.Group>(null);
+  const ribbon = useRef<THREE.Group>(null);
   const igniteRef = useRef(0); // timeline units (0..~1.15), for the tomb callbacks
   const bookIgnite = useRef(0); // canonical units for TheBook (timeline × IGNITE_FULL)
   const emergeShade = useRef(1);
   const doneRef = useRef(false);
   const startRef = useRef<number | null>(null);
   const heldFor = useRef<number | null>(null); // hold duration, once released
-  const bannerSm = useRef({ x: 0, y: 0, w: 0 });
   const { camera, size } = useThree();
 
   useFrame(({ clock }) => {
@@ -692,9 +698,19 @@ function IntroScene({
     // the last beats dissolve into golden light, not black
     onFade(smooth(4.82, 5.18, tt));
 
-    // the ribbon rides the book — invisible during the rise (heroWait
-    // opacity), settled by the hold, and it dives with the book
-    if (bannerEl?.current) driveBanner(bannerEl.current, g, camera, size, bannerSm.current);
+    // the ribbon: pinned to the back cover's bottom edge — it rides the
+    // bob and dives with the book. The plane takes a softened share of
+    // the book's rotation (full share reads edge-on at the flat start;
+    // invisible then anyway behind the heroWait fade).
+    const r = ribbon.current;
+    if (r) {
+      ribbonPin(g, camera, PIN);
+      r.position.copy(PIN);
+      r.rotation.x = g.rotation.x * 0.3;
+      r.rotation.y = g.rotation.y * 0.3;
+      // 0.9: the swallowtail's tips clear the fold on every viewport
+      r.scale.setScalar(Math.max(0.001, g.scale.x) * 0.9);
+    }
 
     if (tt >= TOTAL && !doneRef.current) {
       doneRef.current = true;
@@ -708,7 +724,15 @@ function IntroScene({
       <group ref={group}>
         <TheBook igniteRef={bookIgnite} shadeRef={emergeShade} plain={plain} />
       </group>
-
+      {emerge && portalEl && (
+        <group ref={ribbon}>
+          <Html transform distanceFactor={1} zIndexRange={[1, 1]} portal={portalEl} wrapperClass="bannerWrap3d">
+            <div className="bannerHang">
+              <BookBanner hold show={holding} />
+            </div>
+          </Html>
+        </group>
+      )}
     </>
   );
 }
@@ -752,7 +776,7 @@ export default function Intro3D({
   // HOLD EXPERIMENT: the book chills after arrival; a click enters it
   const holdGate = useRef({ holding: false, released: false });
   const [holding, setHolding] = useState(false);
-  const bannerRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null!);
 
   useEffect(() => {
     const skip = (e: KeyboardEvent) => {
@@ -778,6 +802,7 @@ export default function Intro3D({
 
   return (
     <div
+      ref={rootRef}
       className={`introRoot ${emerge ? "overTomb" : ""}`}
       onClick={() => {
         const g = holdGate.current;
@@ -804,7 +829,8 @@ export default function Intro3D({
             holeRef={holeRect}
             holdGate={holdGate}
             onHold={() => setHolding(true)}
-            bannerEl={bannerRef}
+            portalEl={rootRef}
+            holding={holding}
             onEmerge={(rise, t, ignite, doorGlow) => {
               // the tomb (persistent layer behind us) settles into its
               // 70/40 grade through the rise, then the ignition's own
@@ -848,13 +874,12 @@ export default function Intro3D({
           the click sends the book into the pages. Below the book, the
           parchment ribbon carries the tagline + email capture
           (Kendall's mock, 2026-08-12; replaced the clickable tagline). */}
+      {/* the ribbon itself lives INSIDE the canvas (drei Html, pinned
+          to the book) — only the instruction line stays out here */}
       {emerge && (
-        <>
-          <div className={`closedTitle heroWait ${holding ? "heroShow" : ""}`}>
-            Tap to open the book.
-          </div>
-          <BookBanner hold show={holding} outerRef={bannerRef} />
-        </>
+        <div className={`closedTitle heroWait ${holding ? "heroShow" : ""}`}>
+          Tap to open the book.
+        </div>
       )}
     </div>
   );

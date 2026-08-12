@@ -3,8 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { TheBook, BookLights, igniteDrive } from "@/components/TheBook";
-import BookBanner, { driveBanner } from "@/components/BookBanner";
+import { Html } from "@react-three/drei";
+import { TheBook, BookLights, igniteDrive, ribbonPin } from "@/components/TheBook";
+import BookBanner from "@/components/BookBanner";
+
+const PIN = new THREE.Vector3();
 
 /** coarse pointer ≈ phone/tablet: render leaner there (mirrors Intro3D) */
 function isCoarse(): boolean {
@@ -18,18 +21,20 @@ function isCoarse(): boolean {
 function SpinnableBook({
   spinRef,
   plain,
-  bannerEl,
+  portalEl,
 }: {
   spinRef: React.MutableRefObject<{ vx: number; vy: number; rx: number; ry: number }>;
   plain: boolean;
-  /** the DOM ribbon hanging off the book — repositioned every frame */
-  bannerEl: React.RefObject<HTMLDivElement | null>;
+  /** where the ribbon's DOM portals to (the scene root — NOT the
+      canvas wrapper, whose pointer-events are nuked) */
+  portalEl: React.MutableRefObject<HTMLDivElement>;
 }) {
   const group = useRef<THREE.Group>(null);
+  const ribbon = useRef<THREE.Group>(null);
+  const swing = useRef({ x: 0, y: 0 });
   const igniteRef = useRef(0);
-  const bannerSm = useRef({ x: 0, y: 0, w: 0 });
 
-  useFrame(({ clock, camera, size }) => {
+  useFrame(({ clock, camera }) => {
     const g = group.current;
     if (!g) return;
     const t = clock.getElapsedTime();
@@ -53,8 +58,21 @@ function SpinnableBook({
     // sparkle artifact turned out to be bump-map glints, not the glow
     igniteRef.current = plain ? 0 : igniteDrive(t);
 
-    // the ribbon rides the book: bob, drag-spin, everything
-    if (bannerEl.current) driveBanner(bannerEl.current, g, camera, size, bannerSm.current);
+    // the ribbon: PINNED to the back cover's bottom edge, so it orbits
+    // and dips with every turn of the book. Its plane swings with the
+    // drag velocity and gravity untwists it back toward the room —
+    // cloth, not a weld (a welded plane spends most of the idle spin
+    // edge-on and the email line becomes unreadable).
+    const r = ribbon.current;
+    if (r) {
+      ribbonPin(g, camera, PIN);
+      r.position.copy(PIN);
+      const sw = swing.current;
+      sw.y += (THREE.MathUtils.clamp(s.vy * 26, -0.6, 0.6) - sw.y) * 0.07;
+      sw.x += (THREE.MathUtils.clamp(-s.vx * 16, -0.3, 0.3) - sw.x) * 0.07;
+      r.rotation.set(sw.x, sw.y, sw.y * -0.12);
+      r.scale.setScalar(0.92);
+    }
   });
 
   return (
@@ -63,7 +81,13 @@ function SpinnableBook({
       <group ref={group} scale={0.92}>
         <TheBook igniteRef={igniteRef} plain={plain} />
       </group>
-
+      <group ref={ribbon}>
+        <Html transform distanceFactor={1} zIndexRange={[1, 1]} portal={portalEl} wrapperClass="bannerWrap3d">
+          <div className="bannerHang">
+            <BookBanner />
+          </div>
+        </Html>
+      </group>
     </>
   );
 }
@@ -82,10 +106,11 @@ export default function ClosedBook({
 }) {
   const spinRef = useRef({ vx: 0, vy: 0, rx: 0, ry: 0 });
   const drag = useRef<{ x: number; y: number; moved: number } | null>(null);
-  const bannerRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null!);
 
   return (
     <div
+      ref={rootRef}
       className={`closedBook ${active ? "" : "closedStandby"}`}
       onPointerDown={(e) => {
         e.currentTarget.setPointerCapture(e.pointerId);
@@ -118,14 +143,13 @@ export default function ClosedBook({
         dpr={isCoarse() ? [1, 1.5] : [1, 1.75]}
         frameloop={active ? "always" : "demand"}
       >
-        <SpinnableBook spinRef={spinRef} plain={plain} bannerEl={bannerRef} />
+        <SpinnableBook spinRef={spinRef} plain={plain} portalEl={rootRef} />
       </Canvas>
       {/* the held-book hero copy: instruction above (book voice), and
           below, the parchment ribbon hanging from the book — tagline +
           email capture in one (Kendall's mock, 2026-08-12; replaced the
           clickable tagline + modal) */}
       <div className="closedTitle">Drag to turn it over. Tap to open.</div>
-      <BookBanner outerRef={bannerRef} />
     </div>
   );
 }
