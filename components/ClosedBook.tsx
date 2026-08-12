@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { TheBook, BookLights, igniteDrive } from "@/components/TheBook";
+import BookBanner from "@/components/BookBanner";
 
 /** coarse pointer ≈ phone/tablet: render leaner there (mirrors Intro3D) */
 function isCoarse(): boolean {
@@ -62,7 +63,6 @@ function SpinnableBook({
 
 export default function ClosedBook({
   onOpen,
-  onBusiness,
   active = true,
   plain = false,
 }: {
@@ -70,8 +70,6 @@ export default function ClosedBook({
   /** false = standby: pre-mounted invisibly under the reader, rendering
       once so the dismissal reveal is instant */
   active?: boolean;
-  /** opens the access modal (the tagline is a button) */
-  onBusiness?: () => void;
   /** inspection mode, owned by Experience: no warm rig, no relief, no glow */
   plain?: boolean;
 }) {
@@ -113,26 +111,12 @@ export default function ClosedBook({
       >
         <SpinnableBook spinRef={spinRef} plain={plain} />
       </Canvas>
-      {/* the held-book hero copy (owner mock, 2026-08-11): instruction
-          above (book voice), the tagline below (ramp voice) — and the
-          tagline is a button that opens the access modal */}
+      {/* the held-book hero copy: instruction above (book voice), and
+          below, the parchment ribbon hanging from the book — tagline +
+          email capture in one (Kendall's mock, 2026-08-12; replaced the
+          clickable tagline + modal) */}
       <div className="closedTitle">Drag to turn it over. Tap to open.</div>
-      <div className="closedTagline">
-        <span className="tagLife">Use The Kumar Method to run your life.</span>
-        <br />
-        <button
-          type="button"
-          className="tagBiz"
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation(); // must not read as a tap-to-open-the-reader
-            onBusiness?.();
-          }}
-        >
-          Use <span className="rampMark" aria-hidden="true" /><strong>ramp</strong> to run your business.
-        </button>
-      </div>
+      <BookBanner />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture, useGLTF } from "@react-three/drei";
 import { TheBook, BookLights, IGNITE_FULL } from "@/components/TheBook";
+import BookBanner from "@/components/BookBanner";
 
 /* Book proportions measured from the cover scans:
    front 700×1088, spine 230×852 → a thick, squat tome. */
@@ -717,11 +718,8 @@ export default function Intro3D({
   plain = false,
   onTombFade,
   holeRect,
-  onBusiness,
   uiBlocked = false,
 }: {
-  /** opens the access modal (the tagline is a button) */
-  onBusiness?: () => void;
   /** true while the access modal is open: ALL skip keys must bail
       (Esc closes forms; it must not simultaneously skip the intro) */
   uiBlocked?: boolean;
@@ -835,28 +833,16 @@ export default function Intro3D({
         <div className="rampLogo" aria-label="ramp" />
       </div>
       {/* "tap to skip" retired — the intro is fast enough now (owner) */}
-      {/* the held-book hero copy (owner mock): fades in at the hold,
-          fades away as the click sends the book into the pages. The
-          tagline speaks ramp's voice and opens the access modal. */}
+      {/* the held-book hero copy: fades in at the hold, fades away as
+          the click sends the book into the pages. Below the book, the
+          parchment ribbon carries the tagline + email capture
+          (Kendall's mock, 2026-08-12; replaced the clickable tagline). */}
       {emerge && (
         <>
           <div className={`closedTitle heroWait ${holding ? "heroShow" : ""}`}>
             Tap to open the book.
           </div>
-          <div className={`closedTagline heroWait ${holding ? "heroShow" : ""}`}>
-            <span className="tagLife">Use The Kumar Method to run your life.</span>
-            <br />
-            <button
-              type="button"
-              className="tagBiz"
-              onClick={(e) => {
-                e.stopPropagation(); // must not release the hold
-                onBusiness?.();
-              }}
-            >
-              Use <span className="rampMark" aria-hidden="true" /><strong>ramp</strong> to run your business.
-            </button>
-          </div>
+          <BookBanner hold show={holding} />
         </>
       )}
     </div>

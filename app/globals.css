@@ -1288,6 +1288,214 @@ video.smokeHidden {
   pointer-events: auto;
 }
 
+/* ----------------------------------------------------------------
+   The ribbon (Kendall's mock, 2026-08-12): a parchment banner hanging
+   from the book's bottom edge — tagline, ornamental rule, and the
+   email capture inline. Replaces .closedTagline on the hold + closed
+   screens (that block stays above for easy revert).
+   ---------------------------------------------------------------- */
+
+.bookBanner {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  /* tucks ~3svh under the book's bottom edge (closed half ≈ 25svh);
+     the cast-shadow gradient at the paper's top sells the emergence.
+     The second term is a floor: on short screens the ribbon rides up
+     the book instead of clipping its tails below the fold. */
+  top: min(calc(50% + 22svh), calc(100svh - 260px));
+  width: min(40svh, 500px, 94vw);
+  z-index: 94; /* under the instruction line's 95, over the canvas */
+  pointer-events: none; /* the paper re-enables */
+  filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.55)) drop-shadow(0 3px 8px rgba(0, 0, 0, 0.45));
+  opacity: 0;
+  animation: heroCopyIn 1.3s ease 0.35s forwards;
+}
+
+/* the intro hold shows the book ~22% larger — hang from ITS edge, and
+   fade with the hold (heroWait transition) instead of the mount anim */
+.bookBanner.heroWait {
+  top: min(calc(50% + 27.5svh), calc(100svh - 260px));
+  animation: none;
+}
+
+.bookBanner.heroWait .bannerPaper {
+  pointer-events: none;
+}
+
+.bookBanner.heroWait.heroShow .bannerPaper {
+  pointer-events: auto;
+}
+
+/* the book's own paper (gradients lifted from .paper), cut to a
+   swallowtail ribbon. clip-path kills box-shadow, hence the parent's
+   drop-shadow filter. */
+.bannerPaper {
+  position: relative;
+  pointer-events: auto;
+  padding: 30px 26px 46px; /* bottom clears the tail notch */
+  text-align: center;
+  color: #3d2c17;
+  background:
+    linear-gradient(180deg, rgba(25, 15, 6, 0.4), rgba(25, 15, 6, 0) 24px),
+    radial-gradient(120% 85% at 50% 30%, rgba(255, 250, 233, 0.5), rgba(255, 250, 233, 0) 70%),
+    linear-gradient(104deg, #cdb488 0%, #e5d6b2 10%, #ecdfc0 30%, #f0e5c9 50%, #eaddbb 74%, #ddcba1 92%, #c3a976 100%),
+    #e9dcbc;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 24px), 0 100%);
+}
+
+/* the aged-paper scan, multiplied over everything static — same
+   treatment as the reader's .photoPaper */
+.bannerPaper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: url("/paper/vintage.jpg") center / cover;
+  mix-blend-mode: multiply;
+  opacity: 0.42;
+  filter: saturate(0.5) brightness(1.22) contrast(0.9);
+}
+
+.bannerLines {
+  font-family: var(--font-garamond), Georgia, serif;
+  font-size: clamp(15px, 2.05svh, 19px);
+  line-height: 1.55;
+}
+
+.bannerLines .bLife {
+  display: block;
+}
+
+.bannerLines .bBiz strong {
+  font-weight: 700;
+}
+
+/* ornamental rule: hairlines fading in toward a small inked diamond */
+.bannerRule {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 74%;
+  margin: 10px auto 14px;
+  color: rgba(94, 66, 32, 0.8);
+}
+
+.bannerRule::before,
+.bannerRule::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+}
+
+.bannerRule::before {
+  background: linear-gradient(90deg, transparent, currentColor);
+}
+
+.bannerRule::after {
+  background: linear-gradient(90deg, currentColor, transparent);
+}
+
+.bannerRule i {
+  width: 6px;
+  height: 6px;
+  transform: rotate(45deg);
+  background: currentColor;
+}
+
+/* the form floats above the texture multiply so it hit-tests cleanly */
+.bannerForm {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: min(100%, 320px);
+  margin: 0 auto;
+}
+
+.bannerForm input {
+  flex: 1;
+  min-width: 0;
+  /* 16px floor: anything smaller makes iOS zoom the page on focus */
+  font-family: var(--font-garamond), Georgia, serif;
+  font-size: 16px;
+  color: #3a2a18;
+  background: rgba(255, 252, 240, 0.55);
+  border: 1px solid rgba(94, 66, 32, 0.55);
+  border-right: 0;
+  border-radius: 2px 0 0 2px;
+  padding: 9px 12px;
+  outline: none;
+}
+
+.bannerForm input::placeholder {
+  color: rgba(94, 66, 32, 0.6);
+}
+
+.bannerForm input:focus-visible {
+  border-color: rgba(94, 66, 32, 0.9);
+}
+
+/* autofill paints its own white/lavender — force the parchment field */
+.bannerForm input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #f3ecd6 inset;
+  -webkit-text-fill-color: #3a2a18;
+}
+
+/* the arrow: the mock's dark-red seal */
+.bannerForm button {
+  width: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #571a10;
+  border-radius: 0 2px 2px 0;
+  background: #6b1f14;
+  color: #f3e6c8;
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.bannerForm button:hover,
+.bannerForm button:focus-visible {
+  background: #7d2818;
+}
+
+.bannerForm button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.bannerNote {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-family: var(--font-garamond), Georgia, serif;
+  font-size: 16px;
+  padding: 9px 0 10px;
+}
+
+.bannerErr {
+  position: relative;
+  z-index: 1;
+  margin: 8px 0 0;
+  font-family: var(--font-garamond), Georgia, serif;
+  font-size: 13.5px;
+  color: #7a1d10;
+}
+
+/* short screens: the ribbon compresses instead of clipping its tails */
+@media (max-height: 700px) {
+  .bannerPaper {
+    padding: 24px 22px 40px;
+  }
+
+  .bannerRule {
+    margin: 8px auto 10px;
+  }
+}
+
 /* (the lights toggle and glow slider lived here — retired 2026-08-11
    once the owner dialed the final glow level; lights are on, period) */
 
