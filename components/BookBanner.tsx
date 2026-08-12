@@ -77,7 +77,7 @@ export default function BookBanner({
   /** hold only: visible while the hold lasts */
   show?: boolean;
 }) {
-  const [status, setStatus] = useState<"idle" | "pending" | "ok" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "pending" | "error">("idle");
   const [error, setError] = useState("");
   const paperRef = useRef<HTMLDivElement>(null);
 
@@ -86,12 +86,10 @@ export default function BookBanner({
   // the hold
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
+  function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     event.stopPropagation();
-    // captured before any await — React nulls currentTarget after
-    const form = event.currentTarget;
-    const raw = new FormData(form).get("email");
+    const raw = new FormData(event.currentTarget).get("email");
     const email = typeof raw === "string" ? raw.trim().toLowerCase() : "";
     if (!/^\S+@\S+\.\S+$/.test(email)) {
       setStatus("error");
@@ -100,21 +98,10 @@ export default function BookBanner({
     }
     setStatus("pending");
     setError("");
-    try {
-      const res = await fetch("/api/enterprise-leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(typeof data?.error === "string" ? data.error : "We couldn't save that. Please try again.");
-      }
-      setStatus("ok");
-    } catch (err) {
-      setStatus("error");
-      setError(err instanceof Error ? err.message : "We couldn't save that. Please try again.");
-    }
+    // straight into ramp's qualification flow, email prefilled (owner,
+    // 2026-08-12) — no Supabase write from the ribbon. The access
+    // modal (reader corner) still posts to /api/enterprise-leads.
+    window.location.href = `https://ramp.com/qualification/company-size?email=${encodeURIComponent(email)}`;
   }
 
   return (
@@ -136,23 +123,19 @@ export default function BookBanner({
           <i />
           <b />
         </div>
-        {status === "ok" ? (
-          <p className="bannerNote">Thanks — we&rsquo;ll be in touch shortly.</p>
-        ) : (
-          <form className="bannerForm" onSubmit={submit}>
-            <input
-              type="email"
-              name="email"
-              placeholder="Enter your work email"
-              autoComplete="email"
-              aria-label="Work email"
-              disabled={status === "pending"}
-            />
-            <button type="submit" aria-label="Submit email" disabled={status === "pending"}>
-              <span aria-hidden="true">&#10142;</span>
-            </button>
-          </form>
-        )}
+        <form className="bannerForm" onSubmit={submit}>
+          <input
+            type="email"
+            name="email"
+            placeholder="Enter your work email"
+            autoComplete="email"
+            aria-label="Work email"
+            disabled={status === "pending"}
+          />
+          <button type="submit" aria-label="Submit email" disabled={status === "pending"}>
+            <span aria-hidden="true">&#10142;</span>
+          </button>
+        </form>
         {status === "error" && <p className="bannerErr">{error}</p>}
       </div>
     </div>
