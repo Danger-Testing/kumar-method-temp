@@ -656,13 +656,6 @@ body {
   font-display: swap;
 }
 
-/* TEMPORARY (owner, 2026-08-11 night): CTA hidden on mobile — it
-   overlaps the scrubber counter in the bottom zone. Proper mobile
-   placement to be figured out in the morning. Placed after the base
-   rules so the cascade actually applies it. */
-@media (max-width: 720px) {
-  }
-
 /* page scrubber: a short, quiet ornament — one flourish line that IS
    the scrub track (diamond thumb rides it), "n / 110" centered below.
    Drag to fast-travel. */
@@ -1207,11 +1200,33 @@ video.smokeHidden {
   display: block;
 }
 
-/* the scrubber owns the bottom on phones — the hold/closed screens
-   carry the tagline there instead */
+/* phones (owner, 2026-08-12): the corner spot collided with the
+   scrubber counter, so the tagline sits centered in the gap between
+   the page's bottom edge and the scrubber. The page bottom lands at
+   50svh + half of min(84svh, 140vw) − 3vh (half the bookArea margin);
+   the min() cap keeps the lines clear of the scrubber. SE-class short
+   screens have no gap at all, so the min-height guard keeps the
+   tagline hidden there. */
 @media (max-width: 720px) {
   .readerTagline {
     display: none;
+  }
+}
+
+@media (max-width: 720px) and (min-height: 700px) {
+  .readerTagline {
+    display: block;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    text-align: center;
+    font-size: 12.5px;
+    top: min(
+      calc(50svh + min(42svh, 70vw) - 3vh + 12px),
+      calc(100svh - 2vh - 96px)
+    );
   }
 }
 
