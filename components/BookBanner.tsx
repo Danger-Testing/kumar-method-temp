@@ -102,13 +102,17 @@ export default function BookBanner({
     // 2026-08-12) — no Supabase write from the ribbon.
     const url = `https://ramp.com/qualification/company-size?email=${encodeURIComponent(email)}`;
     // NEW TAB (Kendall, 2026-08-13): people will want to keep reading
-    // the book. Popup-blocked → same-tab fallback.
-    const win = window.open(url, "_blank", "noopener");
-    if (!win) {
+    // the book. NOTE: the "noopener" FEATURE makes window.open return
+    // null even on success, which made the popup-blocked fallback fire
+    // too and navigate BOTH tabs — so open plain, null the opener by
+    // hand, and only fall back when truly blocked.
+    const win = window.open(url, "_blank");
+    if (win) {
+      win.opener = null;
+      setStatus("idle");
+    } else {
       window.location.href = url;
-      return;
     }
-    setStatus("idle");
   }
 
   return (

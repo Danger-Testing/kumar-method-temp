@@ -98,10 +98,14 @@ body {
    falls on it and sells the emergence. Scaled — the ribbon's fixed
    400px layout is sized for the 3D hold. */
 .readerTail {
+  --tailScale: 0.72;
   position: absolute;
   top: calc(100% - 14px); /* 14px tucked behind the page */
   left: 50%;
-  transform: translateX(-50%) scale(0.72);
+  /* explicit stack: the leaves (z 1) must ALWAYS paint over the tuck —
+     never trust DOM order across composited entrance animations */
+  z-index: 0;
+  transform: translateX(-50%) scale(var(--tailScale));
   transform-origin: top center;
   pointer-events: none; /* the paper re-enables */
   /* ONE object: the tail dissolves in on the page's own entrance
@@ -109,14 +113,20 @@ body {
   animation: tailEnter 1.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
+/* while the entering page is still TRANSLUCENT, anything tucked
+   behind it shows through and reads as floating ON TOP (owner report)
+   — so the tail enters from 14px lower (zero overlap) and settles
+   into the tuck exactly as the page turns opaque */
 @keyframes tailEnter {
   from {
     opacity: 0;
     filter: blur(14px);
+    transform: translateX(-50%) translateY(14px) scale(var(--tailScale));
   }
   to {
     opacity: 1;
     filter: blur(0);
+    transform: translateX(-50%) translateY(0) scale(var(--tailScale));
   }
 }
 
@@ -131,11 +141,17 @@ body {
   left: 75%;
 }
 
-/* phones: LARGER, not smaller — the tail must stay very legible
-   (owner call; the page shrank to make the room) */
+/* narrow screens: the tail stays LARGE for legibility (owner call),
+   and the page gives up more room — the tail must never touch the
+   bottom of the screen */
 @media (max-width: 720px) {
   .readerTail {
-    transform: translateX(-50%) scale(0.85);
+    --tailScale: 0.8;
+  }
+
+  .bookArea {
+    height: min(70svh, 118vw);
+    margin-bottom: 21vh;
   }
 }
 
