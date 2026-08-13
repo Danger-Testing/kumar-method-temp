@@ -80,14 +80,42 @@ body {
 
 .bookArea {
   position: relative;
-  /* leaves breathing room beneath the pages for the scrubber */
-  height: min(84svh, 140vw);
+  /* leaves breathing room beneath the pages for the scrubber AND the
+     tail (owner, 2026-08-13: pages scaled down a touch + lifted so the
+     tail is never clipped by the window) */
+  height: min(76svh, 128vw);
   aspect-ratio: 0.66;
   cursor: pointer;
   z-index: 2;
-  margin-bottom: 6vh;
+  margin-bottom: 13vh;
   /* the swipe curl needs depth in single-page mode too */
   perspective: 2600px;
+}
+
+/* the tail in the READER: the same parchment ribbon, tucked under the
+   page's bottom edge (owner/Kendall mock, 2026-08-13). First child of
+   .bookArea → painted UNDER the leaves; the page's own drop shadow
+   falls on it and sells the emergence. Scaled — the ribbon's fixed
+   400px layout is sized for the 3D hold. */
+.readerTail {
+  position: absolute;
+  top: calc(100% - 14px); /* 14px tucked behind the page */
+  left: 50%;
+  transform: translateX(-50%) scale(0.72);
+  transform-origin: top center;
+  pointer-events: none; /* the paper re-enables */
+}
+
+/* two-page spread: it hangs from the RIGHT page, like the mock */
+.spreadOpen .readerTail {
+  left: 75%;
+}
+
+/* phones: a touch smaller — it must clear the scrubber */
+@media (max-width: 720px) {
+  .readerTail {
+    transform: translateX(-50%) scale(0.6);
+  }
 }
 
 /* mobile (touch): the pages are an object, not copy — no text selection,

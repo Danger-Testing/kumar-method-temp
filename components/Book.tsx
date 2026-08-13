@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { chapters } from "@/lib/content";
 import { pages, seeded, type BookPage } from "@/lib/pages";
+import BookBanner from "@/components/BookBanner";
 
 /* ------------------------------------------------------------------ */
 /*  Ornaments                                                          */
@@ -290,7 +291,7 @@ function rasterizeMask(svg: string, cssVar: string) {
   img.src = svg;
 }
 
-export default function Book({ onBusiness }: { onBusiness?: () => void }) {
+export default function Book() {
   const [current, setCurrent] = useState(0);
   const [hasTurned, setHasTurned] = useState(false);
   const [spread, setSpread] = useState(false);
@@ -409,6 +410,12 @@ export default function Book({ onBusiness }: { onBusiness?: () => void }) {
         role="region"
         aria-label={`Book page ${base + 1}${spread ? ` and ${Math.min(base + 2, pages.length)}` : ""} of ${pages.length}`}
       >
+        {/* the tail: the same parchment ribbon as the held book,
+            tucked under the page's bottom edge (owner/Kendall mock,
+            2026-08-13). FIRST child → painted under the leaves. */}
+        <div className="readerTail">
+          <BookBanner />
+        </div>
         {(() => {
           // while a leaf is mid-flip, the layers underneath already show the
           // pages that will be revealed when it lands
@@ -559,22 +566,9 @@ export default function Book({ onBusiness }: { onBusiness?: () => void }) {
         </div>
       </div>
 
-      {/* the corner tagline: same copy and behavior as the hero version */}
-      <div className="readerTagline">
-        <span className="tagLife">
-          Use The Kumar Method to run your life.
-        </span>
-        <button
-          type="button"
-          className="tagBiz"
-          onClick={(e) => {
-            e.stopPropagation();
-            onBusiness?.();
-          }}
-        >
-          Use <span className="rampMark" aria-hidden="true" /><strong>ramp</strong> to run your business.
-        </button>
-      </div>
+      {/* (the corner tagline + access modal are retired — the tail
+          under the page carries the tagline and the email capture now,
+          owner/Kendall 2026-08-13) */}
 
       {/* tap arrows flanking the scrubber — appear with it */}
       <button

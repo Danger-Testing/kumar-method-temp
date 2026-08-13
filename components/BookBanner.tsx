@@ -99,9 +99,16 @@ export default function BookBanner({
     setStatus("pending");
     setError("");
     // straight into ramp's qualification flow, email prefilled (owner,
-    // 2026-08-12) — no Supabase write from the ribbon. The access
-    // modal (reader corner) still posts to /api/enterprise-leads.
-    window.location.href = `https://ramp.com/qualification/company-size?email=${encodeURIComponent(email)}`;
+    // 2026-08-12) — no Supabase write from the ribbon.
+    const url = `https://ramp.com/qualification/company-size?email=${encodeURIComponent(email)}`;
+    // NEW TAB (Kendall, 2026-08-13): people will want to keep reading
+    // the book. Popup-blocked → same-tab fallback.
+    const win = window.open(url, "_blank", "noopener");
+    if (!win) {
+      window.location.href = url;
+      return;
+    }
+    setStatus("idle");
   }
 
   return (

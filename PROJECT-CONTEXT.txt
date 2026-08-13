@@ -413,3 +413,16 @@ each dive (a finished timeline can't be re-held). Tap the book → the
 same dive + golden flash back into the reader. The spinnable
 ClosedBook is RETIRED from the flow but the component file stays
 untouched as the safe copy — one import away if wanted back.
+
+ADDENDUM 2026-08-13: the tail enters the READER
+- The same parchment ribbon now hangs under the page in the reader
+  (.readerTail, first child of .bookArea → painted under the leaves;
+  spread: under the RIGHT page at left 75%; scaled 0.72 / 0.6 phone).
+  Pages sized down + lifted for it (.bookArea 76svh/128vw, margin 13vh).
+- The ramp redirect opens in a NEW TAB now (Kendall: keep reading),
+  popup-blocked → same-tab fallback.
+- The reader corner tagline AND the get-access modal are RETIRED —
+  the tail is THE capture everywhere. EnterpriseAccessModal.tsx and
+  the /api/enterprise-leads route stay in the repo, unused.
+- Kendall's illustration idea (etchings on some pages) is discussed
+  but NOT built.

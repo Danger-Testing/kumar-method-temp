@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Book from "@/components/Book";
 import TombScene from "@/components/TombScene";
-import EnterpriseAccessModal from "@/components/EnterpriseAccessModal";
 // The quiz is OFF the site for now (owner, 2026-08-12) — the questions
 // live on in components/KumarQuiz.tsx, wiring is one import away.
+// The get-access modal is retired too (owner/Kendall, 2026-08-13): the
+// tail's email → ramp link is THE capture everywhere. The component
+// stays in components/EnterpriseAccessModal.tsx.
 
 const Intro3D = dynamic(() => import("@/components/Intro3D"), { ssr: false });
 // The spinnable ClosedBook is RETIRED from the flow (sponsor call,
@@ -21,7 +23,6 @@ export default function Experience() {
   // closed-book flow and any future re-gating
   const [phase, setPhase] = useState<"tomb" | "intro" | "book" | "closed">("intro");
   const [flash, setFlash] = useState(false);
-  const [enterpriseOpen, setEnterpriseOpen] = useState(false);
   // remount key for the held (dismissed-state) instance: each dive
   // finishes its timeline, so the next dismissal needs a fresh one
   const [heldGen, setHeldGen] = useState(0);
@@ -128,7 +129,6 @@ export default function Experience() {
           emerge
           plain={plain}
           holeRect={holeRef}
-          uiBlocked={enterpriseOpen}
           onTombFade={gradeTomb}
           onDone={(finished) => {
             setFlash(finished);
@@ -148,7 +148,6 @@ export default function Experience() {
           startHeld
           active={phase === "closed"}
           plain={plain}
-          uiBlocked={enterpriseOpen}
           onTombFade={gradeTomb}
           onDone={(finished) => {
             setHeldGen((g) => g + 1);
@@ -160,10 +159,9 @@ export default function Experience() {
 
       {phase === "book" && (
         <>
-          {/* the business CTA (bottom-right, in Book) opens the access
-              modal — Marc's separate top-right button was retired in
-              favor of the one CTA (owner call) */}
-          <Book onBusiness={() => setEnterpriseOpen(true)} />
+          {/* lead capture inside the reader = the tail under the page
+              (Book renders it); the corner CTA + modal are retired */}
+          <Book />
           {/* closing the book: back to the tomb, with the closed tome
               hanging in the room — not all the way back to square one.
               Waits out the handoff flash. */}
@@ -195,7 +193,6 @@ export default function Experience() {
           )}
         </>
       )}
-      {enterpriseOpen && <EnterpriseAccessModal onClose={() => setEnterpriseOpen(false)} />}
     </>
   );
 }
