@@ -1713,6 +1713,37 @@ video.smokeHidden {
   transform: translateX(-50%);
 }
 
+/* the share mark: Fell italic on the folio row, on the corner
+   OPPOSITE the folio (verso/recto symmetry). Printer's mark leads. */
+.pageShare {
+  position: absolute;
+  z-index: 4;
+  right: 9cqw;
+  bottom: 3.2cqw;
+  border: 0;
+  background: none;
+  padding: 0 0 2px;
+  font-family: var(--font-fell), serif;
+  font-style: italic;
+  font-size: 2.5cqw;
+  letter-spacing: 0.02em;
+  color: rgba(74, 56, 36, 0.58);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: color 0.2s;
+}
+
+.pageShare:hover,
+.pageShare:focus-visible {
+  color: rgba(74, 56, 36, 0.95);
+}
+
+/* recto pages carry the folio on the right — the mark mirrors left */
+.paper.side-right .pageShare {
+  right: auto;
+  left: 9cqw;
+}
+
 /* ----------------------------------------------------------------
    Accessibility
    ---------------------------------------------------------------- */

@@ -141,6 +141,45 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
   );
 }
 
+/* The share mark (owner/Kendall, 2026-08-13): quiet book chrome on
+   the folio row — Kendall vetoed the boxed version, so it's a
+   printer's mark + Fell italic. Native share sheet where it exists,
+   clipboard elsewhere. Sits on the corner OPPOSITE the folio. */
+function ShareRule({ page }: { page: BookPage }) {
+  const [copied, setCopied] = useState(false);
+  const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
+  const share = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const ch = chapters[page.chapter];
+    const text =
+      page.kind === "rules"
+        ? `“${ch.rules[page.ruleIndexes[0]]}” — The Kumar Method`
+        : "The Kumar Method — a short list of plain rules about money and about life.";
+    const url = window.location.origin;
+    // phones get the native sheet; desktop copies (predictable, and
+    // the "copied" flash is better feedback than Chrome's share dialog)
+    const touch = window.matchMedia("(pointer: coarse)").matches;
+    if (touch && navigator.share) {
+      // the user closing the sheet is not an error
+      navigator.share({ title: "The Kumar Method", text, url }).catch(() => {});
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1700);
+    } catch {
+      // clipboard denied → the share sheet is still better than nothing
+      navigator.share?.({ title: "The Kumar Method", text, url }).catch(() => {});
+    }
+  };
+  return (
+    <button type="button" className="pageShare" onClick={share} onPointerDown={stop} onPointerUp={stop}>
+      <span aria-hidden="true">&#10087;</span> {copied ? "copied" : page.kind === "rules" ? "share this rule" : "share the book"}
+    </button>
+  );
+}
+
 /* The page's ramp mark (owner-picked placement: bottom center on the
    folio row), linking to ramp.com. */
 function RampMarks() {
@@ -253,6 +292,7 @@ function PageLeaf({
         <div className="blotch" aria-hidden="true" />
         <div className="edgeShade" aria-hidden="true" />
         <RampMarks />
+        {page.kind !== "locked" && <ShareRule page={page} />}
       </div>
     </div>
   );
