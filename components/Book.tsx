@@ -116,7 +116,10 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
           ))}
         </h1>
         <Flourish />
-        <p className="lockedNote">Come back tomorrow. Good things compound.</p>
+        <p className="lockedNote">
+          This chapter arrives tomorrow.
+          <span className="lockedSub">Good things compound.</span>
+        </p>
         <div className="folio">P. {pageNumber}</div>
       </div>
     );
@@ -173,10 +176,9 @@ function ShareRule({ page }: { page: BookPage }) {
         ? `“${ch.rules[page.ruleIndexes[0]]}” — The Kumar Method`
         : "The Kumar Method — a short list of plain rules about money and about life.";
     const url = window.location.origin;
-    // phones get the native sheet; desktop copies (predictable, and
-    // the "copied" flash is better feedback than Chrome's share dialog)
-    const touch = window.matchMedia("(pointer: coarse)").matches;
-    if (touch && navigator.share) {
+    // NATIVE share sheet wherever the Web Share API exists — macOS
+    // included (owner call, 2026-08-13); clipboard is the fallback
+    if (navigator.share) {
       // the user closing the sheet is not an error
       navigator.share({ title: "The Kumar Method", text, url }).catch(() => {});
       return;
@@ -186,8 +188,7 @@ function ShareRule({ page }: { page: BookPage }) {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1700);
     } catch {
-      // clipboard denied → the share sheet is still better than nothing
-      navigator.share?.({ title: "The Kumar Method", text, url }).catch(() => {});
+      /* clipboard denied: nothing sensible to do */
     }
   };
   return (

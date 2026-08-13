@@ -102,6 +102,13 @@ body {
   color: rgba(74, 56, 36, 0.85);
 }
 
+.lockedSub {
+  display: block;
+  margin-top: 1.6cqw;
+  font-size: 0.78em;
+  color: rgba(74, 56, 36, 0.62);
+}
+
 /* the tail in the READER: the same parchment ribbon, tucked under the
    page's bottom edge (owner/Kendall mock, 2026-08-13). First child of
    .bookArea → painted UNDER the leaves; the page's own drop shadow
@@ -1730,15 +1737,16 @@ video.smokeHidden {
   position: absolute;
   z-index: 4;
   right: 9cqw;
-  bottom: 3.2cqw;
+  bottom: 3.1cqw;
   border: 0;
   background: none;
   padding: 0 0 2px;
   font-family: var(--font-fell), serif;
   font-style: italic;
-  font-size: 2.5cqw;
+  /* legible, not shy (owner: "really hard to see") */
+  font-size: 3cqw;
   letter-spacing: 0.02em;
-  color: rgba(74, 56, 36, 0.58);
+  color: rgba(64, 47, 28, 0.85);
   cursor: pointer;
   pointer-events: auto;
   transition: color 0.2s;
@@ -1746,7 +1754,7 @@ video.smokeHidden {
 
 .pageShare:hover,
 .pageShare:focus-visible {
-  color: rgba(74, 56, 36, 0.95);
+  color: rgba(46, 33, 18, 1);
 }
 
 /* recto pages carry the folio on the right — the mark mirrors left */
