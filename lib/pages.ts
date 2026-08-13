@@ -2,7 +2,9 @@ import { chapters } from "./content";
 
 export type BookPage =
   | { kind: "chapter"; chapter: number }
-  | { kind: "rules"; chapter: number; ruleIndexes: number[]; firstOfChapter: boolean };
+  | { kind: "rules"; chapter: number; ruleIndexes: number[]; firstOfChapter: boolean }
+  /** the gate's teaser leaf: names the next chapter, arrives tomorrow */
+  | { kind: "locked"; chapter: number };
 
 // Every rule gets a leaf of its own: 10 chapters × (1 opener + 10 rules).
 export function buildPages(): BookPage[] {

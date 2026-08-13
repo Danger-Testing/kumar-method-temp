@@ -92,6 +92,16 @@ body {
   perspective: 2600px;
 }
 
+/* the gate's teaser leaf: next chapter's name, promised for tomorrow */
+.lockedNote {
+  margin-top: 9cqw;
+  text-align: center;
+  font-family: var(--font-fell), serif;
+  font-style: italic;
+  font-size: 3.6cqw;
+  color: rgba(74, 56, 36, 0.85);
+}
+
 /* the tail in the READER: the same parchment ribbon, tucked under the
    page's bottom edge (owner/Kendall mock, 2026-08-13). First child of
    .bookArea → painted UNDER the leaves; the page's own drop shadow

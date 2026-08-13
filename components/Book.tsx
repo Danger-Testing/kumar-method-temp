@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { chapters } from "@/lib/content";
-import { pages, seeded, type BookPage } from "@/lib/pages";
+import { pages, firstPageOfChapter, seeded, type BookPage } from "@/lib/pages";
+import { unlockedChapters } from "@/lib/gate";
 import BookBanner from "@/components/BookBanner";
 
 /* ------------------------------------------------------------------ */
@@ -83,6 +84,35 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
     );
   }
 
+  if (page.kind === "locked") {
+    // the gate's teaser: names the next chapter, promises tomorrow
+    const next = chapters[page.chapter];
+    return (
+      <div className="pageInner chapterPage lockedPage">
+        <div className="tinyFleuron" aria-hidden="true">
+          ❦
+        </div>
+        <Eyebrow text={next.eyebrow} />
+        <h1
+          className="bigTitle"
+          style={{
+            fontSize: `${Math.min(
+              13,
+              86 / (0.66 * Math.max(...next.titleLines.map((l) => l.length)))
+            ).toFixed(2)}cqw`,
+          }}
+        >
+          {next.titleLines.map((line) => (
+            <span key={line}>{line}</span>
+          ))}
+        </h1>
+        <Flourish />
+        <p className="lockedNote">Come back tomorrow. Good things compound.</p>
+        <div className="folio">P. {pageNumber}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="pageInner rulesPage">
       <div className="runningHead">
@@ -146,12 +176,15 @@ function PageLeaf({
   index,
   animClass,
   side = "single",
+  page: pageOverride,
 }: {
   index: number;
   animClass: string;
   side?: "single" | "left" | "right";
+  /** the gate's teaser leaf lives outside the built page list */
+  page?: BookPage;
 }) {
-  const page = pages[index];
+  const page = pageOverride ?? pages[index];
   const rand = seeded(index + 3);
 
   const stainCount = 3 + Math.floor(rand() * 3);
@@ -297,6 +330,17 @@ export default function Book() {
   const [spread, setSpread] = useState(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
+  // CHAPTER GATE (lib/gate.ts): only unlocked chapters render, plus a
+  // teaser leaf naming the next one. Starts at 1 for a hydration-safe
+  // first paint; the effect applies the real schedule immediately.
+  const [unlockedCh, setUnlockedCh] = useState(1);
+  useEffect(() => setUnlockedCh(unlockedChapters()), []);
+  // the teaser leaf's index (= count of real visible pages); -1 = open
+  const gateAt = unlockedCh >= chapters.length ? -1 : firstPageOfChapter(unlockedCh);
+  const total = gateAt === -1 ? pages.length : gateAt + 1;
+  const leafPage = (i: number): BookPage | undefined =>
+    gateAt !== -1 && i === gateAt ? { kind: "locked", chapter: unlockedCh } : undefined;
+
   // pre-rasterize the page-edge mask (see note above Book)
   useEffect(() => {
     rasterizeMask(MASK_SQUARE, "--paper-mask");
@@ -324,7 +368,7 @@ export default function Book() {
     if (!el) return;
     const r = el.getBoundingClientRect();
     const f = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
-    let idx = Math.round(f * (pages.length - 1));
+    let idx = Math.round(f * (total - 1));
     if (spread) idx -= idx % 2;
     setCurrent(idx);
     setHasTurned(true);
@@ -333,7 +377,7 @@ export default function Book() {
   const go = useCallback(
     (to: number, curl = false) => {
       if (to < 0) to = 0;
-      if (to >= pages.length || to === current) return;
+      if (to >= total || to === current) return;
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       if (spread && !reduced) {
         setFlip({ from: base, dir: to > current ? 1 : -1 });
@@ -408,7 +452,7 @@ export default function Book() {
         className={`bookArea ${spread ? "spreadOpen" : ""}`}
         onClick={onPageClick}
         role="region"
-        aria-label={`Book page ${base + 1}${spread ? ` and ${Math.min(base + 2, pages.length)}` : ""} of ${pages.length}`}
+        aria-label={`Book page ${base + 1}${spread ? ` and ${Math.min(base + 2, total)}` : ""} of ${total}`}
       >
         {/* the tail: the same parchment ribbon as the held book,
             tucked under the page's bottom edge (owner/Kendall mock,
@@ -429,7 +473,7 @@ export default function Book() {
                 : flip.from
             : base;
           const underRight = flip ? (flip.dir === 1 ? flip.from + 3 : flip.from + 1) : base + 1;
-          const ok = (i: number) => i >= 0 && i < pages.length;
+          const ok = (i: number) => i >= 0 && i < total;
           return (
             <>
               {ok(underLeft) && (
@@ -438,6 +482,7 @@ export default function Book() {
                     index={underLeft}
                     animClass={hasTurned ? "" : "enterFirst"}
                     side={spread ? "left" : "single"}
+                    page={leafPage(underLeft)}
                   />
                 </div>
               )}
@@ -447,6 +492,7 @@ export default function Book() {
                     index={underRight}
                     animClass={hasTurned ? "" : "enterFirst"}
                     side="right"
+                    page={leafPage(underRight)}
                   />
                 </div>
               )}
@@ -464,6 +510,7 @@ export default function Book() {
                         index={flip.dir === 1 ? flip.from : flip.from - 1}
                         animClass=""
                         side="single"
+                        page={leafPage(flip.dir === 1 ? flip.from : flip.from - 1)}
                       />
                     )}
                   </div>
@@ -480,6 +527,7 @@ export default function Book() {
                         index={flip.dir === 1 ? flip.from + 1 : flip.from}
                         animClass=""
                         side={flip.dir === 1 ? "right" : "left"}
+                        page={leafPage(flip.dir === 1 ? flip.from + 1 : flip.from)}
                       />
                     )}
                   </div>
@@ -489,6 +537,7 @@ export default function Book() {
                         index={flip.dir === 1 ? flip.from + 2 : flip.from - 1}
                         animClass=""
                         side={flip.dir === 1 ? "left" : "right"}
+                        page={leafPage(flip.dir === 1 ? flip.from + 2 : flip.from - 1)}
                       />
                     )}
                   </div>
@@ -509,7 +558,7 @@ export default function Book() {
         role="slider"
         aria-label="Scrub through pages"
         aria-valuemin={1}
-        aria-valuemax={pages.length}
+        aria-valuemax={total}
         aria-valuenow={base + 1}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={(e) => e.stopPropagation()}
@@ -536,7 +585,7 @@ export default function Book() {
           setScrubbing(false);
         }}
       >
-        {scrubbing && <div className="scrubLabel">{chapters[pages[base].chapter].shortName}</div>}
+        {scrubbing && <div className="scrubLabel">{chapters[pages[Math.min(base, pages.length - 1)].chapter].shortName}</div>}
         <div className="scrubLine" ref={scrubRef}>
           <svg className="scrubFlourish" viewBox="0 0 300 12" aria-hidden="true">
             <path
@@ -556,11 +605,11 @@ export default function Book() {
           <div
             className="scrubThumb"
             aria-hidden="true"
-            style={{ left: `${((base / (pages.length - 1)) * 100).toFixed(2)}%` }}
+            style={{ left: `${((base / (total - 1)) * 100).toFixed(2)}%` }}
           />
         </div>
         <div className="scrubCount">
-          {base + 1} / {pages.length}
+          {base + 1} / {total}
         </div>
       </div>
 
