@@ -204,6 +204,29 @@ function ShareRule({ page }: { page: BookPage }) {
   );
 }
 
+/* Kendall's legal line (2026-08-13, "in a non-horrible looking way"):
+   a whisper of ink at the very bottom edge of EVERY page. Lives in
+   PageLeaf, not PageContent, so the ghost show-through never doubles it. */
+function LegalLine() {
+  const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
+  return (
+    <div className="pageLegal">
+      © 2026 Ramp Business Corporation. &ldquo;Ramp&rdquo; and the Ramp logo are registered trademarks of the
+      company.{" "}
+      <a
+        href="https://ramp.com/legal/privacy-policy"
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={stop}
+        onPointerDown={stop}
+        onPointerUp={stop}
+      >
+        Privacy Policy
+      </a>
+    </div>
+  );
+}
+
 /* The page's ramp mark (owner-picked placement: bottom center on the
    folio row), linking to ramp.com. */
 function RampMarks() {
@@ -317,6 +340,7 @@ function PageLeaf({
         <div className="edgeShade" aria-hidden="true" />
         <RampMarks />
         {page.kind !== "locked" && <ShareRule page={page} />}
+        <LegalLine />
       </div>
     </div>
   );
@@ -508,7 +532,20 @@ export default function Book() {
   };
 
   return (
-    <main className="scene" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+    <main
+      className="scene"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      onClick={(e) => {
+        // the dark gutters around the page turn it too (owner: tapping
+        // the black bars on mobile did nothing). Everything interactive
+        // either stops propagation (scrubber, arrows, tail paper) or is
+        // handled by the page's own zoned click.
+        const t = e.target as HTMLElement | null;
+        if (t && t.closest && t.closest(".bookArea")) return;
+        go(e.clientX / window.innerWidth < 0.5 ? base - step : base + step);
+      }}
+    >
       <div className="haze" aria-hidden="true" />
       <Dust />
 

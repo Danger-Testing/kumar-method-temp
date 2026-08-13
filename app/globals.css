@@ -1761,6 +1761,34 @@ video.smokeHidden {
   transform: translateX(-50%);
 }
 
+/* Kendall's legal line: a whisper at the page's very bottom edge,
+   below the folio row — present on every leaf */
+.pageLegal {
+  position: absolute;
+  left: 9cqw;
+  right: 9cqw;
+  bottom: 1.7cqw;
+  z-index: 4;
+  text-align: center;
+  font-family: var(--font-garamond), Georgia, serif;
+  font-size: 1.62cqw;
+  letter-spacing: 0.02em;
+  color: rgba(74, 56, 36, 0.48);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.pageLegal a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+  pointer-events: auto;
+}
+
+.pageLegal a:hover {
+  color: rgba(74, 56, 36, 0.9);
+}
+
 /* the share mark: Fell italic on the folio row, on the corner
    OPPOSITE the folio (verso/recto symmetry). Printer's mark leads. */
 .pageShare {
