@@ -43,9 +43,11 @@ function Eyebrow({ text }: { text: string }) {
 /*  Page content (also reused, mirrored, as show-through ghosting)     */
 /* ------------------------------------------------------------------ */
 
-/* Etchings on SOME pages (Kendall's idea, owner-approved 2026-08-13):
-   sepia copperplate-style vignettes generated to match the reference
-   mock, multiplied into the paper. Keyed "chapter-rule". */
+/* Etchings on SOME pages (Kendall's idea). PARKED for now — the crew
+   called the first batch "a little cheap" (2026-08-13). Flip this ONE
+   flag when there's art everyone likes; the assets and wiring stay. */
+const SHOW_ILLUSTRATIONS = false;
+
 const ILLUSTRATIONS: Record<string, { src: string; alt: string }> = {
   "0-3": { src: "/illustrations/rule-0-3.png", alt: "A modest car on a lane before a stone cottage" },
   "0-5": { src: "/illustrations/rule-0-5.png", alt: "Four chairs drawn close around a small table with a lamp" },
@@ -116,10 +118,7 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
           ))}
         </h1>
         <Flourish />
-        <p className="lockedNote">
-          This chapter arrives tomorrow.
-          <span className="lockedSub">Good things compound.</span>
-        </p>
+        <p className="lockedNote">This chapter arrives tomorrow.</p>
         <div className="folio">P. {pageNumber}</div>
       </div>
     );
@@ -137,7 +136,7 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
         </span>
       </div>
       <div className="rules">
-        {page.ruleIndexes.length === 1 && ILLUSTRATIONS[`${page.chapter}-${page.ruleIndexes[0]}`] && (
+        {SHOW_ILLUSTRATIONS && page.ruleIndexes.length === 1 && ILLUSTRATIONS[`${page.chapter}-${page.ruleIndexes[0]}`] && (
           <img
             className="ruleArt"
             src={ILLUSTRATIONS[`${page.chapter}-${page.ruleIndexes[0]}`].src}
@@ -193,7 +192,14 @@ function ShareRule({ page }: { page: BookPage }) {
   };
   return (
     <button type="button" className="pageShare" onClick={share} onPointerDown={stop} onPointerUp={stop}>
-      <span aria-hidden="true">&#10087;</span> {copied ? "copied" : page.kind === "rules" ? "share this rule" : "share the book"}
+      <svg className="shareIco" viewBox="0 0 16 16" aria-hidden="true">
+        <g fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M8 1.8 L8 9.6" />
+          <path d="M5.3 4.3 L8 1.6 L10.7 4.3" />
+          <path d="M5.2 6.9 H3.4 V14.1 H12.6 V6.9 H10.8" />
+        </g>
+      </svg>
+      {copied ? "copied" : "share"}
     </button>
   );
 }

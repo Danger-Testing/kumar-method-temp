@@ -757,7 +757,8 @@ body {
   -webkit-user-select: none;
   position: fixed;
   left: 50%;
-  bottom: 2vh;
+  /* hugs the screen bottom — it was riding over the tail (owner) */
+  bottom: 6px;
   transform: translateX(-50%);
   width: min(280px, 62vw);
   padding: 8px 0 10px;
@@ -813,10 +814,11 @@ body {
   background: rgba(233, 214, 178, 0.9);
 }
 
-/* tap arrows flanking the scrubber (mobile-friendly page turns) */
+/* tap arrows: the bottom corners of the screen, flanking the page
+   (owner, 2026-08-13 — they crowded the scrubber before) */
 .pageArrow {
   position: fixed;
-  bottom: calc(2vh + 4px);
+  bottom: 16px;
   width: 44px;
   height: 44px;
   display: grid;
@@ -831,11 +833,11 @@ body {
 }
 
 .arrowLeft {
-  left: calc(50% - min(140px, 31vw) - 52px);
+  left: 18px;
 }
 
 .arrowRight {
-  right: calc(50% - min(140px, 31vw) - 52px);
+  right: 18px;
 }
 
 .pageArrow:hover,
