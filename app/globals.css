@@ -638,6 +638,17 @@ body {
   padding-bottom: 10cqw;
 }
 
+/* the etchings: alpha PNGs of pure ink strokes (the "multiply" is
+   baked into the asset — CSS blend modes died in the isolated
+   stacking context here); the page's grain/blotch layers age them */
+.ruleArt {
+  display: block;
+  width: 64cqw;
+  margin: 0 auto 1.5cqw;
+  user-select: none;
+  pointer-events: none;
+}
+
 .rule {
   font-size: 3.7cqw;
   line-height: 1.68;

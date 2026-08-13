@@ -43,6 +43,15 @@ function Eyebrow({ text }: { text: string }) {
 /*  Page content (also reused, mirrored, as show-through ghosting)     */
 /* ------------------------------------------------------------------ */
 
+/* Etchings on SOME pages (Kendall's idea, owner-approved 2026-08-13):
+   sepia copperplate-style vignettes generated to match the reference
+   mock, multiplied into the paper. Keyed "chapter-rule". */
+const ILLUSTRATIONS: Record<string, { src: string; alt: string }> = {
+  "0-3": { src: "/illustrations/rule-0-3.png", alt: "A modest car on a lane before a stone cottage" },
+  "0-5": { src: "/illustrations/rule-0-5.png", alt: "Four chairs drawn close around a small table with a lamp" },
+  "0-9": { src: "/illustrations/rule-0-9.png", alt: "An hourglass beside a stack of coins and a pocket watch" },
+};
+
 function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number }) {
   const ch = chapters[page.chapter];
 
@@ -125,6 +134,14 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
         </span>
       </div>
       <div className="rules">
+        {page.ruleIndexes.length === 1 && ILLUSTRATIONS[`${page.chapter}-${page.ruleIndexes[0]}`] && (
+          <img
+            className="ruleArt"
+            src={ILLUSTRATIONS[`${page.chapter}-${page.ruleIndexes[0]}`].src}
+            alt={ILLUSTRATIONS[`${page.chapter}-${page.ruleIndexes[0]}`].alt}
+            draggable={false}
+          />
+        )}
         {page.ruleIndexes.map((ri) => (
           <div className="rule" key={ri}>
             <div className="ruleNum" aria-label={`Rule ${ri + 1}`}>

@@ -426,3 +426,19 @@ ADDENDUM 2026-08-13: the tail enters the READER
   the /api/enterprise-leads route stay in the repo, unused.
 - Kendall's illustration idea (etchings on some pages) is discussed
   but NOT built.
+
+ADDENDUM 2026-08-13 (later): gate, share, etchings
+- CHAPTER GATE: lib/gate.ts (env override / one-chapter-per-day from
+  UNLOCK_START / UNLOCK_ALL). Teaser leaf ends the book ("Come back
+  tomorrow. Good things compound."). Set UNLOCK_START to the real
+  launch date at handoff.
+- SHARE MARK: ❧ + Fell italic on the folio row, corner opposite the
+  folio. Touch = native sheet; desktop = clipboard + "copied".
+- ETCHINGS: 3 sepia vignettes (ch I rules 4/6/10) generated with
+  Gemini image gen (gemini-2.5-flash-image, key borrowed from
+  crit-website/.env.local), white-pointed + feathered + baked to
+  ALPHA ink PNGs offline (PIL, /tmp/illos/gen.py recipe) — CSS
+  mix-blend-mode DOES NOT WORK at that DOM depth (isolated stacking
+  context), alpha bake is the way. ILLUSTRATIONS map in Book.tsx.
+- window.open("noopener") returns null on success — never use its
+  return as a popup-blocked signal (it navigated both tabs).
