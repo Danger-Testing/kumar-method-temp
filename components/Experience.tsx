@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Book from "@/components/Book";
 import TombScene from "@/components/TombScene";
 import EnterpriseAccessModal from "@/components/EnterpriseAccessModal";
+import KumarQuiz from "@/components/KumarQuiz";
 
 const Intro3D = dynamic(() => import("@/components/Intro3D"), { ssr: false });
 const ClosedBook = dynamic(() => import("@/components/ClosedBook"), { ssr: false });
@@ -18,6 +19,7 @@ export default function Experience() {
   const [phase, setPhase] = useState<"tomb" | "intro" | "book" | "closed">("intro");
   const [flash, setFlash] = useState(false);
   const [enterpriseOpen, setEnterpriseOpen] = useState(false);
+  const [quizOpen, setQuizOpen] = useState(false);
   // Lights are ON, period (owner call, 2026-08-11 after the glow was
   // dialed to its final level). The plain/inspection plumbing survives
   // in the components; there is deliberately no UI for it anymore.
@@ -175,6 +177,22 @@ export default function Experience() {
         </>
       )}
       {enterpriseOpen && <EnterpriseAccessModal onClose={() => setEnterpriseOpen(false)} />}
+      {/* DEV: the quiz launcher — bottom-left, deliberately low-key.
+          The quiz's final home on the site is still to be decided
+          (owner, 2026-08-12); the questions are the deliverable. */}
+      <button
+        type="button"
+        className="quizDevBtn"
+        onClick={(e) => {
+          e.stopPropagation(); // must not release the hold / open the book
+          setQuizOpen(true);
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
+      >
+        start quiz
+      </button>
+      {quizOpen && <KumarQuiz onClose={() => setQuizOpen(false)} />}
     </>
   );
 }
