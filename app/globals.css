@@ -82,8 +82,8 @@ body {
   position: relative;
   /* leaves breathing room beneath the pages for the scrubber AND the
      tail (owner, 2026-08-13: pages scaled down a touch + lifted so the
-     tail is never clipped by the window) */
-  height: min(76svh, 128vw);
+     tail is never clipped by the window; nudged smaller again same day) */
+  height: min(73svh, 122vw);
   aspect-ratio: 0.66;
   cursor: pointer;
   z-index: 2;
@@ -104,6 +104,26 @@ body {
   transform: translateX(-50%) scale(0.72);
   transform-origin: top center;
   pointer-events: none; /* the paper re-enables */
+  /* ONE object: the tail dissolves in on the page's own entrance
+     curve (same clock as .enterFirst — duration, easing, blur) */
+  animation: tailEnter 1.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes tailEnter {
+  from {
+    opacity: 0;
+    filter: blur(14px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+/* the inner ribbon's own fade would double up — the wrapper owns it */
+.readerTail .bookBanner {
+  animation: none;
+  opacity: 1;
 }
 
 /* two-page spread: it hangs from the RIGHT page, like the mock */
@@ -111,10 +131,11 @@ body {
   left: 75%;
 }
 
-/* phones: a touch smaller — it must clear the scrubber */
+/* phones: LARGER, not smaller — the tail must stay very legible
+   (owner call; the page shrank to make the room) */
 @media (max-width: 720px) {
   .readerTail {
-    transform: translateX(-50%) scale(0.6);
+    transform: translateX(-50%) scale(0.85);
   }
 }
 

@@ -501,9 +501,7 @@ export default function Book() {
 
       <div className="vignette" aria-hidden="true" />
 
-      <div className={`hint ${hasTurned ? "hintGone" : ""}`} aria-hidden={hasTurned}>
-        tap the page · or use ← → to turn
-      </div>
+      {/* (the "tap the page" hint is retired — owner, 2026-08-13) */}
 
 
       <div
