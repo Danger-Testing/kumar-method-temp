@@ -400,3 +400,16 @@ ADDENDUM 2026-08-12 (later): ribbon interaction hardening
 - The held stack settles ~6% smaller and 0.09 world higher after the
   boom (IntroScene "settle") so the swallowtail clears the fold while
   the book bobs.
+
+ADDENDUM 2026-08-12 (evening): the dismissed state IS the held opening
+Sponsor feedback: they loved the opening hold (tail, light sweep, no
+dragging) and disliked the drag-to-spin dismissed room. Now dismissing
+the reader reveals the SAME held page: Intro3D gained startHeld (the
+timeline begins at the hold — no emergence replay) and active=false
+standby (pre-mounted invisibly under the reader; pointer-events AND
+the keydown skip are dead — Esc while reading must not fire it).
+Experience keys the held instance by heldGen and remounts it after
+each dive (a finished timeline can't be re-held). Tap the book → the
+same dive + golden flash back into the reader. The spinnable
+ClosedBook is RETIRED from the flow but the component file stays
+untouched as the safe copy — one import away if wanted back.

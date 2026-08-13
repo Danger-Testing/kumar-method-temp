@@ -8,7 +8,9 @@ import EnterpriseAccessModal from "@/components/EnterpriseAccessModal";
 import KumarQuiz from "@/components/KumarQuiz";
 
 const Intro3D = dynamic(() => import("@/components/Intro3D"), { ssr: false });
-const ClosedBook = dynamic(() => import("@/components/ClosedBook"), { ssr: false });
+// The spinnable ClosedBook is RETIRED from the flow (sponsor call,
+// 2026-08-12: the dismissed state is the held opening now) but kept
+// safe in components/ClosedBook.tsx — one import away if wanted back.
 
 import type { HoleRect } from "@/components/Intro3D";
 
@@ -20,6 +22,9 @@ export default function Experience() {
   const [flash, setFlash] = useState(false);
   const [enterpriseOpen, setEnterpriseOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
+  // remount key for the held (dismissed-state) instance: each dive
+  // finishes its timeline, so the next dismissal needs a fresh one
+  const [heldGen, setHeldGen] = useState(0);
   // Lights are ON, period (owner call, 2026-08-11 after the glow was
   // dialed to its final level). The plain/inspection plumbing survives
   // in the components; there is deliberately no UI for it anymore.
@@ -29,6 +34,37 @@ export default function Experience() {
   // rect and its interior clip-path polygon in kumar.css
   // (x 45.9–54.1%, y 49–78.6% of the frame)
   const holeRef = useRef<HoleRect | null>(null);
+
+  // the scene stays alive behind the book instead of dying to black:
+  // the room settles at 70% dark, the tomb at 40% — and when the
+  // gilding ignites, its glow lights the whole chamber back up,
+  // flickering with the awakening. Shared by the intro AND the held
+  // (dismissed-state) instance.
+  const gradeTomb = (fade: number, glow: number, doorGlow = 0) => {
+    const el = tombHostRef.current;
+    if (!el) return;
+    const bg = el.querySelector<HTMLElement>(".km-landing-background");
+    const frame = el.querySelector<HTMLElement>(".km-tomb-frame");
+    const smoke = el.querySelector<HTMLVideoElement>(".km-landing-general-smoke");
+    const stone = el.querySelector<HTMLElement>(".tombLitStone");
+    const floor = el.querySelector<HTMLElement>(".tombFloorLight");
+    if (bg) {
+      // preserve Marc's base grade, add the darkening + glow lift —
+      // at full ignition the room floods with light
+      bg.style.filter = `saturate(.78) contrast(1.05) brightness(${((1 - 0.7 * fade) * (1 + 1.7 * glow)).toFixed(3)})`;
+    }
+    if (frame) {
+      // the stone catches the most light — it blazes at the crest
+      frame.style.filter = `brightness(${((1 - 0.4 * fade) * (1 + 2 * glow)).toFixed(3)})`;
+    }
+    // scale Marc's base opacity (.52), never replace it — writing
+    // 1.0 here doubled the smoke into a fog wall on click
+    if (smoke) smoke.style.opacity = (0.52 * (1 - 0.7 * fade)).toFixed(3);
+    if (stone) stone.style.opacity = Math.min(1, glow).toFixed(3);
+    if (floor) floor.style.opacity = Math.min(1, 0.95 * glow).toFixed(3);
+    const door = el.querySelector<HTMLElement>(".tombDoorGlow");
+    if (door) door.style.opacity = Math.min(1, doorGlow).toFixed(3);
+  };
 
   useEffect(() => {
     const measure = () => {
@@ -93,35 +129,7 @@ export default function Experience() {
           plain={plain}
           holeRect={holeRef}
           uiBlocked={enterpriseOpen}
-          onTombFade={(fade, glow, doorGlow = 0) => {
-            // the scene stays alive behind the book instead of dying to
-            // black: the room settles at 70% dark, the tomb at 40% — and
-            // when the gilding ignites, its glow lights the whole chamber
-            // back up, flickering with the awakening
-            const el = tombHostRef.current;
-            if (!el) return;
-            const bg = el.querySelector<HTMLElement>(".km-landing-background");
-            const frame = el.querySelector<HTMLElement>(".km-tomb-frame");
-            const smoke = el.querySelector<HTMLVideoElement>(".km-landing-general-smoke");
-            const stone = el.querySelector<HTMLElement>(".tombLitStone");
-            const floor = el.querySelector<HTMLElement>(".tombFloorLight");
-            if (bg) {
-              // preserve Marc's base grade, add the darkening + glow lift —
-              // at full ignition the room floods with light
-              bg.style.filter = `saturate(.78) contrast(1.05) brightness(${((1 - 0.7 * fade) * (1 + 1.7 * glow)).toFixed(3)})`;
-            }
-            if (frame) {
-              // the stone catches the most light — it blazes at the crest
-              frame.style.filter = `brightness(${((1 - 0.4 * fade) * (1 + 2 * glow)).toFixed(3)})`;
-            }
-            // scale Marc's base opacity (.52), never replace it — writing
-            // 1.0 here doubled the smoke into a fog wall on click
-            if (smoke) smoke.style.opacity = (0.52 * (1 - 0.7 * fade)).toFixed(3);
-            if (stone) stone.style.opacity = Math.min(1, glow).toFixed(3);
-            if (floor) floor.style.opacity = Math.min(1, 0.95 * glow).toFixed(3);
-            const door = el.querySelector<HTMLElement>(".tombDoorGlow");
-            if (door) door.style.opacity = Math.min(1, doorGlow).toFixed(3);
-          }}
+          onTombFade={gradeTomb}
           onDone={(finished) => {
             setFlash(finished);
             setPhase("book");
@@ -129,13 +137,24 @@ export default function Experience() {
         />
       )}
 
-      {/* pre-mounted (hidden) while reading, so dismissing reveals a
-          fully-rendered book instead of a jarring late pop-in */}
+      {/* the dismissed state IS the held opening (sponsor call,
+          2026-08-12): same page — the tail, the light sweep, tap the
+          book to dive back in. Pre-mounted (hidden) while reading so
+          dismissal reveals a fully-rendered book instead of a pop-in. */}
       {(phase === "book" || phase === "closed") && (
-        <ClosedBook
+        <Intro3D
+          key={`held-${heldGen}`}
+          emerge
+          startHeld
           active={phase === "closed"}
-          onOpen={() => setPhase("book")}
           plain={plain}
+          uiBlocked={enterpriseOpen}
+          onTombFade={gradeTomb}
+          onDone={(finished) => {
+            setHeldGen((g) => g + 1);
+            setFlash(finished);
+            setPhase("book");
+          }}
         />
       )}
 

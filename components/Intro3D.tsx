@@ -18,6 +18,8 @@ const D = H * (230 / 852) * 0.9;
 const CT = 0.05; // cover board thickness
 
 const TOTAL = 5.3; // seconds
+/** the dive clock freezes here after arrival — the held book */
+const HOLD_AT = 2.4;
 
 /** the tomb doorway's screen rect, as viewport fractions (measured by
     Experience off .km-tomb-frame + the clip-path polygon in kumar.css) */
@@ -509,6 +511,7 @@ function IntroScene({
   portalEl,
   holding = false,
   hotspotEl,
+  startHeld = false,
 }: {
   emerge: boolean;
   /** inspection mode: flat white rig, no ignition, no bloom, no glow */
@@ -521,6 +524,9 @@ function IntroScene({
   holding?: boolean;
   /** the cursor hotspot over the book — repositioned every frame */
   hotspotEl?: MutableRefObject<HTMLDivElement>;
+  /** begin the timeline AT the hold: no emergence replay — the
+      dismissed state IS the held opening (sponsor call, 2026-08-12) */
+  startHeld?: boolean;
   /** EXPERIMENT (owner, 2026-08-11): the book holds after arrival until
       a click releases the dive. Shared gate with the root's click. */
   holdGate?: MutableRefObject<{ holding: boolean; released: boolean }>;
@@ -543,8 +549,12 @@ function IntroScene({
 
   useFrame(({ clock }) => {
     // the timeline starts on the first *rendered* frame, so slow texture
-    // loads on mobile don't swallow the opening beats of the spin
-    if (startRef.current === null) startRef.current = clock.getElapsedTime();
+    // loads on mobile don't swallow the opening beats of the spin.
+    // startHeld: begin AT the hold — emergence already over, book held.
+    if (startRef.current === null) {
+      startRef.current =
+        clock.getElapsedTime() - (startHeld ? ((emerge ? 0.85 : 0) + HOLD_AT) / 1.15 : 0);
+    }
     // 1.15 = overall tempo: the whole sequence plays ~15% faster
     const t = (clock.getElapsedTime() - startRef.current) * 1.15;
     const g = group.current;
@@ -558,7 +568,6 @@ function IntroScene({
     // after arrival; the click releases it exactly where it froze. All
     // t-based motion (bob, settle, boom decay, chamber flicker) keeps
     // living during the hold, so the book breathes in place.
-    const HOLD_AT = 2.4;
     const raw = Math.max(0, t - E);
     let tt = raw;
     const gate = holdGate?.current;
@@ -773,6 +782,8 @@ export default function Intro3D({
   onTombFade,
   holeRect,
   uiBlocked = false,
+  startHeld = false,
+  active = true,
 }: {
   /** true while the access modal is open: ALL skip keys must bail
       (Esc closes forms; it must not simultaneously skip the intro) */
@@ -787,6 +798,13 @@ export default function Intro3D({
   onTombFade?: (fade: number, glow: number, doorGlow?: number) => void;
   /** the tomb doorway, measured by Experience — anchors the emergence */
   holeRect?: MutableRefObject<HoleRect | null>;
+  /** begin AT the hold (the dismissed state IS the held opening —
+      sponsor call, 2026-08-12): no emergence replay */
+  startHeld?: boolean;
+  /** false = standby: pre-mounted invisibly under the reader so the
+      dismissal reveals a fully-rendered held book. EVERYTHING must be
+      inert (keys included) — same trap as the old closed-book standby. */
+  active?: boolean;
 }) {
   // TheBook is THE book — no GLB detection, no mount gate. The timeline
   // still starts on the first rendered frame (startRef in IntroScene),
@@ -803,9 +821,9 @@ export default function Intro3D({
 
   useEffect(() => {
     const skip = (e: KeyboardEvent) => {
-      // the access modal owns the keyboard while open — Esc must close
-      // the form, not skip the intro underneath it
-      if (uiBlocked) return;
+      // standby must be deaf too: Esc while READING must not skip the
+      // hidden held instance into a phase change
+      if (!active || uiBlocked) return;
       // typing in any form must never skip the intro
       const t = e.target as HTMLElement | null;
       if (
@@ -821,12 +839,12 @@ export default function Intro3D({
     };
     window.addEventListener("keydown", skip);
     return () => window.removeEventListener("keydown", skip);
-  }, [onDone, uiBlocked]);
+  }, [onDone, uiBlocked, active]);
 
   return (
     <div
       ref={rootRef}
-      className={`introRoot ${emerge ? "overTomb" : ""}`}
+      className={`introRoot ${emerge ? "overTomb" : ""} ${active ? "" : "introStandby"}`}
       onClick={(e) => {
         const g = holdGate.current;
         if (g.holding && !g.released) {
@@ -857,6 +875,7 @@ export default function Intro3D({
           camera={{ position: [0, 0, 4.15], fov: 40 }}
           gl={{ antialias: true }} // no composer anymore — MSAA must cover the edges
           dpr={isCoarse() ? [1, 1.5] : [1, 1.75]}
+          frameloop={active ? "always" : "demand"}
         >
           <IntroScene
             emerge={emerge}
@@ -867,6 +886,7 @@ export default function Intro3D({
             portalEl={rootRef}
             holding={holding}
             hotspotEl={hotspotRef}
+            startHeld={startHeld}
             onEmerge={(rise, t, ignite, doorGlow) => {
               // the tomb (persistent layer behind us) settles into its
               // 70/40 grade through the rise, then the ignition's own

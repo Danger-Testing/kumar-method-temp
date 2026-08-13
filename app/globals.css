@@ -919,6 +919,19 @@ video.smokeHidden {
   cursor: default;
 }
 
+/* the held (dismissed-state) instance pre-mounts invisibly under the
+   reader — EVERYTHING inert, keys included (same trap as the retired
+   closed-book standby: the canvas's INLINE pointer-events eats reader
+   taps without the !important) */
+.introRoot.introStandby {
+  opacity: 0;
+}
+
+.introRoot.introStandby,
+.introRoot.introStandby * {
+  pointer-events: none !important;
+}
+
 /* the cursor hotspot: an invisible div the scene glues to the book's
    screen rect every frame. Pointer over the tome; it carries no
    handlers — clicks bubble to the scene container, which does its own
