@@ -5,7 +5,8 @@ import dynamic from "next/dynamic";
 import Book from "@/components/Book";
 import TombScene from "@/components/TombScene";
 import EnterpriseAccessModal from "@/components/EnterpriseAccessModal";
-import KumarQuiz from "@/components/KumarQuiz";
+// The quiz is OFF the site for now (owner, 2026-08-12) — the questions
+// live on in components/KumarQuiz.tsx, wiring is one import away.
 
 const Intro3D = dynamic(() => import("@/components/Intro3D"), { ssr: false });
 // The spinnable ClosedBook is RETIRED from the flow (sponsor call,
@@ -21,7 +22,6 @@ export default function Experience() {
   const [phase, setPhase] = useState<"tomb" | "intro" | "book" | "closed">("intro");
   const [flash, setFlash] = useState(false);
   const [enterpriseOpen, setEnterpriseOpen] = useState(false);
-  const [quizOpen, setQuizOpen] = useState(false);
   // remount key for the held (dismissed-state) instance: each dive
   // finishes its timeline, so the next dismissal needs a fresh one
   const [heldGen, setHeldGen] = useState(0);
@@ -196,26 +196,6 @@ export default function Experience() {
         </>
       )}
       {enterpriseOpen && <EnterpriseAccessModal onClose={() => setEnterpriseOpen(false)} />}
-      {/* DEV: the quiz launcher — bottom-left, deliberately low-key.
-          The quiz's final home on the site is still to be decided
-          (owner, 2026-08-12); the questions are the deliverable.
-          Hidden in the reader: it sat on the left tap-arrow on phones
-          (peer catch). */}
-      {phase !== "book" && (
-      <button
-        type="button"
-        className="quizDevBtn"
-        onClick={(e) => {
-          e.stopPropagation(); // must not release the hold / open the book
-          setQuizOpen(true);
-        }}
-        onPointerDown={(e) => e.stopPropagation()}
-        onPointerUp={(e) => e.stopPropagation()}
-      >
-        start quiz
-      </button>
-      )}
-      {quizOpen && <KumarQuiz onClose={() => setQuizOpen(false)} />}
     </>
   );
 }
