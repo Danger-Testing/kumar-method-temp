@@ -179,7 +179,10 @@ export default function Experience() {
       {enterpriseOpen && <EnterpriseAccessModal onClose={() => setEnterpriseOpen(false)} />}
       {/* DEV: the quiz launcher — bottom-left, deliberately low-key.
           The quiz's final home on the site is still to be decided
-          (owner, 2026-08-12); the questions are the deliverable. */}
+          (owner, 2026-08-12); the questions are the deliverable.
+          Hidden in the reader: it sat on the left tap-arrow on phones
+          (peer catch). */}
+      {phase !== "book" && (
       <button
         type="button"
         className="quizDevBtn"
@@ -192,6 +195,7 @@ export default function Experience() {
       >
         start quiz
       </button>
+      )}
       {quizOpen && <KumarQuiz onClose={() => setQuizOpen(false)} />}
     </>
   );
