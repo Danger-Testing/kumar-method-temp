@@ -290,6 +290,11 @@ body {
   background: linear-gradient(to left, rgba(20, 12, 5, 0.28), rgba(20, 12, 5, 0) 26%);
 }
 
+/* the reverse curl lands flat and visible — same shade fade-out */
+.flipRevOne .faceFront::after {
+  animation: flipShadeOut 0.52s both;
+}
+
 .flipFace {
   position: absolute;
   inset: 0;
@@ -319,6 +324,20 @@ body {
 .flipFwd .faceBack::after,
 .flipRev .faceFront::after {
   background: linear-gradient(to left, rgba(20, 12, 5, 0.28), rgba(20, 12, 5, 0) 26%);
+  /* the LANDING face: its spine shadow fades out through the last
+     quarter of the turn, so the flipper's unmount has nothing left to
+     pop away (the "shadow then it goes to zero" flash — owner) */
+  animation: flipShadeOut 0.74s both;
+}
+
+@keyframes flipShadeOut {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .spreadOpen::after {
@@ -1757,6 +1776,16 @@ video.smokeHidden {
 .pageShare:hover,
 .pageShare:focus-visible {
   color: rgba(46, 33, 18, 1);
+}
+
+/* the glyph rides inline with the word, small (it rendered at the
+   SVG default size at first — enormous) */
+.shareIco {
+  display: inline-block;
+  width: 0.82em;
+  height: 0.82em;
+  vertical-align: -0.06em;
+  margin-right: 0.34em;
 }
 
 /* recto pages carry the folio on the right — the mark mirrors left */
