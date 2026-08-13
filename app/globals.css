@@ -812,6 +812,15 @@ body {
   opacity: 0.8;
 }
 
+/* the spread hangs the tail under the RIGHT page — the scrubber
+   mirrors it under the LEFT one (same bookArea math: a quarter of the
+   spread's width off center), so they can never overlap */
+@media (min-width: 900px) and (orientation: landscape) {
+  .scrubber {
+    left: calc(50% - min(73svh, 122vw) * 0.33);
+  }
+}
+
 .scrubCount {
   display: block;
   margin-top: 5px;
