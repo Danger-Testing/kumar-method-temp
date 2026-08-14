@@ -394,6 +394,28 @@ export default function Book() {
   const [hasTurned, setHasTurned] = useState(false);
   const [spread, setSpread] = useState(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const areaRef = useRef<HTMLDivElement>(null);
+
+  // DYNAMIC tail sizing (owner, 2026-08-13: "the page is the priority,
+  // not this huge CTA"): the tail scales to ~85% of the page LEAF's
+  // width, clamped — always subordinate to the page. Two passes because
+  // the page's height formula reads the tail's size back (fixed point
+  // converges immediately).
+  useEffect(() => {
+    const update = () => {
+      const area = areaRef.current;
+      if (!area) return;
+      for (let i = 0; i < 2; i++) {
+        const w = area.getBoundingClientRect().width;
+        const leafW = spread ? w / 2 : w;
+        const s = Math.min(0.72, Math.max(0.55, (leafW * 0.85) / 400));
+        area.style.setProperty("--tailScale", s.toFixed(3));
+      }
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [spread]);
 
   // CHAPTER GATE (lib/gate.ts): only unlocked chapters render, plus a
   // teaser leaf naming the next one. Starts at 1 for a hydration-safe
@@ -527,6 +549,7 @@ export default function Book() {
       <Dust />
 
       <div
+        ref={areaRef}
         className={`bookArea ${spread ? "spreadOpen" : ""}`}
         onClick={onPageClick}
         role="region"

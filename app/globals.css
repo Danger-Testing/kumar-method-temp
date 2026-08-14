@@ -83,14 +83,15 @@ body {
   /* THE VSTACK (owner, 2026-08-13): page -> tail -> terms, sized
      backward from "the terms are always visible". Single-page views
      reserve the whole lower band; the spread restores bigger pages. */
-  --tailScale: 0.72;
+  --tailScale: 0.72; /* fallback — Book.tsx sets it DYNAMICALLY from
+     the page leaf's width so the tail is always subordinate */
   /* the page's height SUBTRACTS the tail + terms pixels — the band
-     below is guaranteed, not hoped for */
-  height: min(68svh, 118vw, calc(100svh - var(--tailScale, 0.72) * 218px - 150px));
+     below is guaranteed, not hoped for. The page takes the rest. */
+  height: min(74svh, 128vw, calc(100svh - var(--tailScale, 0.72) * 218px - 130px));
   aspect-ratio: 0.66;
   cursor: pointer;
   z-index: 2;
-  margin-bottom: calc(var(--tailScale, 0.72) * 218px + 66px);
+  margin-bottom: calc(var(--tailScale, 0.72) * 218px + 56px);
   /* the swipe curl needs depth in single-page mode too */
   perspective: 2600px;
 }
@@ -158,14 +159,6 @@ body {
 /* two-page spread: it hangs from the RIGHT page, like the mock */
 .spreadOpen .readerTail {
   left: 75%;
-}
-
-/* narrow screens: the tail stays LARGE for legibility (owner call);
-   the page gives up the room */
-@media (max-width: 720px) {
-  .bookArea {
-    --tailScale: 0.8; /* the height/margin formulas pick it up */
-  }
 }
 
 /* mobile (touch): the pages are an object, not copy — no text selection,
