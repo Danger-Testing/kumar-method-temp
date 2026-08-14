@@ -5,6 +5,7 @@ import { chapters } from "@/lib/content";
 import { pages, firstPageOfChapter, seeded, type BookPage } from "@/lib/pages";
 import { unlockedChapters } from "@/lib/gate";
 import BookBanner from "@/components/BookBanner";
+import LegalLine from "@/components/LegalLine";
 
 /* ------------------------------------------------------------------ */
 /*  Ornaments                                                          */
@@ -201,30 +202,6 @@ function ShareRule({ page }: { page: BookPage }) {
       </svg>
       {copied ? "copied" : "share"}
     </button>
-  );
-}
-
-/* Kendall's legal line (2026-08-13, "in a non-horrible looking way"):
-   in the DARK between the page's bottom edge and the scrubber (owner —
-   on the parchment it made the page bottom look weird). One fixed
-   element for the whole reader. */
-function LegalLine() {
-  const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
-  return (
-    <div className="pageLegal">
-      © 2026 Ramp Business Corporation. &ldquo;Ramp&rdquo; and the Ramp logo are registered trademarks of the
-      company.{" "}
-      <a
-        href="https://ramp.com/legal/privacy-policy"
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={stop}
-        onPointerDown={stop}
-        onPointerUp={stop}
-      >
-        Privacy Policy
-      </a>
-    </div>
   );
 }
 

@@ -6,6 +6,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture, useGLTF, Html } from "@react-three/drei";
 import { TheBook, BookLights, IGNITE_FULL, ribbonPin, bookRect } from "@/components/TheBook";
 import BookBanner, { bannerTapGuard } from "@/components/BookBanner";
+import LegalLine from "@/components/LegalLine";
 
 const PIN = new THREE.Vector3();
 const RECT = { l: 0, t: 0, r: 0, b: 0 };
@@ -937,6 +938,9 @@ export default function Intro3D({
           <div className={`closedTitle heroWait ${holding ? "heroShow" : ""}`}>
             Tap to open the book.
           </div>
+          {/* the legal line lives on EVERY screen (Kendall) — here it
+              arrives with the hold copy */}
+          <LegalLine className={`heroWait ${holding ? "heroShow" : ""}`} />
           {/* cursor hotspot: pointer over the tome, arrow elsewhere */}
           <div className="bookHotspot" ref={hotspotRef} aria-hidden="true" />
         </>
