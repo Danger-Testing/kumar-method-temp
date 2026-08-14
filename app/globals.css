@@ -2292,3 +2292,8 @@ video.smokeHidden {
   margin-top: 12px;
   font-size: 13px;
 }
+
+.dashBtn.big {
+  padding: 12px 22px;
+  font-size: 15px;
+}

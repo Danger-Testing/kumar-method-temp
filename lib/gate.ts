@@ -54,7 +54,9 @@ export function computeGate(start: string, override: number | null, now = new Da
   let daysToNext = 0;
   if (unlocked < TOTAL_CHAPTERS) {
     if (override && override >= 1) {
-      daysToNext = 1; // calendar paused by override: promise tomorrow
+      // countdown PAUSED (pre-launch or manual hold): the teaser shows
+      // a frozen "in 2 days" (owner call, 2026-08-13) — no live clock
+      daysToNext = 2;
     } else {
       const s = new Date(`${start}T00:00:00`);
       const next = new Date(s.getTime() + unlocked * 86400000);

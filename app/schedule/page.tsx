@@ -4,13 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { chapters } from "@/lib/content";
 import { computeGate } from "@/lib/gate";
 
-/* THE RELEASE DASHBOARD (owner, 2026-08-13, v2): a normal admin
-   panel — deliberately NOT in the book's design language — with real
-   controls. State lives in Vercel Edge Config behind /api/gate;
-   changes are live for readers within ~a minute (CDN cache) and need
-   no deploy. Writes require the team passcode (GATE_ADMIN_KEY env). */
-
-const DAY = 86400000;
+/* THE RELEASE DASHBOARD, v3 — simpler (owner). One decision on top:
+   the countdown. Paused = chapter I only and the book promises "in 2
+   days" (frozen). START COUNTDOWN makes today day one → chapter II
+   tomorrow, one per day after, on each reader's local clock. */
 
 type Gate = {
   start: string;
@@ -20,10 +17,14 @@ type Gate = {
   total: number;
 };
 
+const localToday = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
 export default function SchedulePage() {
   const [gate, setGate] = useState<Gate | null>(null);
   const [passcode, setPasscode] = useState("");
-  const [startInput, setStartInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
@@ -31,11 +32,7 @@ export default function SchedulePage() {
     setPasscode(window.localStorage.getItem("gatePasscode") ?? "");
     fetch("/api/gate", { cache: "no-store" })
       .then((r) => r.json())
-      .then((g: Gate) => {
-        const local = { ...g, ...computeGate(g.start, g.override) };
-        setGate(local);
-        setStartInput(local.start);
-      })
+      .then((g: Gate) => setGate({ ...g, ...computeGate(g.start, g.override) }))
       .catch(() => setMsg({ kind: "err", text: "Couldn't load the gate state." }));
   }, []);
 
@@ -52,10 +49,8 @@ export default function SchedulePage() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || "Something went wrong.");
-        const local = { ...data, ...computeGate(data.start, data.override) };
-        setGate(local);
-        setStartInput(local.start);
-        setMsg({ kind: "ok", text: `${okText} Readers see it within about a minute.` });
+        setGate({ ...data, ...computeGate(data.start, data.override) });
+        setMsg({ kind: "ok", text: `${okText} Readers see it within a minute.` });
       } catch (e) {
         setMsg({ kind: "err", text: e instanceof Error ? e.message : "Something went wrong." });
       } finally {
@@ -73,9 +68,7 @@ export default function SchedulePage() {
     );
   }
 
-  const start = new Date(`${gate.start}T00:00:00`);
-  const fmt = (d: Date) =>
-    d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  const paused = gate.override !== null;
   const canAct = passcode.trim().length > 0 && !busy;
 
   return (
@@ -84,8 +77,8 @@ export default function SchedulePage() {
         <div>
           <h1>Chapter releases</h1>
           <p className="dashMuted">
-            The Kumar Method · {gate.unlocked} of {gate.total} chapters live
-            {gate.override ? " · autopilot paused (manual override)" : " · autopilot: one per day"}
+            {gate.unlocked} of {gate.total} live ·{" "}
+            {paused ? "countdown NOT started — the book says “in 2 days”" : "countdown running: one chapter per day"}
           </p>
         </div>
         <input
@@ -100,55 +93,44 @@ export default function SchedulePage() {
       {msg && <div className={`dashMsg ${msg.kind}`}>{msg.text}</div>}
 
       <section className="dashCard">
-        <h2>Autopilot</h2>
-        <p className="dashMuted">
-          Chapter I goes live on day one, one more each day after, on the reader&rsquo;s local clock.
-        </p>
-        <div className="dashRow">
-          <label>
-            Day one
-            <input
-              className="dashInput"
-              type="date"
-              value={startInput}
-              onChange={(e) => setStartInput(e.target.value)}
-            />
-          </label>
-          <button
-            className="dashBtn primary"
-            disabled={!canAct || !startInput}
-            onClick={() => send({ start: startInput, override: null }, "Schedule saved and autopilot on.")}
-          >
-            Save schedule
-          </button>
-          {gate.override !== null && (
+        {paused ? (
+          <div className="dashRow">
             <button
-              className="dashBtn"
+              className="dashBtn primary big"
               disabled={!canAct}
-              onClick={() => send({ override: null }, "Autopilot resumed.")}
+              onClick={() =>
+                send(
+                  { start: localToday(), override: null },
+                  "Countdown started — today is day one, the next chapter lands tomorrow.",
+                )
+              }
             >
-              Resume autopilot
+              Start countdown
             </button>
-          )}
-        </div>
+            <span className="dashMuted">Today becomes day one. Next chapter tomorrow, one per day after.</span>
+          </div>
+        ) : (
+          <div className="dashRow">
+            <button
+              className="dashBtn big"
+              disabled={!canAct}
+              onClick={() => send({ override: gate.unlocked }, "Countdown paused where it stands.")}
+            >
+              Pause countdown
+            </button>
+            <span className="dashMuted">
+              Day one: {new Date(`${gate.start}T00:00:00`).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}.
+              Pausing freezes the book at {gate.unlocked} chapter{gate.unlocked > 1 ? "s" : ""}.
+            </span>
+          </div>
+        )}
       </section>
 
       <section className="dashCard">
-        <h2>Chapters</h2>
         <table className="dashTable">
-          <thead>
-            <tr>
-              <th>Chapter</th>
-              <th>Autopilot date</th>
-              <th>Status</th>
-              <th></th>
-              <th></th>
-            </tr>
-          </thead>
           <tbody>
             {chapters.map((ch, i) => {
               const n = i + 1;
-              const date = new Date(start.getTime() + i * DAY);
               const live = n <= gate.unlocked;
               return (
                 <tr key={ch.roman}>
@@ -157,21 +139,15 @@ export default function SchedulePage() {
                       {ch.roman}. {ch.fullName}
                     </strong>
                   </td>
-                  <td>{fmt(date)}</td>
                   <td>
-                    <span className={`dashPill ${live ? "live" : ""}`}>{live ? "Live" : "Scheduled"}</span>
+                    <span className={`dashPill ${live ? "live" : ""}`}>{live ? "Live" : "Locked"}</span>
                   </td>
                   <td>
                     {!live && (
                       <button
                         className="dashBtn small primary"
                         disabled={!canAct}
-                        onClick={() =>
-                          send(
-                            { override: n },
-                            `Chapters I–${ch.roman} are live now (autopilot paused).`,
-                          )
-                        }
+                        onClick={() => send({ override: n }, `Chapters I–${ch.roman} are live (countdown paused).`)}
                       >
                         Set live now
                       </button>
@@ -180,9 +156,9 @@ export default function SchedulePage() {
                       <button
                         className="dashBtn small"
                         disabled={!canAct}
-                        onClick={() => send({ override: n - 1 }, `Rolled back: chapter ${ch.roman} is hidden again.`)}
+                        onClick={() => send({ override: n - 1 }, `Chapter ${ch.roman} hidden again.`)}
                       >
-                        Roll back
+                        Undo
                       </button>
                     )}
                   </td>
@@ -196,11 +172,6 @@ export default function SchedulePage() {
             })}
           </tbody>
         </table>
-        <p className="dashMuted dashFoot">
-          &ldquo;Set live now&rdquo; pauses autopilot at that chapter; &ldquo;Resume autopilot&rdquo; hands
-          control back to the calendar. Previews are cosmetic and per-visit. Passcode lives in the
-          GATE_ADMIN_KEY environment variable.
-        </p>
       </section>
     </main>
   );
