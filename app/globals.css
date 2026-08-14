@@ -1793,6 +1793,13 @@ video.smokeHidden {
   color: rgba(233, 214, 178, 0.9);
 }
 
+/* the held screens: the tail dives deeper than the reader's — hug the
+   very bottom so the terms always clear it (the ribbon also shrank to
+   guarantee the strip) */
+.introRoot .pageLegal {
+  bottom: 8px;
+}
+
 /* invisible must mean untouchable too (the hold's fade-in) */
 .pageLegal.heroWait a {
   pointer-events: none;

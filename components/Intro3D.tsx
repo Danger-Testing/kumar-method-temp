@@ -730,8 +730,10 @@ function IntroScene({
       r.position.copy(PIN);
       r.rotation.x = g.rotation.x * 0.3;
       r.rotation.y = g.rotation.y * 0.3;
-      // 0.9: the swallowtail's tips clear the fold on every viewport
-      r.scale.setScalar(Math.max(0.001, g.scale.x) * 0.9);
+      // 0.84: the swallowtail's tips clear the fold AND leave a dark
+      // strip below for the legal line, on every viewport (owner:
+      // "always ensure those terms can be seen")
+      r.scale.setScalar(Math.max(0.001, g.scale.x) * 0.84);
     }
 
     // the cursor hotspot hugs the book: pointer over the tome only
