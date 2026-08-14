@@ -1761,21 +1761,24 @@ video.smokeHidden {
   transform: translateX(-50%);
 }
 
-/* Kendall's legal line: a whisper at the page's very bottom edge,
-   below the folio row — present on every leaf */
+/* Kendall's legal line: in the DARK between the page's bottom edge
+   and the scrubber (on the parchment it made the page bottom look
+   weird — owner). Rides the scrubber's horizontal home: centered on
+   phones, under the left page on the spread. */
 .pageLegal {
-  position: absolute;
-  left: 9cqw;
-  right: 9cqw;
-  bottom: 1.7cqw;
-  z-index: 4;
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 58px;
+  z-index: 45;
+  width: min(92vw, 680px);
   text-align: center;
   font-family: var(--font-garamond), Georgia, serif;
-  font-size: 1.62cqw;
-  letter-spacing: 0.02em;
-  color: rgba(74, 56, 36, 0.48);
+  font-size: 11px;
+  line-height: 1.55;
+  letter-spacing: 0.03em;
+  color: rgba(233, 214, 178, 0.42);
   pointer-events: none;
-  white-space: nowrap;
 }
 
 .pageLegal a {
@@ -1786,7 +1789,13 @@ video.smokeHidden {
 }
 
 .pageLegal a:hover {
-  color: rgba(74, 56, 36, 0.9);
+  color: rgba(233, 214, 178, 0.9);
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .pageLegal {
+    left: calc(50% - min(73svh, 122vw) * 0.33);
+  }
 }
 
 /* the share mark: Fell italic on the folio row, on the corner

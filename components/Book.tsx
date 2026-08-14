@@ -205,8 +205,9 @@ function ShareRule({ page }: { page: BookPage }) {
 }
 
 /* Kendall's legal line (2026-08-13, "in a non-horrible looking way"):
-   a whisper of ink at the very bottom edge of EVERY page. Lives in
-   PageLeaf, not PageContent, so the ghost show-through never doubles it. */
+   in the DARK between the page's bottom edge and the scrubber (owner —
+   on the parchment it made the page bottom look weird). One fixed
+   element for the whole reader. */
 function LegalLine() {
   const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
   return (
@@ -340,7 +341,6 @@ function PageLeaf({
         <div className="edgeShade" aria-hidden="true" />
         <RampMarks />
         {page.kind !== "locked" && <ShareRule page={page} />}
-        <LegalLine />
       </div>
     </div>
   );
@@ -653,6 +653,7 @@ export default function Book() {
 
       {/* (the "tap the page" hint is retired — owner, 2026-08-13) */}
 
+      <LegalLine />
 
       <div
         className={`scrubber ${scrubbing ? "scrubbing" : ""} ${hasTurned ? "" : "scrubHidden"}`}
