@@ -44,15 +44,16 @@ function Eyebrow({ text }: { text: string }) {
 /*  Page content (also reused, mirrored, as show-through ghosting)     */
 /* ------------------------------------------------------------------ */
 
-/* Etchings on SOME pages (Kendall's idea). PARKED for now — the crew
-   called the first batch "a little cheap" (2026-08-13). Flip this ONE
-   flag when there's art everyone likes; the assets and wiring stay. */
-const SHOW_ILLUSTRATIONS = false;
+/* Illustrations on SOME pages — Nolan's watercolor-and-ink lesson
+   drawings (2026-08-14), color-matched and edge-feathered for the
+   parchment. Keyed "chapter-rule"; drop a file in
+   public/illustrations and add a line here for more. */
+const SHOW_ILLUSTRATIONS = true;
 
 const ILLUSTRATIONS: Record<string, { src: string; alt: string }> = {
-  "0-3": { src: "/illustrations/rule-0-3.png", alt: "A modest car on a lane before a stone cottage" },
-  "0-5": { src: "/illustrations/rule-0-5.png", alt: "Four chairs drawn close around a small table with a lamp" },
-  "0-9": { src: "/illustrations/rule-0-9.png", alt: "An hourglass beside a stack of coins and a pocket watch" },
+  "0-0": { src: "/illustrations/lesson-0-0.png", alt: "Seeing the world as it is" },
+  "0-3": { src: "/illustrations/lesson-0-3.png", alt: "A modest car on a lane before a stone cottage" },
+  "0-9": { src: "/illustrations/lesson-0-9.png", alt: "Time and money, kept together" },
 };
 
 function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number }) {
