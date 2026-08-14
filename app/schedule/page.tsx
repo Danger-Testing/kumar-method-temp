@@ -38,6 +38,10 @@ export default function SchedulePage() {
 
   const send = useCallback(
     async (payload: Record<string, unknown>, okText: string) => {
+      if (!passcode.trim()) {
+        setMsg({ kind: "err", text: "Enter the team passcode (top right) first." });
+        return;
+      }
       setBusy(true);
       setMsg(null);
       window.localStorage.setItem("gatePasscode", passcode);
@@ -69,7 +73,7 @@ export default function SchedulePage() {
   }
 
   const paused = gate.override !== null;
-  const canAct = passcode.trim().length > 0 && !busy;
+  const canAct = !busy;
 
   return (
     <main className="dash">
