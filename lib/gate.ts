@@ -18,7 +18,7 @@
 export const UNLOCK_ALL = false;
 
 /** day one — chapter I only on this date, +1 chapter per day after */
-export const UNLOCK_START = "2026-08-13";
+export const UNLOCK_START = "2026-08-14";
 
 export const TOTAL_CHAPTERS = 10;
 
@@ -29,4 +29,14 @@ export function unlockedChapters(now = new Date()): number {
   const start = new Date(`${UNLOCK_START}T00:00:00`);
   const days = Math.floor((now.getTime() - start.getTime()) / 86400000);
   return Math.max(1, Math.min(TOTAL_CHAPTERS, days + 1));
+}
+
+/** days until the NEXT chapter unlocks (>=1; 0 = the book is open) —
+    drives the teaser leaf's copy ("tomorrow" vs "in N days") */
+export function nextUnlockInDays(now = new Date()): number {
+  const n = unlockedChapters(now);
+  if (n >= TOTAL_CHAPTERS) return 0;
+  const start = new Date(`${UNLOCK_START}T00:00:00`);
+  const next = new Date(start.getTime() + n * 86400000);
+  return Math.max(1, Math.ceil((next.getTime() - now.getTime()) / 86400000));
 }

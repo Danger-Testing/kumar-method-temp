@@ -2103,3 +2103,84 @@ video.smokeHidden {
   font-size: 22px;
   color: rgba(94, 66, 32, 0.85);
 }
+
+/* ----------------------------------------------------------------
+   /schedule — the internal release dashboard (unlisted, read-only)
+   ---------------------------------------------------------------- */
+
+.sched {
+  min-height: 100svh;
+  padding: 48px clamp(20px, 6vw, 80px);
+  background: #0b0805;
+  color: rgba(233, 214, 178, 0.9);
+  font-family: var(--font-garamond), Georgia, serif;
+  overflow: auto;
+}
+
+.sched h1 {
+  font-family: var(--font-fell), serif;
+  font-size: 30px;
+  margin-bottom: 8px;
+}
+
+.sched h2 {
+  font-family: var(--font-fell), serif;
+  font-size: 21px;
+  margin: 36px 0 10px;
+}
+
+.schedMeta {
+  color: rgba(233, 214, 178, 0.6);
+  margin-bottom: 26px;
+}
+
+.sched table {
+  border-collapse: collapse;
+  width: min(880px, 100%);
+}
+
+.sched th,
+.sched td {
+  text-align: left;
+  padding: 9px 18px 9px 0;
+  border-bottom: 1px solid rgba(233, 214, 178, 0.14);
+  font-size: 16px;
+}
+
+.sched th {
+  font-family: var(--font-fell-sc), serif;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: rgba(233, 214, 178, 0.55);
+}
+
+.sched tr.live td {
+  color: rgba(240, 224, 192, 1);
+}
+
+.sched tr.live td:nth-child(4) {
+  color: #d8b25c;
+}
+
+.sched a {
+  color: rgba(216, 178, 92, 0.85);
+}
+
+.sched ol {
+  padding-left: 22px;
+  line-height: 1.7;
+  width: min(760px, 100%);
+}
+
+.sched code {
+  font-size: 0.85em;
+  background: rgba(233, 214, 178, 0.1);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.schedNote {
+  margin-top: 14px;
+  color: rgba(233, 214, 178, 0.55);
+  font-size: 14.5px;
+}

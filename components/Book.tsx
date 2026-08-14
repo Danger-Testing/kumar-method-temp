@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { chapters } from "@/lib/content";
 import { pages, firstPageOfChapter, seeded, type BookPage } from "@/lib/pages";
-import { unlockedChapters } from "@/lib/gate";
+import { unlockedChapters, nextUnlockInDays } from "@/lib/gate";
 import BookBanner from "@/components/BookBanner";
 import LegalLine from "@/components/LegalLine";
 
@@ -119,7 +119,11 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
           ))}
         </h1>
         <Flourish />
-        <p className="lockedNote">This chapter arrives tomorrow.</p>
+        <p className="lockedNote">
+          {(page.daysAway ?? 1) <= 1
+            ? "This chapter arrives tomorrow."
+            : `This chapter arrives in ${page.daysAway} days.`}
+        </p>
         <div className="folio">P. {pageNumber}</div>
       </div>
     );
@@ -420,12 +424,19 @@ export default function Book() {
   // teaser leaf naming the next one. Starts at 1 for a hydration-safe
   // first paint; the effect applies the real schedule immediately.
   const [unlockedCh, setUnlockedCh] = useState(1);
-  useEffect(() => setUnlockedCh(unlockedChapters()), []);
+  const [daysAway, setDaysAway] = useState(1);
+  useEffect(() => {
+    // /?chapters=N — team preview of any gate state (used by /schedule)
+    const q = Number(new URLSearchParams(window.location.search).get("chapters"));
+    const forced = Number.isFinite(q) && q >= 1 ? Math.min(chapters.length, Math.floor(q)) : null;
+    setUnlockedCh(forced ?? unlockedChapters());
+    setDaysAway(nextUnlockInDays());
+  }, []);
   // the teaser leaf's index (= count of real visible pages); -1 = open
   const gateAt = unlockedCh >= chapters.length ? -1 : firstPageOfChapter(unlockedCh);
   const total = gateAt === -1 ? pages.length : gateAt + 1;
   const leafPage = (i: number): BookPage | undefined =>
-    gateAt !== -1 && i === gateAt ? { kind: "locked", chapter: unlockedCh } : undefined;
+    gateAt !== -1 && i === gateAt ? { kind: "locked", chapter: unlockedCh, daysAway } : undefined;
 
   // pre-rasterize the page-edge mask (see note above Book)
   useEffect(() => {
@@ -657,7 +668,7 @@ export default function Book() {
       {/* (the "tap the page" hint is retired — owner, 2026-08-13) */}
 
       <div
-        className={`scrubber ${scrubbing ? "scrubbing" : ""} ${hasTurned ? "" : "scrubHidden"}`}
+        className={`scrubber ${scrubbing ? "scrubbing" : ""}`}
         role="slider"
         aria-label="Scrub through pages"
         aria-valuemin={1}
@@ -722,7 +733,7 @@ export default function Book() {
 
       {/* tap arrows flanking the scrubber — appear with it */}
       <button
-        className={`pageArrow arrowLeft ${hasTurned ? "" : "scrubHidden"}`}
+        className="pageArrow arrowLeft"
         aria-label="Previous page"
         onClick={(e) => {
           e.stopPropagation();
@@ -741,7 +752,7 @@ export default function Book() {
         </svg>
       </button>
       <button
-        className={`pageArrow arrowRight ${hasTurned ? "" : "scrubHidden"}`}
+        className="pageArrow arrowRight"
         aria-label="Next page"
         onClick={(e) => {
           e.stopPropagation();
