@@ -396,11 +396,11 @@ export default function Book() {
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const areaRef = useRef<HTMLDivElement>(null);
 
-  // DYNAMIC tail sizing (owner, 2026-08-13: "the page is the priority,
-  // not this huge CTA"): the tail scales to ~85% of the page LEAF's
-  // width, clamped — always subordinate to the page. Two passes because
-  // the page's height formula reads the tail's size back (fixed point
-  // converges immediately).
+  // THE TAIL LAW (owner, 2026-08-13): the tail is ALWAYS exactly 70%
+  // of the width of the page leaf it hangs under. Nothing more,
+  // nothing less, no clamps — a clamp's floor once made it BIGGER
+  // than a tiny page. Two passes because the page's height formula
+  // reads the tail's size back (fixed point converges immediately).
   useEffect(() => {
     const update = () => {
       const area = areaRef.current;
@@ -408,8 +408,7 @@ export default function Book() {
       for (let i = 0; i < 2; i++) {
         const w = area.getBoundingClientRect().width;
         const leafW = spread ? w / 2 : w;
-        const s = Math.min(0.72, Math.max(0.55, (leafW * 0.85) / 400));
-        area.style.setProperty("--tailScale", s.toFixed(3));
+        area.style.setProperty("--tailScale", ((leafW * 0.7) / 400).toFixed(3));
       }
     };
     update();

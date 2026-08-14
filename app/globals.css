@@ -83,8 +83,8 @@ body {
   /* THE VSTACK (owner, 2026-08-13): page -> tail -> terms, sized
      backward from "the terms are always visible". Single-page views
      reserve the whole lower band; the spread restores bigger pages. */
-  --tailScale: 0.72; /* fallback — Book.tsx sets it DYNAMICALLY from
-     the page leaf's width so the tail is always subordinate */
+  --tailScale: 0.5; /* pre-JS fallback only — Book.tsx enforces THE
+     TAIL LAW: exactly 70% of the page leaf's width, always */
   /* the page's height SUBTRACTS the tail + terms pixels — the band
      below is guaranteed, not hoped for. The page takes the rest. */
   height: min(74svh, 128vw, calc(100svh - var(--tailScale, 0.72) * 218px - 130px));
@@ -813,6 +813,9 @@ body {
   .scrubber {
     display: block;
     left: calc(50% - min(73svh, 122vw) * 0.33);
+    /* the UPPER slot: vertically centered in the gap between the page
+       bottom and the terms (positions swapped with the terms — owner) */
+    bottom: calc(28.25svh - min(73svh, 122vw) / 4 - 13px);
   }
 }
 
@@ -1813,13 +1816,17 @@ video.smokeHidden {
   top: calc(100% - 14px + var(--tailScale, 0.72) * 218px + 20px);
 }
 
-/* the spread: the tail owns the right page's underside, the scrubber
-   the far bottom-left — the terms sit under the LEFT page, vertically
-   centered in the true gap between page bottom and scrubber */
+/* the spread: the tail owns the right page's underside; under the
+   LEFT page the scrubber floats in the gap and the terms hold the
+   very bottom (positions swapped — owner) */
 @media (min-width: 900px) and (orientation: landscape) {
   .scene .pageLegal {
+    /* NOT fixed: .bookArea's perspective makes it the containing
+       block even for fixed children (bottom:12px landed ON the page).
+       Absolute, with the viewport-bottom math done by hand:
+       page bottom -> viewport bottom = 56.5svh - pageHeight/2. */
     left: 25%;
-    top: calc(100% + (56.5svh - min(73svh, 122vw) / 2 - 94px) / 2);
+    top: calc(100% + 56.5svh - min(73svh, 122vw) / 2 - 47px);
   }
 }
 
