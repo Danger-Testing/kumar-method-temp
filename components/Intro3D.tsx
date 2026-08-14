@@ -666,13 +666,14 @@ function IntroScene({
       (startK + (1 - startK) * scaleEase) *
       (1 + boom);
     g.scale.setScalar(s);
-    // the held stack settles a touch smaller and higher (owner,
-    // 2026-08-12): the tail's swallowtail never dips below the fold as
-    // the book bobs. Eases in after the boom; stays through the dive.
+    // the held stack settles smaller and HIGHER (owner, raised again
+    // 2026-08-13: "move this whole thing up" — the tail must end with
+    // clear dark below it for the legal line, on every window shape).
+    // Eases in right after the boom; stays through the dive.
     if (E > 0) {
-      const settle = smooth(E + 0.9, E + 1.6, t);
-      g.position.y += 0.09 * settle;
-      g.scale.multiplyScalar(1 - 0.06 * settle);
+      const settle = smooth(E + 0.7, E + 1.3, t);
+      g.position.y += 0.17 * settle;
+      g.scale.multiplyScalar(1 - 0.08 * settle);
     }
 
     // the dolly: no let-up — it accelerates until the cover kisses the lens

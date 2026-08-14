@@ -1313,9 +1313,9 @@ video.smokeHidden {
   text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55), 0 5px 34px rgba(0, 0, 0, 0.4);
 }
 
-/* the intro hold shows the book ~22% larger — match its edges */
+/* the intro hold: the held stack rides higher now — the title too */
 .closedTitle.heroWait {
-  bottom: calc(50% + 33.5svh);
+  bottom: calc(50% + 35.5svh);
 }
 
 .closedTagline.heroWait {
@@ -1329,7 +1329,7 @@ video.smokeHidden {
     bottom: calc(50% + 30.5svh);
   }
   .closedTitle.heroWait {
-    bottom: calc(50% + 35.5svh);
+    bottom: calc(50% + 37svh);
   }
 }
 
