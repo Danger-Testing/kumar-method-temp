@@ -40,3 +40,26 @@ export function nextUnlockInDays(now = new Date()): number {
   const next = new Date(start.getTime() + n * 86400000);
   return Math.max(1, Math.ceil((next.getTime() - now.getTime()) / 86400000));
 }
+
+/** pure gate math — the /api/gate route feeds it live Edge Config
+    values; the static exports above remain the offline fallback */
+export function computeGate(start: string, override: number | null, now = new Date()) {
+  let unlocked: number;
+  if (override && override >= 1) {
+    unlocked = Math.min(TOTAL_CHAPTERS, Math.floor(override));
+  } else {
+    const s = new Date(`${start}T00:00:00`);
+    unlocked = Math.max(1, Math.min(TOTAL_CHAPTERS, Math.floor((now.getTime() - s.getTime()) / 86400000) + 1));
+  }
+  let daysToNext = 0;
+  if (unlocked < TOTAL_CHAPTERS) {
+    if (override && override >= 1) {
+      daysToNext = 1; // calendar paused by override: promise tomorrow
+    } else {
+      const s = new Date(`${start}T00:00:00`);
+      const next = new Date(s.getTime() + unlocked * 86400000);
+      daysToNext = Math.max(1, Math.ceil((next.getTime() - now.getTime()) / 86400000));
+    }
+  }
+  return { unlocked, daysToNext };
+}

@@ -429,8 +429,24 @@ export default function Book() {
     // /?chapters=N — team preview of any gate state (used by /schedule)
     const q = Number(new URLSearchParams(window.location.search).get("chapters"));
     const forced = Number.isFinite(q) && q >= 1 ? Math.min(chapters.length, Math.floor(q)) : null;
-    setUnlockedCh(forced ?? unlockedChapters());
+    if (forced) {
+      setUnlockedCh(forced);
+      setDaysAway(1);
+      return;
+    }
+    // static schedule immediately; the LIVE gate (Edge Config via
+    // /api/gate, dashboard-controlled) refines it when it answers
+    setUnlockedCh(unlockedChapters());
     setDaysAway(nextUnlockInDays());
+    fetch("/api/gate")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((g) => {
+        if (g && typeof g.unlocked === "number") {
+          setUnlockedCh(g.unlocked);
+          setDaysAway(g.daysToNext || 1);
+        }
+      })
+      .catch(() => {});
   }, []);
   // the teaser leaf's index (= count of real visible pages); -1 = open
   const gateAt = unlockedCh >= chapters.length ? -1 : firstPageOfChapter(unlockedCh);
