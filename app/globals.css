@@ -80,14 +80,17 @@ body {
 
 .bookArea {
   position: relative;
-  /* leaves breathing room beneath the pages for the scrubber AND the
-     tail (owner, 2026-08-13: pages scaled down a touch + lifted so the
-     tail is never clipped by the window; nudged smaller again same day) */
-  height: min(73svh, 122vw);
+  /* THE VSTACK (owner, 2026-08-13): page -> tail -> terms, sized
+     backward from "the terms are always visible". Single-page views
+     reserve the whole lower band; the spread restores bigger pages. */
+  --tailScale: 0.72;
+  /* the page's height SUBTRACTS the tail + terms pixels — the band
+     below is guaranteed, not hoped for */
+  height: min(68svh, 118vw, calc(100svh - var(--tailScale, 0.72) * 218px - 150px));
   aspect-ratio: 0.66;
   cursor: pointer;
   z-index: 2;
-  margin-bottom: 13vh;
+  margin-bottom: calc(var(--tailScale, 0.72) * 218px + 66px);
   /* the swipe curl needs depth in single-page mode too */
   perspective: 2600px;
 }
@@ -115,7 +118,6 @@ body {
    falls on it and sells the emergence. Scaled — the ribbon's fixed
    400px layout is sized for the 3D hold. */
 .readerTail {
-  --tailScale: 0.72;
   position: absolute;
   top: calc(100% - 14px); /* 14px tucked behind the page */
   left: 50%;
@@ -158,17 +160,11 @@ body {
   left: 75%;
 }
 
-/* narrow screens: the tail stays LARGE for legibility (owner call),
-   and the page gives up more room — the tail must never touch the
-   bottom of the screen */
+/* narrow screens: the tail stays LARGE for legibility (owner call);
+   the page gives up the room */
 @media (max-width: 720px) {
-  .readerTail {
-    --tailScale: 0.8;
-  }
-
   .bookArea {
-    height: min(70svh, 118vw);
-    margin-bottom: 21vh;
+    --tailScale: 0.8; /* the height/margin formulas pick it up */
   }
 }
 
@@ -186,6 +182,8 @@ body {
 .bookArea.spreadOpen {
   aspect-ratio: 1.32;
   max-width: 96vw;
+  height: min(73svh, 122vw);
+  margin-bottom: 13vh;
 }
 
 .leafBox {
@@ -772,6 +770,9 @@ body {
    the scrub track (diamond thumb rides it), "n / 110" centered below.
    Drag to fast-travel. */
 .scrubber {
+  /* SPREAD-ONLY: retired on single-page views (owner) — the terms own
+     the bottom there */
+  display: none;
   user-select: none;
   -webkit-user-select: none;
   position: fixed;
@@ -817,6 +818,7 @@ body {
    spread's width off center), so they can never overlap */
 @media (min-width: 900px) and (orientation: landscape) {
   .scrubber {
+    display: block;
     left: calc(50% - min(73svh, 122vw) * 0.33);
   }
 }
@@ -1809,19 +1811,22 @@ video.smokeHidden {
   pointer-events: auto;
 }
 
-/* desktop reader (spread): above the scrubber, under the left page */
-@media (min-width: 900px) and (orientation: landscape) {
-  .scene .pageLegal {
-    left: calc(50% - min(73svh, 122vw) * 0.33);
-    bottom: 56px;
-  }
+/* the READER's terms are a member of the page's vstack: absolute in
+   .bookArea, hanging below the tail (single page) — they move with
+   the page, never pinned-and-prayed */
+.scene .pageLegal {
+  position: absolute;
+  bottom: auto;
+  top: calc(100% - 14px + var(--tailScale, 0.72) * 218px + 20px);
 }
 
-/* phones: the scrubber is RETIRED for now (owner) — the legal block
-   takes its home at the bottom center; arrows still turn pages */
-@media (max-width: 720px) {
-  .scrubber {
-    display: none;
+/* the spread: the tail owns the right page's underside, the scrubber
+   the far bottom-left — the terms sit under the LEFT page, vertically
+   centered in the true gap between page bottom and scrubber */
+@media (min-width: 900px) and (orientation: landscape) {
+  .scene .pageLegal {
+    left: 25%;
+    top: calc(100% + (56.5svh - min(73svh, 122vw) / 2 - 94px) / 2);
   }
 }
 

@@ -538,6 +538,10 @@ export default function Book() {
         <div className="readerTail">
           <BookBanner />
         </div>
+        {/* the terms are part of the page's vstack: page → tail → terms
+            (owner, 2026-08-13 — designed backward from "terms visible
+            everywhere", not pinned to the screen and hoped) */}
+        <LegalLine />
         {(() => {
           // while a leaf is mid-flip, the layers underneath already show the
           // pages that will be revealed when it lands
@@ -629,8 +633,6 @@ export default function Book() {
       <div className="vignette" aria-hidden="true" />
 
       {/* (the "tap the page" hint is retired — owner, 2026-08-13) */}
-
-      <LegalLine />
 
       <div
         className={`scrubber ${scrubbing ? "scrubbing" : ""} ${hasTurned ? "" : "scrubHidden"}`}
