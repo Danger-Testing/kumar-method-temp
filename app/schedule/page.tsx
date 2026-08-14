@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { chapters } from "@/lib/content";
+import { computeGate } from "@/lib/gate";
 
 /* THE RELEASE DASHBOARD (owner, 2026-08-13, v2): a normal admin
    panel — deliberately NOT in the book's design language — with real
@@ -31,8 +32,9 @@ export default function SchedulePage() {
     fetch("/api/gate", { cache: "no-store" })
       .then((r) => r.json())
       .then((g: Gate) => {
-        setGate(g);
-        setStartInput(g.start);
+        const local = { ...g, ...computeGate(g.start, g.override) };
+        setGate(local);
+        setStartInput(local.start);
       })
       .catch(() => setMsg({ kind: "err", text: "Couldn't load the gate state." }));
   }, []);
@@ -50,8 +52,9 @@ export default function SchedulePage() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || "Something went wrong.");
-        setGate(data);
-        setStartInput(data.start);
+        const local = { ...data, ...computeGate(data.start, data.override) };
+        setGate(local);
+        setStartInput(local.start);
         setMsg({ kind: "ok", text: `${okText} Readers see it within about a minute.` });
       } catch (e) {
         setMsg({ kind: "err", text: e instanceof Error ? e.message : "Something went wrong." });

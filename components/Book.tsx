@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { chapters } from "@/lib/content";
 import { pages, firstPageOfChapter, seeded, type BookPage } from "@/lib/pages";
-import { unlockedChapters, nextUnlockInDays } from "@/lib/gate";
+import { unlockedChapters, nextUnlockInDays, computeGate } from "@/lib/gate";
 import BookBanner from "@/components/BookBanner";
 import LegalLine from "@/components/LegalLine";
 
@@ -441,9 +441,12 @@ export default function Book() {
     fetch("/api/gate")
       .then((r) => (r.ok ? r.json() : null))
       .then((g) => {
-        if (g && typeof g.unlocked === "number") {
-          setUnlockedCh(g.unlocked);
-          setDaysAway(g.daysToNext || 1);
+        if (g && typeof g.start === "string") {
+          // the READER'S local clock decides "tomorrow" vs "in N days"
+          // — the server's UTC clock runs hours ahead of the room
+          const gate = computeGate(g.start, g.override ?? null);
+          setUnlockedCh(gate.unlocked);
+          setDaysAway(gate.daysToNext || 1);
         }
       })
       .catch(() => {});
