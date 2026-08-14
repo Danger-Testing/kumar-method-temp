@@ -669,11 +669,15 @@ function IntroScene({
     // the held stack settles smaller and HIGHER (owner, raised again
     // 2026-08-13: "move this whole thing up" — the tail must end with
     // clear dark below it for the legal line, on every window shape).
-    // Eases in right after the boom; stays through the dive.
+    // Eases in right after the boom. On RELEASE the book glides back
+    // DOWN to center and to full size BEFORE the dive zooms (owner) —
+    // finished by tt≈3.35, comfortably ahead of the dolly at 3.85.
     if (E > 0) {
       const settle = smooth(E + 0.7, E + 1.3, t);
-      g.position.y += 0.17 * settle;
-      g.scale.multiplyScalar(1 - 0.08 * settle);
+      const recenter = smooth(HOLD_AT + 0.05, HOLD_AT + 0.95, tt);
+      const k = settle * (1 - recenter);
+      g.position.y += 0.17 * k;
+      g.scale.multiplyScalar(1 - 0.08 * k);
     }
 
     // the dolly: no let-up — it accelerates until the cover kisses the lens
