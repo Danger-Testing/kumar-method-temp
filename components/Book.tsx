@@ -50,10 +50,10 @@ function Eyebrow({ text }: { text: string }) {
    public/illustrations and add a line here for more. */
 const SHOW_ILLUSTRATIONS = true;
 
-const ILLUSTRATIONS: Record<string, { src: string; alt: string }> = {
-  "0-0": { src: "/illustrations/lesson-0-0.png", alt: "Seeing the world as it is" },
-  "0-3": { src: "/illustrations/lesson-0-3.png", alt: "A modest car on a lane before a stone cottage" },
-  "0-9": { src: "/illustrations/lesson-0-9.png", alt: "Time and money, kept together" },
+export const ILLUSTRATIONS: Record<string, { src: string; alt: string; ratio: string }> = {
+  "0-0": { src: "/illustrations/lesson-0-0.png", alt: "Seeing the world as it is", ratio: "1000 / 1062" },
+  "0-3": { src: "/illustrations/lesson-0-3.png", alt: "A modest car on a lane before a stone cottage", ratio: "1000 / 704" },
+  "0-9": { src: "/illustrations/lesson-0-9.png", alt: "Time and money, kept together", ratio: "1000 / 1005" },
 };
 
 function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number }) {
@@ -147,6 +147,7 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
             className="ruleArt"
             src={ILLUSTRATIONS[`${page.chapter}-${page.ruleIndexes[0]}`].src}
             alt={ILLUSTRATIONS[`${page.chapter}-${page.ruleIndexes[0]}`].alt}
+            style={{ aspectRatio: ILLUSTRATIONS[`${page.chapter}-${page.ruleIndexes[0]}`].ratio }}
             draggable={false}
           />
         )}

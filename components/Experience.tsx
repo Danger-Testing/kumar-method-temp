@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import Book from "@/components/Book";
+import Book, { ILLUSTRATIONS } from "@/components/Book";
 import TombScene from "@/components/TombScene";
 // The quiz is OFF the site for now (owner, 2026-08-12) — the questions
 // live on in components/KumarQuiz.tsx, wiring is one import away.
@@ -96,6 +96,12 @@ export default function Experience() {
     // all the book textures (~700KB total — no more 4.8MB GLB fetch)
     import("@/components/Intro3D");
     import("@/components/ClosedBook"); // pre-warm: dismissing must be seamless
+    // and the lesson illustrations — the intro is ~10s of idle network,
+    // so the reader never sees them pop in (owner report)
+    Object.values(ILLUSTRATIONS).forEach(({ src }) => {
+      const img = new window.Image();
+      img.src = src;
+    });
   }, []);
 
   useEffect(() => {
