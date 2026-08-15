@@ -276,15 +276,7 @@ body {
   }
 }
 
-.flipFwdOne .faceFront::after,
-.flipRevOne .faceFront::after {
-  background: linear-gradient(to left, rgba(20, 12, 5, 0.28), rgba(20, 12, 5, 0) 26%);
-}
-
-/* the reverse curl lands flat and visible — same shade fade-out */
-.flipRevOne .faceFront::after {
-  animation: flipShadeOut 0.52s both;
-}
+/* (the curl faces carry no shading — see the no-shadow rule below) */
 
 .flipFace {
   position: absolute;
@@ -307,28 +299,14 @@ body {
   z-index: 3;
 }
 
-.flipFwd .faceFront::after,
-.flipRev .faceBack::after {
-  background: linear-gradient(to right, rgba(20, 12, 5, 0.28), rgba(20, 12, 5, 0) 26%);
-}
-
-.flipFwd .faceBack::after,
-.flipRev .faceFront::after {
-  background: linear-gradient(to left, rgba(20, 12, 5, 0.28), rgba(20, 12, 5, 0) 26%);
-  /* the LANDING face: its spine shadow fades out through the last
-     quarter of the turn, so the flipper's unmount has nothing left to
-     pop away (the "shadow then it goes to zero" flash — owner) */
-  animation: flipShadeOut 0.74s both;
-}
-
-@keyframes flipShadeOut {
-  0%,
-  70% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+/* THE TURNING LEAF CARRIES NO SHADOWS (owner, 2026-08-14: the shadow
+   appeared then vanished — "just looks bad"). Its drop shadow and the
+   spine gradients doubled over the static pages and popped at the
+   unmount. Clean paper turns; the landing is pixel-identical to the
+   page beneath, so the unmount is invisible. */
+.flipper .leaf::before,
+.flipper .flipFace::after {
+  display: none;
 }
 
 .spreadOpen::after {
