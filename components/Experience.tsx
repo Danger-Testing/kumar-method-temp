@@ -11,6 +11,7 @@ import TombScene from "@/components/TombScene";
 // stays in components/EnterpriseAccessModal.tsx.
 
 const Intro3D = dynamic(() => import("@/components/Intro3D"), { ssr: false });
+const ClosedBook = dynamic(() => import("@/components/ClosedBook"), { ssr: false });
 // The spinnable ClosedBook is RETIRED from the flow (sponsor call,
 // 2026-08-12: the dismissed state is the held opening now) but kept
 // safe in components/ClosedBook.tsx — one import away if wanted back.
@@ -143,24 +144,9 @@ export default function Experience() {
         />
       )}
 
-      {/* the dismissed state IS the held opening (sponsor call,
-          2026-08-12): same page — the tail, the light sweep, tap the
-          book to dive back in. Pre-mounted (hidden) while reading so
-          dismissal reveals a fully-rendered book instead of a pop-in. */}
+      {/* PREVIEW BRANCH: spinning tome on dismiss */}
       {(phase === "book" || phase === "closed") && (
-        <Intro3D
-          key={`held-${heldGen}`}
-          emerge
-          startHeld
-          active={phase === "closed"}
-          plain={plain}
-          onTombFade={gradeTomb}
-          onDone={(finished) => {
-            setHeldGen((g) => g + 1);
-            setFlash(finished);
-            setPhase("book");
-          }}
-        />
+        <ClosedBook active={phase === "closed"} onOpen={() => setPhase("book")} plain={plain} />
       )}
 
       {phase === "book" && (
