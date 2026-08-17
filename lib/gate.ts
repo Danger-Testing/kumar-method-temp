@@ -18,7 +18,11 @@
 export const UNLOCK_ALL = false;
 
 /** day one — chapter I only on this date, +1 chapter per day after */
-export const UNLOCK_START = "2026-08-14";
+/* STATIC FALLBACK ONLY — the real schedule lives in Edge Config via
+   /api/gate. Far-future on purpose: a deployment WITHOUT the env vars
+   (e.g. a fresh clone) safely holds at chapter I, frozen "in 2 days",
+   instead of running an accidental calendar. */
+export const UNLOCK_START = "2027-01-01";
 
 export const TOTAL_CHAPTERS = 10;
 
@@ -49,6 +53,10 @@ export function computeGate(start: string, override: number | null, now = new Da
     unlocked = Math.min(TOTAL_CHAPTERS, Math.floor(override));
   } else {
     const s = new Date(`${start}T00:00:00`);
+    if (now.getTime() < s.getTime()) {
+      // BEFORE day one: not started — chapter I, frozen "in 2 days"
+      return { unlocked: 1, daysToNext: 2 };
+    }
     unlocked = Math.max(1, Math.min(TOTAL_CHAPTERS, Math.floor((now.getTime() - s.getTime()) / 86400000) + 1));
   }
   let daysToNext = 0;

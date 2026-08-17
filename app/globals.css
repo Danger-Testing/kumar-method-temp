@@ -1467,7 +1467,10 @@ video.smokeHidden {
 /* Html centers its content on the pinned point — hang the ribbon
    below it, with the top 12px tucked behind the cover */
 .bannerHang {
-  transform: translateY(calc(50% - 12px));
+  /* 64px stem tucked behind the cover (was 12): insurance against
+     device-specific pin drift (an iOS report showed a gap between
+     book and tail) — any drift shows parchment, never a hole */
+  transform: translateY(calc(50% - 64px));
 }
 
 .bookBanner {
@@ -1504,8 +1507,9 @@ video.smokeHidden {
   /* not a button: the arrow (or grab in the closed room) must not
      read as clickable over the paper — the field and seal set their own */
   cursor: default;
-  /* top clears the 12px tuck behind the cover; bottom clears the notch */
-  padding: 30px 28px 42px;
+  /* top clears the 64px stem behind the cover (content still starts
+     18px below the hem); bottom clears the notch */
+  padding: 82px 28px 42px;
   text-align: center;
   color: #3d2c17;
   background:
