@@ -181,7 +181,11 @@ function ShareRule({ page }: { page: BookPage }) {
       page.kind === "rules"
         ? `“${ch.rules[page.ruleIndexes[0]]}” — The Kumar Method`
         : "The Kumar Method — a short list of plain rules about money and about life.";
-    const url = window.location.origin;
+    // origin + PATH: on ramp.com/thekumarmethod the origin alone
+    // shared Ramp's corporate homepage ("feels random" — the crew).
+    // Path included = the book's own URL on every host; query params
+    // (team previews) stay out of shares.
+    const url = window.location.origin + window.location.pathname;
     // NATIVE share sheet wherever the Web Share API exists — macOS
     // included (owner call, 2026-08-13); clipboard is the fallback
     if (navigator.share) {
