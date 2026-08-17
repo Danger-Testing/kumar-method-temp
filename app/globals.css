@@ -19,6 +19,10 @@ body {
   font-family: var(--font-garamond), Georgia, serif;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
+  /* no double-tap zoom; taps stay instant (owner: zoom disabled) */
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 ::selection {
@@ -2089,7 +2093,14 @@ video.smokeHidden {
    ---------------------------------------------------------------- */
 
 .dash {
-  min-height: 100svh;
+  /* the only scrolling page: allow pan, still no pinch. HEIGHT, not
+     min-height: body is overflow:hidden for the book, so the panel
+     must be its own scroll container or its lower rows are
+     unreachable on a phone */
+  touch-action: pan-y;
+  height: 100svh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 40px clamp(20px, 5vw, 64px) 80px;
   background: #f5f6f8;
   color: #1a202c;
