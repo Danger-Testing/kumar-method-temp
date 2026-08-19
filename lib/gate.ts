@@ -175,9 +175,21 @@ const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDat
 /** "tomorrow at 7:00 PM" / "Friday at 7:00 PM" / "August 30 at 7:00 PM" */
 export function teaserWhen(at: string, now = new Date()): string {
   const d = new Date(at);
-  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  /* THE READER'S OWN ZONE, NAMED (owner, 2026-08-19). The clock was
+     already local — 19:00 in Los Angeles renders as 22:00 in New York,
+     and the day words are computed on the reader's calendar, so London
+     correctly reads "tomorrow at 3:00 AM". What was missing is whose
+     clock we mean: "10:00 PM" alone leaves a reader guessing.
+     timeZoneName "short" prints EDT / PDT / GMT+1 and follows daylight
+     saving by itself, so August says EDT and January says EST. */
+  const time = d.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
   const days = Math.round((startOfDay(d) - startOfDay(now)) / 86400000);
-  if (days <= 0) return `today at ${time}`;
+  // a drop landing after 5pm reads as "tonight", not "today"
+  if (days <= 0) return `${d.getHours() >= 17 ? "tonight" : "today"} at ${time}`;
   if (days === 1) return `tomorrow at ${time}`;
   if (days < 7) return `${d.toLocaleDateString(undefined, { weekday: "long" })} at ${time}`;
   return `${d.toLocaleDateString(undefined, { month: "long", day: "numeric" })} at ${time}`;
