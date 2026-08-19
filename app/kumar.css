@@ -338,9 +338,9 @@
   /* riding higher on the plinth's face, which runs 8.1%-14.5% up from
      the artwork's bottom edge (owner: smaller, fainter, further up) */
   bottom: 10.4%;
-  width: 2.7%;
+  width: 2.1%;
   z-index: 2;
-  opacity: .3;
+  opacity: .18;
   /* the only clickable thing in the tomb: it opens dangertesting.com */
   pointer-events: auto;
   transform: translate(calc(var(--landing-x) * -.35%), calc(var(--landing-y) * -.012%));
@@ -349,7 +349,7 @@
 
 .km-tomb-mark:hover,
 .km-tomb-mark:focus-visible {
-  opacity: .55;
+  opacity: .4;
 }
 
 .km-tomb-mark img {
