@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { assetBase } from "@/lib/asset";
 
 /* Marc's landing, ported verbatim from marcgmbh/kumarmethod-website
    (tomb branch, src/app/page.tsx) — same markup, same easing, same
@@ -14,6 +15,14 @@ export default function TombScene({
   interactive?: boolean;
   onWake?: () => void;
 }) {
+  /* the smoke's path: "" until mounted, so the server's markup and the
+     first client render agree, then the ramp.com embed's prefix (see
+     lib/asset.ts — a <video src> is a JS string, which the platform
+     does not rewrite). Off ramp.com this sets "" over "" and React
+     bails out, so nothing re-renders. */
+  const [base, setBase] = useState("");
+  useEffect(() => setBase(assetBase()), []);
+
   const landingRef = useRef<HTMLElement>(null);
   const landingTargetRef = useRef({ x: 0, y: 0 });
   const landingPositionRef = useRef({ x: 0, y: 0 });
@@ -112,7 +121,7 @@ export default function TombScene({
           <div className="km-landing-tomb-interior">
             <video
               className="km-landing-tomb-smoke"
-              src="/intomb-smoke.mp4"
+              src={`${base}/intomb-smoke.mp4`}
               autoPlay
               loop
               muted
@@ -163,7 +172,7 @@ export default function TombScene({
         </svg>
         <video
           className="km-landing-general-smoke"
-          src="/general-smoke.mp4"
+          src={`${base}/general-smoke.mp4`}
           autoPlay
           loop
           muted

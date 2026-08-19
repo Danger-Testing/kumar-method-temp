@@ -1,4 +1,5 @@
 "use client";
+import { asset } from "@/lib/asset";
 
 /* THE BOOK — the single source of truth for the physical tome, used by
    the intro emergence (Intro3D) and the dismissed state (ClosedBook).
@@ -141,7 +142,7 @@ export function BookLights({ plain, sweep = false }: { plain: boolean; sweep?: b
   );
 }
 
-useGLTF.preload("/book.glb");
+useGLTF.preload(asset("/book.glb"));
 
 export function TheBook({
   igniteRef,

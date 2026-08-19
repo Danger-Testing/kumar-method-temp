@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "rea
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture, useGLTF, Html } from "@react-three/drei";
+import { asset } from "@/lib/asset";
 import { TheBook, BookLights, IGNITE_FULL, ribbonPin, bookRect } from "@/components/TheBook";
 import BookBanner, { bannerTapGuard } from "@/components/BookBanner";
 import LegalLine from "@/components/LegalLine";
@@ -234,15 +235,15 @@ export function BuiltBook({
   plain?: boolean;
 }) {
   const [front, back, spine] = useTexture([
-    "/covers/front.jpeg",
-    "/covers/back.jpeg",
-    "/covers/spine.jpeg",
+    asset("/covers/front.jpeg"),
+    asset("/covers/back.jpeg"),
+    asset("/covers/spine.jpeg"),
   ]);
-  const goldMask = useGoldMask("/covers/front.jpeg");
-  const spineMask = useGoldMask("/covers/spine.jpeg");
-  const wineFront = useWineTint("/covers/front.jpeg");
-  const wineBack = useWineTint("/covers/back.jpeg");
-  const wineSpine = useWineTint("/covers/spine.jpeg");
+  const goldMask = useGoldMask(asset("/covers/front.jpeg"));
+  const spineMask = useGoldMask(asset("/covers/spine.jpeg"));
+  const wineFront = useWineTint(asset("/covers/front.jpeg"));
+  const wineBack = useWineTint(asset("/covers/back.jpeg"));
+  const wineSpine = useWineTint(asset("/covers/spine.jpeg"));
   const pageEdge = useMemo(makePageEdgeTexture, []);
 
   [front, back, spine].forEach((t) => {
@@ -368,7 +369,7 @@ export function GlbBook({
   /** inspection mode: strip surface relief */
   plain?: boolean;
 }) {
-  const { scene } = useGLTF("/book.glb");
+  const { scene } = useGLTF(asset("/book.glb"));
 
   // give the GLB the same gilding ignition as the built book: derive a
   // gold mask from each material's own texture, so it lands exactly on

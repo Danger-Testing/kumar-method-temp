@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Book, { ILLUSTRATIONS } from "@/components/Book";
+import { asset } from "@/lib/asset";
 import TombScene from "@/components/TombScene";
 // The quiz is OFF the site for now (owner, 2026-08-12) — the questions
 // live on in components/KumarQuiz.tsx, wiring is one import away.
@@ -103,7 +104,7 @@ export default function Experience() {
     // turns that far in the first seconds, and the intro keeps the pipe.
     const warm = (src: string) => {
       const img = new window.Image();
-      img.src = src;
+      img.src = asset(src);
     };
     const firstChapter = ([key]: [string, unknown]) => key.startsWith("0-");
     Object.entries(ILLUSTRATIONS).filter(firstChapter).forEach(([, v]) => warm(v.src));

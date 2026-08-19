@@ -15,6 +15,7 @@ import {
 } from "@/lib/gate";
 import BookBanner from "@/components/BookBanner";
 import LegalLine from "@/components/LegalLine";
+import { asset } from "@/lib/asset";
 
 /* ------------------------------------------------------------------ */
 /*  Ornaments                                                          */
@@ -193,7 +194,7 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
         {SHOW_ILLUSTRATIONS && page.ruleIndexes.length === 1 && ILLUSTRATIONS[`${page.chapter}-${page.ruleIndexes[0]}`] && (
           <img
             className="ruleArt"
-            src={ILLUSTRATIONS[`${page.chapter}-${page.ruleIndexes[0]}`].src}
+            src={asset(ILLUSTRATIONS[`${page.chapter}-${page.ruleIndexes[0]}`].src)}
             alt={ILLUSTRATIONS[`${page.chapter}-${page.ruleIndexes[0]}`].alt}
             style={{ aspectRatio: ILLUSTRATIONS[`${page.chapter}-${page.ruleIndexes[0]}`].ratio }}
             draggable={false}
