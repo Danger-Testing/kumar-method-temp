@@ -3,7 +3,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { chapters } from "@/lib/content";
 import { pages, firstPageOfChapter, seeded, type BookPage } from "@/lib/pages";
-import { unlockedChapters, nextUnlockInDays, computeGate } from "@/lib/gate";
+import {
+  unlockedChapters,
+  nextUnlockInDays,
+  computeGate,
+  gateEndpoint,
+  normalizeDrops,
+  applyDrops,
+  daysUntil,
+  teaserLine,
+} from "@/lib/gate";
 import BookBanner from "@/components/BookBanner";
 import LegalLine from "@/components/LegalLine";
 
@@ -45,15 +54,53 @@ function Eyebrow({ text }: { text: string }) {
 /* ------------------------------------------------------------------ */
 
 /* Illustrations on SOME pages — Nolan's watercolor-and-ink lesson
-   drawings (2026-08-14), color-matched and edge-feathered for the
-   parchment. Keyed "chapter-rule"; drop a file in
-   public/illustrations and add a line here for more. */
+   drawings, color-matched and edge-feathered for the parchment. The
+   full set landed 2026-08-18: three per chapter, all ten chapters.
+   Keyed "chapter-rule", both 0-indexed (key "2-4" = chapter III,
+   rule 5). Sources live in "Ramp - Lesson Drawings"; the shipped
+   files are its color-matched PNGs trimmed to the ink and re-encoded
+   850px-wide WebP (/tmp/illos-new/build.py recipe) — the PNGs ran
+   ~9.5MB for the set, the WebPs ~5.5MB.
+
+   Chapter III's three arrived on rules 1, 2, 3 and sit on 1, 5, 10
+   instead — the owner wanted them spaced out (2026-08-18), so those
+   three no longer illustrate the rule they were drawn for.
+   Chapter VI has a fourth drawing whose rule the illustrator left
+   blank ("6-_.png"); it is parked on rule 8, chasing a loss. */
 const SHOW_ILLUSTRATIONS = true;
 
 export const ILLUSTRATIONS: Record<string, { src: string; alt: string; ratio: string }> = {
-  "0-0": { src: "/illustrations/lesson-0-0.png", alt: "Seeing the world as it is", ratio: "1000 / 1062" },
-  "0-3": { src: "/illustrations/lesson-0-3.png", alt: "A modest car on a lane before a stone cottage", ratio: "1000 / 704" },
-  "0-9": { src: "/illustrations/lesson-0-9.png", alt: "Time and money, kept together", ratio: "1000 / 1005" },
+  "0-0": { src: "/illustrations/lesson-0-0.webp", alt: "Seeing the world as it is", ratio: "850 / 903" },
+  "0-3": { src: "/illustrations/lesson-0-3.webp", alt: "A modest car on a lane before a stone cottage", ratio: "850 / 598" },
+  "0-9": { src: "/illustrations/lesson-0-9.webp", alt: "Time and money, kept together", ratio: "850 / 855" },
+  "1-0": { src: "/illustrations/lesson-1-0.webp", alt: "A gold watch worn on a cuffed wrist", ratio: "850 / 879" },
+  "1-5": { src: "/illustrations/lesson-1-5.webp", alt: "A man asleep, the purchase left until morning", ratio: "850 / 777" },
+  "1-8": { src: "/illustrations/lesson-1-8.webp", alt: "A shop shelf hung with sale tags", ratio: "850 / 806" },
+  "2-0": { src: "/illustrations/lesson-2-0.webp", alt: "A wedding cake with the couple on top", ratio: "850 / 875" },
+  "2-4": { src: "/illustrations/lesson-2-4.webp", alt: "A couple walking a village lane together", ratio: "850 / 850" },
+  "2-9": { src: "/illustrations/lesson-2-9.webp", alt: "Two children running a lemonade stand", ratio: "850 / 835" },
+  "3-1": { src: "/illustrations/lesson-3-1.webp", alt: "Two hands shaking on a deal", ratio: "850 / 894" },
+  "3-3": { src: "/illustrations/lesson-3-3.webp", alt: "Friends at dinner, one hand signing the bill", ratio: "850 / 817" },
+  "3-8": { src: "/illustrations/lesson-3-8.webp", alt: "A hand passing folded cash to another", ratio: "850 / 836" },
+  "4-0": { src: "/illustrations/lesson-4-0.webp", alt: "A piggy bank, filled once", ratio: "850 / 810" },
+  "4-2": { src: "/illustrations/lesson-4-2.webp", alt: "A lone figure carrying a boulder uphill", ratio: "850 / 837" },
+  "4-8": { src: "/illustrations/lesson-4-8.webp", alt: "A pile of banded cash", ratio: "850 / 794" },
+  "5-0": { src: "/illustrations/lesson-5-0.webp", alt: "Two aces held over a stack of chips", ratio: "850 / 845" },
+  "5-2": { src: "/illustrations/lesson-5-2.webp", alt: "A phone in both hands, alerts stacking up", ratio: "850 / 896" },
+  "5-7": { src: "/illustrations/lesson-5-7.webp", alt: "A player sweeping the whole pot in", ratio: "850 / 725" },
+  "5-9": { src: "/illustrations/lesson-5-9.webp", alt: "One figure facing a crowd", ratio: "850 / 862" },
+  "6-0": { src: "/illustrations/lesson-6-0.webp", alt: "A worker at the belt, a ladder out above him", ratio: "850 / 833" },
+  "6-3": { src: "/illustrations/lesson-6-3.webp", alt: "A roped team climbing a ridge", ratio: "850 / 819" },
+  "6-9": { src: "/illustrations/lesson-6-9.webp", alt: "Rows of workers, one small lit row doing the work", ratio: "850 / 797" },
+  "7-0": { src: "/illustrations/lesson-7-0.webp", alt: "A traveler walking out at first light", ratio: "850 / 847" },
+  "7-3": { src: "/illustrations/lesson-7-3.webp", alt: "A hand-drawn map of many winding routes", ratio: "850 / 835" },
+  "7-6": { src: "/illustrations/lesson-7-6.webp", alt: "A suitcase packed with certificates and licenses", ratio: "850 / 844" },
+  "8-1": { src: "/illustrations/lesson-8-1.webp", alt: "An hourglass on a shelf with a price tag tied on", ratio: "850 / 856" },
+  "8-3": { src: "/illustrations/lesson-8-3.webp", alt: "A tall door marked NO beside a small one marked YES", ratio: "850 / 790" },
+  "8-8": { src: "/illustrations/lesson-8-8.webp", alt: "Travelers queued at the airport window", ratio: "850 / 843" },
+  "9-1": { src: "/illustrations/lesson-9-1.webp", alt: "A treasure chest of gold marked Roth IRA", ratio: "850 / 838" },
+  "9-7": { src: "/illustrations/lesson-9-7.webp", alt: "Three children carrying a chest together", ratio: "850 / 847" },
+  "9-9": { src: "/illustrations/lesson-9-9.webp", alt: "A tree whose roots hold a vault of gold", ratio: "850 / 844" },
 };
 
 function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number }) {
@@ -121,9 +168,10 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
         </h1>
         <Flourish />
         <p className="lockedNote">
-          {(page.daysAway ?? 1) <= 1
-            ? "This chapter arrives tomorrow."
-            : `This chapter arrives in ${page.daysAway} days.`}
+          {page.line ??
+            ((page.daysAway ?? 1) <= 1
+              ? "This chapter arrives tomorrow."
+              : `This chapter arrives in ${page.daysAway} days.`)}
         </p>
         <div className="folio">P. {pageNumber}</div>
       </div>
@@ -171,6 +219,24 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
    the folio row — Kendall vetoed the boxed version, so it's a
    printer's mark + Fell italic. Native share sheet where it exists,
    clipboard elsewhere. Sits on the corner OPPOSITE the folio. */
+/* THE SHARED URL. On ramp.com the book is served under
+   /thekumarmethod by Ramp's own rewrite, so window.location.pathname
+   reads "/" inside the app — origin + pathname shared
+   "https://ramp.com/" and the receiving app glued the quote onto it
+   (owner report, 2026-08-18: the link arrived as ramp.com/%20%E2%80%9CTime...
+   and 404'd). The book's public home is a constant now. Other hosts
+   (vercel.app, previews) share their own URL, minus the trailing
+   slash and any team-preview query. */
+const BOOK_URL = "https://ramp.com/thekumarmethod";
+
+function shareUrl(): string {
+  const { host, origin, pathname } = window.location;
+  if (/(^|\.)ramp\.com$/i.test(host)) return BOOK_URL;
+  return (origin + pathname).replace(/\/$/, "");
+}
+
+const stopEvent = (e: { stopPropagation: () => void }) => e.stopPropagation();
+
 function ShareRule({ page }: { page: BookPage }) {
   const [copied, setCopied] = useState(false);
   const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
@@ -181,11 +247,7 @@ function ShareRule({ page }: { page: BookPage }) {
       page.kind === "rules"
         ? `“${ch.rules[page.ruleIndexes[0]]}” — The Kumar Method`
         : "The Kumar Method — a short list of plain rules about money and about life.";
-    // origin + PATH: on ramp.com/thekumarmethod the origin alone
-    // shared Ramp's corporate homepage ("feels random" — the crew).
-    // Path included = the book's own URL on every host; query params
-    // (team previews) stay out of shares.
-    const url = window.location.origin + window.location.pathname;
+    const url = shareUrl();
     // NATIVE share sheet wherever the Web Share API exists — macOS
     // included (owner call, 2026-08-13); clipboard is the fallback
     if (navigator.share) {
@@ -420,6 +482,20 @@ export default function Book() {
         const leafW = spread ? w / 2 : w;
         area.style.setProperty("--tailScale", ((leafW * 0.7) / 400).toFixed(3));
       }
+      /* ...and publish where the page's top edge landed, so the top
+         chrome (the ✕ and the contents mark, in two different
+         components) can sit in the dark ABOVE the page instead of
+         being clipped by it (owner, 2026-08-18, on a phone). Summed
+         offsetTops, not a bounding rect: the page's entrance
+         TRANSFORMS it, and a rect measured mid-animation would read a
+         top that is about to move. */
+      let top = 0;
+      let el: HTMLElement | null = area;
+      while (el) {
+        top += el.offsetTop;
+        el = el.offsetParent as HTMLElement | null;
+      }
+      document.documentElement.style.setProperty("--pageTop", `${Math.round(top)}px`);
     };
     update();
     window.addEventListener("resize", update);
@@ -431,6 +507,7 @@ export default function Book() {
   // first paint; the effect applies the real schedule immediately.
   const [unlockedCh, setUnlockedCh] = useState(1);
   const [daysAway, setDaysAway] = useState(1);
+  const [dropAt, setDropAt] = useState<string | null>(null);
   useEffect(() => {
     // /?chapters=N — team preview of any gate state (used by /schedule)
     const q = Number(new URLSearchParams(window.location.search).get("chapters"));
@@ -444,24 +521,66 @@ export default function Book() {
     // /api/gate, dashboard-controlled) refines it when it answers
     setUnlockedCh(unlockedChapters());
     setDaysAway(nextUnlockInDays());
-    fetch("/api/gate")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((g) => {
-        if (g && typeof g.start === "string") {
-          // the READER'S local clock decides "tomorrow" vs "in N days"
-          // — the server's UTC clock runs hours ahead of the room
-          const gate = computeGate(g.start, g.override ?? null);
-          setUnlockedCh(gate.unlocked);
-          setDaysAway(gate.daysToNext || 1);
-        }
-      })
-      .catch(() => {});
+
+    let timer: number | undefined;
+    let alive = true;
+
+    /* THE TIMED DROPS (2026-08-18). The API hands over the raw `drops`
+       and we apply them HERE, because the reader's own clock is what
+       decides — same rule as the rest of the gate, and it means the
+       60s-cached response can never be stale on the only question that
+       matters ("has 19:00 passed where you are sitting?"). */
+    const read = () => {
+      fetch(gateEndpoint())
+        .then((r) => (r.ok ? r.json() : null))
+        .then((g) => {
+          if (!alive || !g || typeof g.start !== "string") return;
+          const local = computeGate(g.start, g.override ?? null);
+          const dropped = applyDrops(local.unlocked, normalizeDrops(g.drops));
+          setUnlockedCh(dropped.unlocked);
+          setDropAt(dropped.nextDropAt);
+          setDaysAway(
+            dropped.nextDropAt ? daysUntil(dropped.nextDropAt) : local.daysToNext || 1
+          );
+          // a drop inside the hour: come back for it, so a book left
+          // open on the table grows the new chapter by itself
+          if (dropped.nextDropAt) {
+            const ms = new Date(dropped.nextDropAt).getTime() - Date.now();
+            if (ms > 0 && ms <= 3600000) timer = window.setTimeout(read, ms + 3000);
+          }
+        })
+        .catch(() => {});
+    };
+    read();
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
   }, []);
   // the teaser leaf's index (= count of real visible pages); -1 = open
   const gateAt = unlockedCh >= chapters.length ? -1 : firstPageOfChapter(unlockedCh);
   const total = gateAt === -1 ? pages.length : gateAt + 1;
   const leafPage = (i: number): BookPage | undefined =>
-    gateAt !== -1 && i === gateAt ? { kind: "locked", chapter: unlockedCh, daysAway } : undefined;
+    gateAt !== -1 && i === gateAt
+      ? {
+          kind: "locked",
+          chapter: unlockedCh,
+          daysAway,
+          line: teaserLine(chapters[unlockedCh].roman, dropAt),
+        }
+      : undefined;
+
+  const [contentsOpen, setContentsOpen] = useState(false);
+
+  // Escape shuts the contents (it covers the arrows' keyboard reach)
+  useEffect(() => {
+    if (!contentsOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setContentsOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [contentsOpen]);
 
   // pre-rasterize the page-edge mask (see note above Book)
   useEffect(() => {
@@ -545,6 +664,17 @@ export default function Book() {
     return () => window.removeEventListener("keydown", onKey);
   }, [go, base, step]);
 
+  /* hop to a chapter's opening leaf (the contents panel) — the spread
+     lands on the left-hand page of the pair, like the scrubber does */
+  const jumpToChapter = (chapterIndex: number) => {
+    let idx = firstPageOfChapter(chapterIndex);
+    if (idx < 0 || idx >= total) return;
+    if (spread) idx -= idx % 2;
+    setContentsOpen(false);
+    setHasTurned(true);
+    setCurrent(idx);
+  };
+
   const onPageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
@@ -599,7 +729,7 @@ export default function Book() {
         {/* the terms are part of the page's vstack: page → tail → terms
             (owner, 2026-08-13 — designed backward from "terms visible
             everywhere", not pinned to the screen and hoped) */}
-        <LegalLine />
+        <LegalLine className={scrubbing ? "termsAside" : ""} />
         {(() => {
           // while a leaf is mid-flip, the layers underneath already show the
           // pages that will be revealed when it lands
@@ -796,6 +926,70 @@ export default function Book() {
         </svg>
       </button>
 
+      {/* THE CONTENTS (owner, 2026-08-18): a corner mark, top right.
+          It lists the chapters that are actually live — the gate's
+          count, so a reader never sees the name of one that hasn't
+          dropped — and hops to any of them. Shut until asked, which is
+          how the earlier always-on contents menu went wrong. */}
+      <button
+        className={`contentsBtn ${contentsOpen ? "isOpen" : ""}`}
+        aria-haspopup="true"
+        aria-expanded={contentsOpen}
+        onClick={(e) => {
+          e.stopPropagation();
+          setContentsOpen((v) => !v);
+        }}
+        onPointerDown={stopEvent}
+        onPointerUp={stopEvent}
+      >
+        <svg className="contentsMark" viewBox="0 0 16 16" aria-hidden="true">
+          <g fill="currentColor">
+            <circle cx="2.3" cy="4" r="1.15" />
+            <circle cx="2.3" cy="8" r="1.15" />
+            <circle cx="2.3" cy="12" r="1.15" />
+          </g>
+          <g stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+            <path d="M6 4 H14" />
+            <path d="M6 8 H14" />
+            <path d="M6 12 H14" />
+          </g>
+        </svg>
+        <span className="contentsWord">{contentsOpen ? "close" : "chapters"}</span>
+      </button>
+
+      {contentsOpen && (
+        <>
+          <div
+            className="contentsVeil"
+            onClick={(e) => {
+              e.stopPropagation();
+              setContentsOpen(false);
+            }}
+            onPointerDown={stopEvent}
+          />
+          <nav className="contentsPanel" aria-label="Chapters">
+            {chapters.slice(0, unlockedCh).map((ch, ci) => {
+              const here = pages[Math.min(base, pages.length - 1)].chapter === ci;
+              return (
+                <button
+                  key={ch.roman}
+                  className={`contentsRow ${here ? "isHere" : ""}`}
+                  aria-current={here ? "page" : undefined}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    jumpToChapter(ci);
+                  }}
+                  onPointerDown={stopEvent}
+                  onPointerUp={stopEvent}
+                >
+                  <span className="contentsRoman">{ch.roman}</span>
+                  <span className="contentsName">{ch.fullName}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </>
+      )}
     </main>
   );
 }

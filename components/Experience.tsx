@@ -97,11 +97,22 @@ export default function Experience() {
     import("@/components/Intro3D");
     import("@/components/ClosedBook"); // pre-warm: dismissing must be seamless
     // and the lesson illustrations — the intro is ~10s of idle network,
-    // so the reader never sees them pop in (owner report)
-    Object.values(ILLUSTRATIONS).forEach(({ src }) => {
+    // so the reader never sees them pop in (owner report). With the full
+    // set in (three per chapter, ~5.5MB), chapter I still warms during
+    // the intro and the other nine wait for an idle moment — nobody
+    // turns that far in the first seconds, and the intro keeps the pipe.
+    const warm = (src: string) => {
       const img = new window.Image();
       img.src = src;
-    });
+    };
+    const firstChapter = ([key]: [string, unknown]) => key.startsWith("0-");
+    Object.entries(ILLUSTRATIONS).filter(firstChapter).forEach(([, v]) => warm(v.src));
+    const rest = () =>
+      Object.entries(ILLUSTRATIONS)
+        .filter((e) => !firstChapter(e))
+        .forEach(([, v]) => warm(v.src));
+    if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(() => rest());
+    else window.setTimeout(rest, 2500);
   }, []);
 
   useEffect(() => {
