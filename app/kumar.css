@@ -358,6 +358,16 @@
   height: auto;
 }
 
+/* the drawn mark is ~30px wide at a laptop width and faint by design,
+   which is a hard thing to hit — this invisible pad gives the link a
+   comfortable target without making the turtle any bigger. Everything
+   over the tomb still wakes the book; only this corner opens the site. */
+.km-tomb-mark::before {
+  content: "";
+  position: absolute;
+  inset: -9px;
+}
+
 .km-tomb-frame {
   /* dynamic cover, anchored near the floor: fills the viewport in tall
      windows (cropping excess at the top), but on wide/fullscreen
