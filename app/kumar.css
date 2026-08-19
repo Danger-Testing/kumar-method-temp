@@ -323,6 +323,41 @@
   object-fit: cover;
 }
 
+/* THE MARK ON THE STONE (owner, 2026-08-19: "truly to that rendered
+   position of the object", not a browser-calculated corner). It is a
+   child of .km-tomb-frame, the fixed-aspect box that holds the tomb
+   artwork, so every number here is a percentage of the ARTWORK's own
+   rendered box and stays put at any window size or crop. The numbers
+   come off the sprite: its base plinth runs 34.1%-66.4% across and
+   ends 91.9% down, so the mark sits on the plinth's left end, just
+   above its bottom edge. It carries the tomb layer's parallax translate
+   too, so it rides with the stone instead of sliding across it. */
+.km-tomb-mark {
+  position: absolute;
+  left: 35.4%;
+  /* riding higher on the plinth's face, which runs 8.1%-14.5% up from
+     the artwork's bottom edge (owner: smaller, fainter, further up) */
+  bottom: 10.4%;
+  width: 2.7%;
+  z-index: 2;
+  opacity: .3;
+  /* the only clickable thing in the tomb: it opens dangertesting.com */
+  pointer-events: auto;
+  transform: translate(calc(var(--landing-x) * -.35%), calc(var(--landing-y) * -.012%));
+  transition: opacity .3s;
+}
+
+.km-tomb-mark:hover,
+.km-tomb-mark:focus-visible {
+  opacity: .55;
+}
+
+.km-tomb-mark img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .km-tomb-frame {
   /* dynamic cover, anchored near the floor: fills the viewport in tall
      windows (cropping excess at the top), but on wide/fullscreen

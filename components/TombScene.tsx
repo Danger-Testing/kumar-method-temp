@@ -148,6 +148,22 @@ export default function TombScene({
             aria-hidden="true"
             sizes="100vw"
           />
+          {/* the mark on the plinth's left end (owner, 2026-08-19), the
+              one clickable thing in the tomb — it stops its click from
+              bubbling, or the book would wake under the visitor.
+              Inside the frame, so it is fixed to the ARTWORK's rendered
+              box rather than to the window — see .km-tomb-mark. */}
+          <a
+            className="km-tomb-mark"
+            href="https://dangertesting.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Danger Testing"
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <img src={`${base}/marks/main-white.svg`} alt="" draggable={false} />
+          </a>
           {/* the awakening's light landing on the stone itself — masked by
               the tomb sprite so only real surfaces catch it (driven per
               frame by Experience during the intro; inert on the landing) */}
