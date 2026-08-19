@@ -3,16 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { chapters } from "@/lib/content";
 import { pages, firstPageOfChapter, seeded, type BookPage } from "@/lib/pages";
-import {
-  unlockedChapters,
-  nextUnlockInDays,
-  computeGate,
-  gateEndpoint,
-  normalizeDrops,
-  applyDrops,
-  daysUntil,
-  teaserLine,
-} from "@/lib/gate";
 import BookBanner from "@/components/BookBanner";
 import LegalLine from "@/components/LegalLine";
 import { asset } from "@/lib/asset";
@@ -140,40 +130,6 @@ function PageContent({ page, pageNumber }: { page: BookPage; pageNumber: number 
             </p>
           ))}
         </div>
-        <div className="folio">P. {pageNumber}</div>
-      </div>
-    );
-  }
-
-  if (page.kind === "locked") {
-    // the gate's teaser: names the next chapter, promises tomorrow
-    const next = chapters[page.chapter];
-    return (
-      <div className="pageInner chapterPage lockedPage">
-        <div className="tinyFleuron" aria-hidden="true">
-          ❦
-        </div>
-        <Eyebrow text={next.eyebrow} />
-        <h1
-          className="bigTitle"
-          style={{
-            fontSize: `${Math.min(
-              13,
-              86 / (0.66 * Math.max(...next.titleLines.map((l) => l.length)))
-            ).toFixed(2)}cqw`,
-          }}
-        >
-          {next.titleLines.map((line) => (
-            <span key={line}>{line}</span>
-          ))}
-        </h1>
-        <Flourish />
-        <p className="lockedNote">
-          {page.line ??
-            ((page.daysAway ?? 1) <= 1
-              ? "This chapter arrives tomorrow."
-              : `This chapter arrives in ${page.daysAway} days.`)}
-        </p>
         <div className="folio">P. {pageNumber}</div>
       </div>
     );
@@ -313,15 +269,12 @@ function PageLeaf({
   index,
   animClass,
   side = "single",
-  page: pageOverride,
 }: {
   index: number;
   animClass: string;
   side?: "single" | "left" | "right";
-  /** the gate's teaser leaf lives outside the built page list */
-  page?: BookPage;
 }) {
-  const page = pageOverride ?? pages[index];
+  const page = pages[index];
   const rand = seeded(index + 3);
 
   const stainCount = 3 + Math.floor(rand() * 3);
@@ -390,7 +343,7 @@ function PageLeaf({
         <div className="blotch" aria-hidden="true" />
         <div className="edgeShade" aria-hidden="true" />
         <RampMarks />
-        {page.kind !== "locked" && <ShareRule page={page} />}
+        <ShareRule page={page} />
       </div>
     </div>
   );
@@ -503,73 +456,11 @@ export default function Book() {
     return () => window.removeEventListener("resize", update);
   }, [spread]);
 
-  // CHAPTER GATE (lib/gate.ts): only unlocked chapters render, plus a
-  // teaser leaf naming the next one. Starts at 1 for a hydration-safe
-  // first paint; the effect applies the real schedule immediately.
-  const [unlockedCh, setUnlockedCh] = useState(1);
-  const [daysAway, setDaysAway] = useState(1);
-  const [dropAt, setDropAt] = useState<string | null>(null);
-  useEffect(() => {
-    // /?chapters=N — team preview of any gate state (used by /schedule)
-    const q = Number(new URLSearchParams(window.location.search).get("chapters"));
-    const forced = Number.isFinite(q) && q >= 1 ? Math.min(chapters.length, Math.floor(q)) : null;
-    if (forced) {
-      setUnlockedCh(forced);
-      setDaysAway(1);
-      return;
-    }
-    // static schedule immediately; the LIVE gate (Edge Config via
-    // /api/gate, dashboard-controlled) refines it when it answers
-    setUnlockedCh(unlockedChapters());
-    setDaysAway(nextUnlockInDays());
-
-    let timer: number | undefined;
-    let alive = true;
-
-    /* THE TIMED DROPS (2026-08-18). The API hands over the raw `drops`
-       and we apply them HERE, because the reader's own clock is what
-       decides — same rule as the rest of the gate, and it means the
-       60s-cached response can never be stale on the only question that
-       matters ("has 19:00 passed where you are sitting?"). */
-    const read = () => {
-      fetch(gateEndpoint())
-        .then((r) => (r.ok ? r.json() : null))
-        .then((g) => {
-          if (!alive || !g || typeof g.start !== "string") return;
-          const local = computeGate(g.start, g.override ?? null);
-          const dropped = applyDrops(local.unlocked, normalizeDrops(g.drops));
-          setUnlockedCh(dropped.unlocked);
-          setDropAt(dropped.nextDropAt);
-          setDaysAway(
-            dropped.nextDropAt ? daysUntil(dropped.nextDropAt) : local.daysToNext || 1
-          );
-          // a drop inside the hour: come back for it, so a book left
-          // open on the table grows the new chapter by itself
-          if (dropped.nextDropAt) {
-            const ms = new Date(dropped.nextDropAt).getTime() - Date.now();
-            if (ms > 0 && ms <= 3600000) timer = window.setTimeout(read, ms + 3000);
-          }
-        })
-        .catch(() => {});
-    };
-    read();
-    return () => {
-      alive = false;
-      window.clearTimeout(timer);
-    };
-  }, []);
-  // the teaser leaf's index (= count of real visible pages); -1 = open
-  const gateAt = unlockedCh >= chapters.length ? -1 : firstPageOfChapter(unlockedCh);
-  const total = gateAt === -1 ? pages.length : gateAt + 1;
-  const leafPage = (i: number): BookPage | undefined =>
-    gateAt !== -1 && i === gateAt
-      ? {
-          kind: "locked",
-          chapter: unlockedCh,
-          daysAway,
-          line: teaserLine(chapters[unlockedCh].roman, dropAt),
-        }
-      : undefined;
+  /* Every leaf renders: chapter release is Ramp's, on their side
+     (owner, 2026-08-19). The gate that used to live here — Edge Config
+     drops, the /schedule dashboard, the teaser leaf — is preserved on
+     the chapter-gate-v1 branch and the gate-v1 tag. */
+  const total = pages.length;
 
   const [contentsOpen, setContentsOpen] = useState(false);
 
@@ -753,7 +644,6 @@ export default function Book() {
                     index={underLeft}
                     animClass={hasTurned ? "" : "enterFirst"}
                     side={spread ? "left" : "single"}
-                    page={leafPage(underLeft)}
                   />
                 </div>
               )}
@@ -763,7 +653,6 @@ export default function Book() {
                     index={underRight}
                     animClass={hasTurned ? "" : "enterFirst"}
                     side="right"
-                    page={leafPage(underRight)}
                   />
                 </div>
               )}
@@ -781,7 +670,6 @@ export default function Book() {
                         index={flip.dir === 1 ? flip.from : flip.from - 1}
                         animClass=""
                         side="single"
-                        page={leafPage(flip.dir === 1 ? flip.from : flip.from - 1)}
                       />
                     )}
                   </div>
@@ -798,7 +686,6 @@ export default function Book() {
                         index={flip.dir === 1 ? flip.from + 1 : flip.from}
                         animClass=""
                         side={flip.dir === 1 ? "right" : "left"}
-                        page={leafPage(flip.dir === 1 ? flip.from + 1 : flip.from)}
                       />
                     )}
                   </div>
@@ -808,7 +695,6 @@ export default function Book() {
                         index={flip.dir === 1 ? flip.from + 2 : flip.from - 1}
                         animClass=""
                         side={flip.dir === 1 ? "left" : "right"}
-                        page={leafPage(flip.dir === 1 ? flip.from + 2 : flip.from - 1)}
                       />
                     )}
                   </div>
@@ -927,11 +813,9 @@ export default function Book() {
         </svg>
       </button>
 
-      {/* THE CONTENTS (owner, 2026-08-18): a corner mark, top right.
-          It lists the chapters that are actually live — the gate's
-          count, so a reader never sees the name of one that hasn't
-          dropped — and hops to any of them. Shut until asked, which is
-          how the earlier always-on contents menu went wrong. */}
+      {/* THE CONTENTS (owner, 2026-08-18): a corner mark, top right —
+          every chapter, and it hops to any of them. Shut until asked,
+          which is how the earlier always-on contents menu went wrong. */}
       <button
         className={`contentsBtn ${contentsOpen ? "isOpen" : ""}`}
         aria-haspopup="true"
@@ -969,7 +853,7 @@ export default function Book() {
             onPointerDown={stopEvent}
           />
           <nav className="contentsPanel" aria-label="Chapters">
-            {chapters.slice(0, unlockedCh).map((ch, ci) => {
+            {chapters.map((ch, ci) => {
               const here = pages[Math.min(base, pages.length - 1)].chapter === ci;
               return (
                 <button

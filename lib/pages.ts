@@ -2,12 +2,7 @@ import { chapters } from "./content";
 
 export type BookPage =
   | { kind: "chapter"; chapter: number }
-  | { kind: "rules"; chapter: number; ruleIndexes: number[]; firstOfChapter: boolean }
-  /** the gate's teaser leaf: names the next chapter and when it lands.
-      `line` is gate.ts's teaserLine (shared verbatim with /schedule, so
-      the two can't drift); `daysAway` is the fallback when nothing is
-      scheduled. */
-  | { kind: "locked"; chapter: number; daysAway?: number; line?: string | null };
+  | { kind: "rules"; chapter: number; ruleIndexes: number[]; firstOfChapter: boolean };
 
 // Every rule gets a leaf of its own: 10 chapters × (1 opener + 10 rules).
 export function buildPages(): BookPage[] {
